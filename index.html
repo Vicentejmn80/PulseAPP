@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Pulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"] },
+        },
+      },
+    };
+  </script>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      background:
+        radial-gradient(1100px 520px at 50% -8%, #ffd8b8 0%, transparent 58%),
+        #f6ebdf;
+      color: #241710;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, [role="button"] { cursor: pointer; }
+    input, textarea { cursor: text; }
+    button:disabled { cursor: default; }
+    #root { min-height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useEffect, useMemo, useState } = React;
+    const STORE_KEY = "pulse-app-v1";
+
+    const RANKING_AURORA = [
+      { pos: "1", name: "Sofía", pts: 1240, initials: "SO", bg: "#FF8A3D" },
+      { pos: "2", name: "Diego", pts: 980, initials: "DI", bg: "#5C4DDB" },
+      { pos: "3", name: "Luna", pts: 860, initials: "LU", bg: "#FF5A78", you: true },
+    ];
+
+    const MOCKS = [
+      {
+        id: "aurora",
+        tipo: "reto",
+        kind: "cafe",
+        titulo: "Reto Café Aurora",
+        negocio: "Café Aurora",
+        rubro: "Cafetería",
+        premio: "Café gratis por una semana",
+        jugadores: 34,
+        distancia: "120 m",
+        preguntas: [
+          { texto: "¿De qué país es originario el café más consumido en el mundo?", opciones: ["Etiopía", "Brasil", "Colombia", "Vietnam"], correcta: 0 },
+          { texto: "¿Qué es un espresso?", opciones: ["Café corto y concentrado", "Un té con leche", "Chocolate frío", "Agua con gas"], correcta: 0 },
+          { texto: "¿Cuál lleva espresso y leche vaporizada?", opciones: ["Cappuccino", "Jugo de naranja", "Mate", "Limonada"], correcta: 0 },
+        ],
+      },
+      {
+        id: "burger",
+        tipo: "reto",
+        kind: "burger",
+        titulo: "Reto Burger",
+        negocio: "Fuego Burger",
+        rubro: "Hamburguesas",
+        premio: "Doble clásica gratis",
+        jugadores: 21,
+        distancia: "350 m",
+        preguntas: [
+          { texto: "¿Qué acompaña clásicamente a una hamburguesa?", opciones: ["Papas fritas", "Sushi", "Arroz blanco", "Gelatina"], correcta: 0 },
+          { texto: "¿De qué es la carne de una burger clásica?", opciones: ["Vacuno", "Manzana", "Arroz", "Pescado crudo"], correcta: 0 },
+          { texto: "¿Cuál es la salsa más típica?", opciones: ["Ketchup", "Mermelada", "Salsa de soja", "Chocolate"], correcta: 0 },
+        ],
+      },
+      {
+        id: "verde",
+        tipo: "trivia",
+        kind: "tienda",
+        titulo: "Trivia Tienda Verde",
+        negocio: "Tienda Verde",
+        rubro: "Almacén",
+        premio: "Bolsa de snacks",
+        jugadores: 18,
+        distancia: "480 m",
+        preguntas: [
+          { texto: "¿Qué vende sobre todo un almacén de barrio?", opciones: ["Abarrotes", "Autos", "Pasajes", "Muebles"], correcta: 0 },
+          { texto: "¿Qué suele ir en una bolsa de snacks?", opciones: ["Snacks salados", "Cemento", "Ropa", "Libros"], correcta: 0 },
+          { texto: "¿Qué se puede reciclar en una tienda verde?", opciones: ["Envases", "Humo", "Gasolina", "Piedras"], correcta: 0 },
+        ],
+      },
+    ];
+
+    function loadStore() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+        return {
+          created: Array.isArray(raw.created) ? raw.created : [],
+          joined: Array.isArray(raw.joined) ? raw.joined : [],
+          scores: raw.scores && typeof raw.scores === "object" ? raw.scores : {},
+        };
+      } catch (error) {
+        return { created: [], joined: [], scores: {} };
+      }
+    }
+
+    function formato(n) {
+      return String(Math.max(0, n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function tipoLabel(tipo) {
+      if (tipo === "trivia") return "Trivia";
+      if (tipo === "juego") return "Juego";
+      return "Reto";
+    }
+
+    function Svg({ children, className = "w-6 h-6" }) {
+      return (
+        <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="currentColor">
+          {children}
+        </svg>
+      );
+    }
+
+    function IconTrophy({ className }) {
+      return (
+        <Svg className={className}>
+          <path d="M17 3H7v2H4.2A2.2 2.2 0 0 0 2 7.2C2 10 4.1 12.3 6.8 12.8A6.2 6.2 0 0 0 11 16.2V18H8.4a1 1 0 0 0 0 2h7.2a1 1 0 0 0 0-2H13v-1.8a6.2 6.2 0 0 0 4.2-3.4C19.9 12.3 22 10 22 7.2A2.2 2.2 0 0 0 19.8 5H17V3zM7 7H4.3C4.6 8.8 5.6 10.2 7 10.8V7zm10 3.8c1.4-.6 2.4-2 2.7-3.8H17v3.8z" />
+        </Svg>
+      );
+    }
+
+    function IconFire({ className }) {
+      return (
+        <Svg className={className}>
+          <path d="M12.2 2c.4 2.6-.6 4.2-1.8 5.4 1.7.2 3.3-1 3.8-1 .2 2.2 2.6 3.6 2.6 6.5A6.8 6.8 0 0 1 8 18.6c-2.6-1.5-3.6-4.3-2.4-7.1 1 .4 2.2-.1 2.6-1.1C9 12 11 12.4 11.6 10.2 12.4 8.2 12 5.2 12.2 2z" />
+        </Svg>
+      );
+    }
+
+    function IconPin({ className }) {
+      return (
+        <Svg className={className}>
+          <path d="M12 2.2A7.2 7.2 0 0 0 4.8 9.4c0 5.1 6.1 11.8 6.7 12.4a.7.7 0 0 0 1 0c.6-.6 6.7-7.3 6.7-12.4A7.2 7.2 0 0 0 12 2.2zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" />
+        </Svg>
+      );
+    }
+
+    function IconPeople({ className }) {
+      return (
+        <Svg className={className}>
+          <path d="M9 11a3.2 3.2 0 1 0-3.2-3.2A3.2 3.2 0 0 0 9 11zm6.2-.4a2.7 2.7 0 1 0-2.7-2.7 2.7 2.7 0 0 0 2.7 2.7zM9 12.4c-3.1 0-6 1.6-6 3.8V18h12v-1.8c0-2.2-2.9-3.8-6-3.8zm6.3.3c-.4 0-.9 0-1.3.1 1.5.9 2.4 2.1 2.4 3.4V18H21v-1.6c0-2-2.5-3.7-5.7-3.7z" />
+        </Svg>
+      );
+    }
+
+    function IconMedal({ className }) {
+      return (
+        <Svg className={className}>
+          <path d="M8 2h3.2L12 6.2 8 2zm4.8 0H16l-4 4.2L12.8 2zM7.2 8.2h9.6v1.2a4.8 4.8 0 1 1-9.6 0V8.2z" />
+          <circle cx="12" cy="14.2" r="2.1" fill="#fff" opacity=".9" />
+        </Svg>
+      );
+    }
+
+    function IconCoin({ className }) {
+      return (
+        <Svg className={className}>
+          <path d="M12 2.4l1.7 5.1h5.4l-4.4 3.2 1.7 5.2L12 13.2 7.6 15.9l1.7-5.2-4.4-3.2h5.4L12 2.4z" />
+        </Svg>
+      );
+    }
+
+    function LogoMark() {
+      return (
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FF4F1A] shadow-[0_8px_16px_rgba(255,79,26,0.35)]">
+          <svg viewBox="0 0 32 32" className="h-6 w-6" fill="none" aria-hidden="true">
+            <path d="M4 16h6l2.5-6 4.5 12 3-6H28" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      );
+    }
+
+    function CoffeeArt({ className }) {
+      return (
+        <svg viewBox="0 0 180 180" className={className} aria-hidden="true">
+          <ellipse cx="86" cy="150" rx="62" ry="12" fill="#E7C2A6" />
+          <ellipse cx="86" cy="146" rx="50" ry="8" fill="#F8E6D6" />
+          <path d="M46 62h84l-7 64c-1 11-11 19-24 19H74c-13 0-23-8-24-19L46 62z" fill="#FFF8F2" />
+          <path d="M54 70h68l-6 54c-1 8-8 14-18 14H76c-10 0-17-6-18-14L54 70z" fill="#4A2C22" />
+          <ellipse cx="88" cy="76" rx="32" ry="13" fill="#F0C7A4" />
+          <path d="M88 86c8-10 16-12 22-9-8 2-14 8-22 9z" fill="#FFF9F4" />
+          <path d="M128 78c16 2 22 16 18 28-4 12-16 16-26 10" fill="none" stroke="#FFF8F2" strokeWidth="8" strokeLinecap="round" />
+          <path d="M72 46c4-10-6-14 0-24" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
+          <path d="M92 40c4-10-6-14 0-24" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" opacity="0.75" />
+        </svg>
+      );
+    }
+
+    function BurgerArt({ className }) {
+      return (
+        <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+          <path d="M12 30c1-10 9-18 20-18s19 8 20 18H12z" fill="#F0B56A" />
+          <path d="M18 24c4-3 8-4 14-4" stroke="#FFE3BC" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <rect x="12" y="31" width="40" height="6" rx="2" fill="#3E9A4E" />
+          <path d="M12 39h40v5c-4 3-12 5-20 5s-16-2-20-5v-5z" fill="#C4622D" />
+          <path d="M12 50c2 5 10 8 20 8s18-3 20-8v-4H12v4z" fill="#E7A15A" />
+        </svg>
+      );
+    }
+
+    function BagArt({ className }) {
+      return (
+        <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+          <path d="M18 26h28l4 24H14l4-24z" fill="#FFF6EA" />
+          <path d="M22 26c0-8 4-14 10-14s10 6 10 14" fill="none" stroke="#FFF6EA" strokeWidth="3" />
+          <path d="M32 16c2 4 2 8 0 12 4-2 8-2 12 0-2-6-6-12-12-12z" fill="#1F9D62" />
+        </svg>
+      );
+    }
+
+    function Thumb({ item, large = false }) {
+      const box = large
+        ? "flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[26px] shadow-[0_12px_24px_rgba(255,79,26,0.22)]"
+        : "flex h-[74px] w-[74px] shrink-0 items-center justify-center overflow-hidden rounded-[18px]";
+      if (item.kind === "burger") {
+        return <div className={`${box} bg-gradient-to-br from-[#FF8D7A] to-[#E23B2F]`}><BurgerArt className="h-12 w-12" /></div>;
+      }
+      if (item.kind === "tienda" || item.tipo === "trivia") {
+        return <div className={`${box} bg-gradient-to-br from-[#7DDC9A] to-[#1F9D62]`}><BagArt className="h-12 w-12" /></div>;
+      }
+      if (item.tipo === "juego") {
+        return (
+          <div className={`${box} bg-gradient-to-br from-[#FFB3C7] to-[#E23E6B] text-white`}>
+            <IconFire className="h-9 w-9" />
+          </div>
+        );
+      }
+      if (item.kind === "cafe" || /caf[eé]/i.test(item.negocio || "")) {
+        return (
+          <div className={`${box} bg-gradient-to-br from-[#FFB067] to-[#FF4F1A]`}>
+            <CoffeeArt className={large ? "h-[84px] w-[84px] translate-y-3" : "h-[78px] w-[78px] translate-y-2"} />
+          </div>
+        );
+      }
+      return (
+        <div className={`${box} bg-gradient-to-br from-[#FFB067] to-[#FF4F1A] text-white`}>
+          <IconTrophy className="h-9 w-9" />
+        </div>
+      );
+    }
+
+    function Avatar({ initials, bg, size = 36, ring = false }) {
+      return (
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-full font-extrabold ${ring ? "ring-2 ring-white" : ""}`}
+          style={{ width: size, height: size, background: bg, color: "#fff", fontSize: size * 0.34 }}
+        >
+          {initials}
+        </div>
+      );
+    }
+
+    function StatusBar({ light = false }) {
+      const color = light ? "text-white" : "text-[#241710]";
+      return (
+        <div className={`relative z-40 flex h-[54px] items-center justify-between px-7 ${color}`}>
+          <span className="w-[54px] text-[15px] font-semibold">9:41</span>
+          <span className="w-[118px]" />
+          <span className="flex w-[54px] items-center justify-end gap-[5px]">
+            <svg viewBox="0 0 18 12" className="h-[11px] w-[17px]" fill="currentColor" aria-hidden="true">
+              <rect x="0" y="7" width="3" height="5" rx="0.6" />
+              <rect x="4.5" y="5" width="3" height="7" rx="0.6" />
+              <rect x="9" y="2.5" width="3" height="9.5" rx="0.6" />
+              <rect x="13.5" y="0" width="3" height="12" rx="0.6" />
+            </svg>
+            <svg viewBox="0 0 16 12" className="h-[11px] w-[15px]" fill="currentColor" aria-hidden="true">
+              <path d="M8 2.2C5.6 2.2 3.5 3.1 1.9 4.6L.6 3.2C2.6 1.3 5.2 0 8 0s5.4 1.3 7.4 3.2l-1.3 1.4C12.5 3.1 10.4 2.2 8 2.2zm0 3.4c-1.4 0-2.6.5-3.6 1.4L3.1 5.7C4.4 4.4 6.1 3.6 8 3.6s3.6.8 4.9 2.1l-1.3 1.3c-1-.9-2.2-1.4-3.6-1.4zM8 9.2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" />
+            </svg>
+            <svg viewBox="0 0 25 12" className="h-[11px] w-[24px]" aria-hidden="true">
+              <rect x="0.6" y="0.6" width="21" height="10.8" rx="2.4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+              <rect x="2" y="2" width="16" height="8" rx="1.2" fill="currentColor" />
+              <rect x="22.4" y="3.6" width="1.8" height="4.6" rx="0.6" fill="currentColor" opacity="0.45" />
+            </svg>
+          </span>
+        </div>
+      );
+    }
+
+    function TabBar({ active, onChange }) {
+      const items = [
+        { id: "home", label: "Descubre", icon: (
+          <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" />
+            <path d="M14.8 9.2l-1.2 4.4-4.4 1.2 1.2-4.4 4.4-1.2z" fill="currentColor" stroke="none" />
+          </svg>
+        ) },
+        { id: "retos", label: "Retos", icon: <IconTrophy className="h-[22px] w-[22px]" /> },
+        { id: "ranking", label: "Ranking", icon: <IconMedal className="h-[22px] w-[22px]" /> },
+        { id: "perfil", label: "Perfil", icon: (
+          <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.2" />
+            <path d="M5.2 19.2c.8-3 3.4-4.8 6.8-4.8s6 1.8 6.8 4.8" />
+          </svg>
+        ) },
+      ];
+      return (
+        <div className="flex h-[78px] shrink-0 items-start justify-around border-t border-[#F3E4D8] bg-white px-2 pt-2">
+          {items.map((item) => {
+            const on = item.id === active;
+            return (
+              <button key={item.id} type="button" onClick={() => onChange(item.id)} className={`flex w-16 flex-col items-center gap-0.5 ${on ? "text-[#FF4F1A]" : "text-[#B6A297]"}`}>
+                {item.icon}
+                <span className="text-[10px] font-bold">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function BackButton({ onClick, label = "Volver" }) {
+      return (
+        <button type="button" aria-label={label} onClick={onClick} className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_12px_rgba(80,40,10,0.08)]">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#241710" strokeWidth="2.4" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      );
+    }
+
+    function PrimaryButton({ children, onClick, disabled, testid }) {
+      return (
+        <button
+          type="button"
+          data-testid={testid}
+          disabled={disabled}
+          onClick={onClick}
+          className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#FF4F1A] text-[17px] font-extrabold text-white shadow-[0_12px_24px_rgba(255,79,26,0.35)] disabled:opacity-40"
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Shell({ children }) {
+      return (
+        <div className="flex min-h-[100dvh] items-center justify-center sm:p-4">
+          <div className="relative h-[100dvh] w-full sm:h-[min(868px,calc(100dvh-32px))] sm:w-[414px]">
+            <div className="absolute -left-[3px] top-[128px] hidden h-7 w-[3px] rounded-l-sm bg-[#2c2c2e] sm:block" />
+            <div className="absolute -left-[3px] top-[168px] hidden h-12 w-[3px] rounded-l-sm bg-[#2c2c2e] sm:block" />
+            <div className="absolute -left-[3px] top-[224px] hidden h-12 w-[3px] rounded-l-sm bg-[#2c2c2e] sm:block" />
+            <div className="absolute -right-[3px] top-[176px] hidden h-[70px] w-[3px] rounded-r-sm bg-[#2c2c2e] sm:block" />
+            <div className="h-full bg-[#141414] p-0 shadow-[0_28px_70px_rgba(70,32,10,0.22)] sm:rounded-[54px] sm:p-3 sm:ring-1 sm:ring-white/10">
+              <div className="relative h-full overflow-hidden bg-[#FFF7F1] sm:rounded-[42px]">
+                <div className="pointer-events-none absolute left-1/2 top-[11px] z-50 hidden h-[34px] w-[118px] -translate-x-1/2 rounded-full bg-black sm:block" />
+                {children}
+                <div className="pointer-events-none absolute bottom-2 left-1/2 z-50 hidden h-[5px] w-32 -translate-x-1/2 rounded-full bg-black sm:block" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ExperienceCard({ item, joined, onOpen }) {
+      const accent = item.kind === "burger" ? "text-[#E23B2F]" : item.tipo === "trivia" || item.kind === "tienda" ? "text-[#1F9D62]" : item.tipo === "juego" ? "text-[#E23E6B]" : "text-[#FF4F1A]";
+      const pin = item.kind === "burger" ? "text-[#E23B2F]" : item.tipo === "trivia" || item.kind === "tienda" ? "text-[#1F9D62]" : "text-[#FF4F1A]";
+      return (
+        <button type="button" onClick={onOpen} className="flex w-full gap-3 rounded-[22px] bg-white p-2.5 text-left shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+          <Thumb item={item} />
+          <div className="min-w-0 flex-1 py-0.5">
+            <p className={`flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] ${accent}`}>
+              {item.rubro}
+              {item.creado && <span className="rounded-full bg-[#FF4F1A] px-1.5 py-0.5 text-[9px] tracking-wide text-white">Nuevo</span>}
+            </p>
+            <h4 className="truncate text-[15px] font-extrabold leading-tight">{item.titulo}</h4>
+            <p className="mt-0.5 flex items-center gap-1 text-[12px] font-semibold text-[#8D7366]">
+              <IconPin className={`h-3.5 w-3.5 ${pin}`} />
+              <span className="truncate">{item.negocio} · {item.distancia}</span>
+            </p>
+            <p className="mt-1 flex min-w-0 items-center gap-1 text-[12px] font-bold text-[#C47B12]">
+              <IconTrophy className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{item.premio}</span>
+              {!joined && item.creado && <span className="ml-auto shrink-0 text-[#FF4F1A]">Únete</span>}
+            </p>
+          </div>
+        </button>
+      );
+    }
+
+    function HomeScreen({ featured, list, joinedIds, puntos, onOpen, onCreate, onTab }) {
+      const cafeBanner = featured.kind === "cafe" || /caf[eé]/i.test(featured.negocio || "");
+      return (
+        <div className="flex h-full flex-col">
+          <StatusBar />
+          <div className="flex items-center justify-between px-5 pb-3">
+            <div className="flex items-center gap-2.5">
+              <LogoMark />
+              <div>
+                <p className="text-[18px] font-extrabold leading-none tracking-tight">Pulse</p>
+                <p className="mt-0.5 text-[11px] font-semibold text-[#A08B80]">Juega cerca de ti</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" data-testid="crear" onClick={onCreate} className="flex h-9 items-center gap-1 rounded-full bg-[#FF4F1A] px-3 text-[12px] font-extrabold text-white shadow-[0_8px_16px_rgba(255,79,26,0.3)]">
+                + Crear
+              </button>
+              <div className="flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 shadow-[0_6px_16px_rgba(80,40,10,0.08)]">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFC53D] text-[#8A4E00]">
+                  <IconCoin className="h-4 w-4" />
+                </span>
+                <span className="text-[13px] font-extrabold tabular-nums">{formato(puntos)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            <button type="button" onClick={() => onOpen(featured.id)} className="relative block h-[214px] w-full overflow-hidden rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] text-left shadow-[0_16px_32px_rgba(255,79,26,0.28)]">
+              <div className="absolute -right-6 -top-8 h-36 w-36 rounded-full bg-white/15" />
+              {cafeBanner ? <CoffeeArt className="pointer-events-none absolute -right-3 bottom-1 h-[150px] w-[150px]" /> : (
+                <IconTrophy className="pointer-events-none absolute bottom-6 right-5 h-24 w-24 text-white/30" />
+              )}
+              <div className="relative flex h-full max-w-[220px] flex-col p-5">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#FFE08A]" />
+                  {featured.creado ? "Nuevo" : "Destacado"}
+                </span>
+                <h2 className="mt-3 line-clamp-3 text-[26px] font-extrabold leading-[1.05] tracking-tight text-white">{featured.titulo}</h2>
+                <p className="mt-1.5 text-[15px] font-bold text-white/95">¡Participa y gana!</p>
+                <div className="mt-auto">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/15 px-2.5 py-1 text-[11px] font-bold text-white">
+                    <IconPeople className="h-3.5 w-3.5" />
+                    {(featured.jugadores + (joinedIds.includes(featured.id) ? 1 : 0))} jugando
+                  </span>
+                </div>
+              </div>
+            </button>
+            <h3 className="mb-3 mt-5 text-[15px] font-extrabold leading-tight">Experiencias activas cerca de ti</h3>
+            <div className="flex flex-col gap-2.5">
+              {list.map((item) => (
+                <ExperienceCard key={item.id} item={item} joined={joinedIds.includes(item.id)} onOpen={() => onOpen(item.id)} />
+              ))}
+            </div>
+          </div>
+          <TabBar active="home" onChange={onTab} />
+        </div>
+      );
+    }
+
+    function rankingRows(item, joined) {
+      if (item.creado) {
+        if (!joined) return [];
+        return [{ pos: "1", name: "Luna", pts: 0, initials: "LU", bg: "#FF5A78", you: true }];
+      }
+      if (item.id === "aurora") return RANKING_AURORA;
+      return [
+        { pos: "1", name: "Mateo", pts: 740, initials: "MA", bg: "#1F9D62" },
+        { pos: "2", name: "Luna", pts: 510, initials: "LU", bg: "#FF5A78", you: true },
+        { pos: "3", name: "Ana", pts: 460, initials: "AN", bg: "#E0A106" },
+      ];
+    }
+
+    function DetailScreen({ item, joined, onBack, onJoin, onPlay }) {
+      const jugadores = item.jugadores + (joined ? 1 : 0);
+      const rows = rankingRows(item, joined);
+      const n = item.preguntas.length;
+      return (
+        <div className="flex h-full flex-col">
+          <StatusBar />
+          <div className="flex h-11 items-center px-4">
+            <BackButton onClick={onBack} />
+            <p className="flex-1 pr-9 text-center text-[15px] font-extrabold">Experiencia</p>
+          </div>
+          <div className="flex-1 overflow-y-auto pb-3">
+            <div className="flex flex-col items-center px-6 pt-2">
+              <Thumb item={item} large />
+              <h2 className="mt-3 text-center text-[24px] font-extrabold tracking-tight">{item.negocio}</h2>
+              <p className="text-[13px] font-semibold text-[#8D7366]">{item.rubro}</p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                {item.creado && <span className="rounded-full bg-[#FF4F1A] px-2.5 py-1 text-[11px] font-extrabold text-white">Nuevo</span>}
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#E8F8EE] px-2.5 py-1 text-[11px] font-bold text-[#1C8A4A]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#1C8A4A]" />
+                  Abierto
+                </span>
+                <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[#8D7366]">
+                  <IconPin className="h-3.5 w-3.5 text-[#FF4F1A]" />
+                  A {item.distancia}
+                </span>
+                <span className="text-[12px] font-bold text-[#8D7366]">{tipoLabel(item.tipo)} · {n} {n === 1 ? "pregunta" : "preguntas"}</span>
+              </div>
+            </div>
+            <div className="mx-4 mt-4 flex items-center gap-3 rounded-[24px] bg-gradient-to-r from-[#FFF4D8] to-[#FFE7BF] p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFC53D] text-[#8A4E00]">
+                <IconTrophy className="h-7 w-7" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#C47B12]">Premio de la semana</p>
+                <p className="mt-0.5 line-clamp-2 text-[16px] font-extrabold leading-tight">{item.premio}</p>
+              </div>
+            </div>
+            <div className="mx-4 mt-3 flex items-center gap-3 rounded-[20px] bg-white px-3.5 py-3 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
+              <div className="flex -space-x-2">
+                <Avatar initials="SO" bg="#FF8A3D" size={28} ring />
+                <Avatar initials="DI" bg="#5C4DDB" size={28} ring />
+                <Avatar initials="LU" bg="#FF5A78" size={28} ring />
+              </div>
+              <p className="text-[14px] font-semibold">
+                <span className="font-extrabold">{jugadores}</span>
+                <span className="text-[#8D7366]"> {jugadores === 1 ? "jugador participando" : "jugadores participando"}</span>
+              </p>
+            </div>
+            {joined && <p className="mx-4 mt-3 rounded-2xl bg-[#E8F8EE] px-3 py-2 text-center text-[13px] font-extrabold text-[#1C8A4A]">Ya estás dentro. Puedes jugar.</p>}
+            <div className="mt-4 px-5">
+              <h3 className="text-[14px] font-extrabold">Top de la semana</h3>
+            </div>
+            <div className="mt-2 flex flex-col gap-2 px-4">
+              {rows.length === 0 && (
+                <p className="rounded-2xl bg-white px-4 py-4 text-[13px] font-semibold text-[#8D7366]">Nadie se ha unido todavía. Únete para aparecer en el ranking.</p>
+              )}
+              {rows.map((row) => (
+                <div key={row.pos} className={`flex items-center gap-3 rounded-2xl px-3 py-2 ${row.you ? "bg-[#FFF1EA] ring-1 ring-[#FFD3C2]" : "bg-white shadow-[0_6px_16px_rgba(80,40,10,0.04)]"}`}>
+                  <span className={`w-5 text-center text-[14px] font-extrabold ${row.pos === "1" ? "text-[#E0A106]" : "text-[#B6A297]"}`}>{row.pos}</span>
+                  <Avatar initials={row.initials} bg={row.bg} size={36} />
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 text-[14px] font-extrabold">
+                      {row.name}
+                      {row.you && <span className="rounded-full bg-[#FF4F1A] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white">Tú</span>}
+                    </p>
+                    <p className="truncate text-[11px] font-semibold text-[#A08B80]">{row.you ? "Tu posición en este reto" : item.negocio}</p>
+                  </div>
+                  <p className="text-[14px] font-extrabold tabular-nums">{formato(row.pts)}<span className="ml-0.5 text-[11px] font-bold text-[#A08B80]">pts</span></p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="shrink-0 bg-[#FFF7F1] px-4 pb-7 pt-3">
+            {joined ? (
+              <PrimaryButton testid="jugar" onClick={onPlay}>Jugar ahora</PrimaryButton>
+            ) : (
+              <PrimaryButton testid="unirse" onClick={onJoin}>Unirse</PrimaryButton>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function GameScreen({ item, onClose }) {
+      const [index, setIndex] = useState(0);
+      const [picked, setPicked] = useState(null);
+      const [score, setScore] = useState(0);
+      const [done, setDone] = useState(false);
+      const total = item.preguntas.length;
+      const question = item.preguntas[index];
+      const letras = ["A", "B", "C", "D"];
+
+      function choose(i) {
+        if (picked !== null) return;
+        setPicked(i);
+        if (i === question.correcta) setScore((n) => n + 50);
+      }
+
+      function next() {
+        if (index + 1 >= total) {
+          setDone(true);
+          return;
+        }
+        setIndex((n) => n + 1);
+        setPicked(null);
+      }
+
+      if (done) {
+        return (
+          <div className="flex h-full flex-col">
+            <StatusBar />
+            <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#FFC53D] text-[#8A4E00]">
+                <IconTrophy className="h-10 w-10" />
+              </div>
+              <h2 className="mt-4 text-[26px] font-extrabold">¡Listo!</h2>
+              <p className="mt-1 text-[15px] font-semibold text-[#8D7366]">{item.titulo}</p>
+              <p className="mt-4 text-[42px] font-extrabold leading-none tabular-nums">+{score}</p>
+              <p className="mt-1 text-[13px] font-bold text-[#A08B80]">puntos en esta partida</p>
+            </div>
+            <div className="px-4 pb-7">
+              <PrimaryButton onClick={() => onClose(score)}>Volver al reto</PrimaryButton>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex h-full flex-col">
+          <StatusBar />
+          <div className="flex h-11 items-center gap-2 px-4">
+            <button type="button" aria-label="Cerrar" onClick={() => onClose(0)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_4px_12px_rgba(80,40,10,0.08)]">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#241710" strokeWidth="2.4" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+              </svg>
+            </button>
+            <p className="flex-1 truncate text-center text-[14px] font-extrabold">{item.titulo}</p>
+            <div className="w-9 shrink-0" />
+          </div>
+          <div className="px-5 pt-2">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[13px] font-extrabold">Pregunta {index + 1} de {total}</span>
+              <span className="rounded-full bg-[#FFF1EA] px-2 py-0.5 text-[11px] font-extrabold text-[#FF4F1A]">{item.rubro}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-[#FFE1D2]">
+              <div className="h-full rounded-full bg-gradient-to-r from-[#FFB067] to-[#FF4F1A]" style={{ width: `${((index + (picked !== null ? 1 : 0)) / total) * 100}%` }} />
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col justify-center overflow-y-auto px-5 py-4">
+            <h2 className="text-[22px] font-extrabold leading-snug tracking-tight">{question.texto}</h2>
+            <p className={`mt-2 text-[13px] font-extrabold ${picked === null ? "text-[#A08B80]" : picked === question.correcta ? "text-[#1C8A4A]" : "text-[#E23B2F]"}`}>{picked === null ? "Elige una respuesta" : picked === question.correcta ? "¡Correcto!" : "Casi. La correcta está marcada."}</p>
+            <div className="mt-4 flex flex-col gap-2.5">
+              {question.opciones.map((texto, i) => {
+                const correcta = picked !== null && i === question.correcta;
+                const mala = picked === i && i !== question.correcta;
+                const cls = correcta
+                  ? "border-[#1C8A4A] bg-[#E8F8EE]"
+                  : mala
+                    ? "border-[#E23B2F] bg-[#FFE8E4]"
+                    : "border-[#F3E4D8] bg-white";
+                return (
+                  <button key={letras[i]} type="button" onClick={() => choose(i)} className={`flex h-[60px] items-center gap-3 rounded-[20px] border-2 px-3 text-left shadow-[0_6px_14px_rgba(80,40,10,0.04)] ${cls}`}>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFF1EA] text-[14px] font-extrabold text-[#FF4F1A]">{letras[i]}</span>
+                    <span className="truncate text-[16px] font-extrabold">{texto}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="px-4 pb-7">
+            {picked !== null && (
+              <button type="button" onClick={next} className="mb-3 flex h-12 w-full items-center justify-center rounded-2xl bg-[#241710] text-[15px] font-extrabold text-white">
+                {index + 1 >= total ? "Ver resultado" : "Siguiente"}
+              </button>
+            )}
+            <div className="flex items-center gap-3 rounded-[22px] bg-[#2A1812] px-4 py-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#FFE08A] to-[#FFB11A] text-[#8A4E00]">
+                <IconCoin className="h-7 w-7" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[12px] font-semibold text-white/60">Si aciertas sumas</p>
+                <p className="mt-0.5 text-[20px] font-extrabold leading-none text-white">+50 puntos</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] font-semibold text-white/50">En esta trivia</p>
+                <p className="text-[16px] font-extrabold tabular-nums text-[#FFC53D]">{score} pts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Medal({ tone, label, children }) {
+      const tones = {
+        gold: "from-[#FFE7A3] to-[#F5B942] text-[#8A5A00] ring-[#FFE7A8]",
+        fire: "from-[#FFB067] to-[#FF4F1A] text-white ring-[#FFD3C2]",
+        bronze: "from-[#F0C2A0] to-[#C4845A] text-[#6B3A22] ring-[#F3D7C4]",
+        rose: "from-[#FFB3C7] to-[#E23E6B] text-white ring-[#FFD0DC]",
+      };
+      return (
+        <div className="flex flex-col items-center gap-1.5">
+          <div className={`flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b shadow-[0_8px_16px_rgba(80,40,10,0.12)] ring-4 ${tones[tone]}`}>
+            {children}
+          </div>
+          <span className="text-center text-[11px] font-extrabold leading-tight">{label}</span>
+        </div>
+      );
+    }
+
+    function ProfileScreen({ puntos, creados, onTab }) {
+      const dias = ["L", "M", "M", "J", "V", "S", "D"];
+      return (
+        <div className="flex h-full flex-col bg-[#FFF7F1]">
+          <div className="shrink-0 rounded-b-[32px] bg-gradient-to-b from-[#FF8A3C] to-[#FF4F1A] pb-12">
+            <StatusBar light />
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <div className="rounded-full bg-white/25 p-1">
+                  <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-[#FFE1D2] text-[28px] font-extrabold text-[#C2410C]">LU</div>
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#FF4F1A] shadow">
+                  <IconFire className="h-5 w-5" />
+                </div>
+              </div>
+              <h2 className="mt-3 text-[24px] font-extrabold tracking-tight text-white">Luna</h2>
+              <p className="text-[13px] font-bold text-white/80">@lunacafe</p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto pb-4">
+            <div className="relative z-10 -mt-8 mx-4 rounded-[26px] bg-white px-4 py-4 text-center shadow-[0_12px_28px_rgba(80,40,10,0.08)]">
+              <p className="text-[42px] font-extrabold leading-none tracking-tight tabular-nums">{formato(puntos)}</p>
+              <p className="mt-1 text-[13px] font-bold text-[#A08B80]">puntos totales</p>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 px-4">
+              <div className="rounded-[22px] bg-white p-3.5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
+                <div className="flex items-center gap-1.5 text-[#FF4F1A]">
+                  <IconFire className="h-5 w-5" />
+                  <span className="text-[11px] font-extrabold uppercase tracking-wide">Racha</span>
+                </div>
+                <p className="mt-1 text-[28px] font-extrabold leading-none">7<span className="ml-1 text-[13px] font-bold text-[#A08B80]">días</span></p>
+                <div className="mt-2.5 flex justify-between gap-0.5">
+                  {dias.map((d, i) => (
+                    <div key={`${d}-${i}`} className="flex flex-col items-center gap-1">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF4F1A] text-white"><IconFire className="h-2.5 w-2.5" /></span>
+                      <span className="text-[8px] font-bold text-[#C4B0A6]">{d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col rounded-[22px] bg-white p-3.5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
+                <div className="flex items-center gap-1.5 text-[#E0A106]">
+                  <IconMedal className="h-5 w-5" />
+                  <span className="text-[11px] font-extrabold uppercase tracking-wide">Ranking</span>
+                </div>
+                <p className="mt-1 text-[28px] font-extrabold leading-none">#3</p>
+                <p className="mt-1 text-[12px] font-bold leading-snug text-[#8D7366]">en Café Aurora</p>
+                <p className="mt-auto pt-2 text-[11px] font-extrabold text-[#FF4F1A]">{creados} creados por ti</p>
+              </div>
+            </div>
+            <div className="mt-4 px-5"><h3 className="text-[14px] font-extrabold">Insignias</h3></div>
+            <div className="mt-3 grid grid-cols-4 gap-2 px-4">
+              <Medal tone="bronze" label="Primer reto"><IconTrophy className="h-7 w-7" /></Medal>
+              <Medal tone="fire" label="Racha x7"><IconFire className="h-7 w-7" /></Medal>
+              <Medal tone="gold" label="Top 3"><IconMedal className="h-7 w-7" /></Medal>
+              <Medal tone="rose" label="Catador">
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden="true">
+                  <ellipse cx="12" cy="13" rx="5" ry="7" />
+                </svg>
+              </Medal>
+            </div>
+          </div>
+          <TabBar active="perfil" onChange={onTab} />
+        </div>
+      );
+    }
+
+    function RetosScreen({ created, joinedIds, onOpen, onCreate, onTab }) {
+      return (
+        <div className="flex h-full flex-col">
+          <StatusBar />
+          <div className="px-5 pb-3">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Tus publicaciones</p>
+            <h2 className="text-[24px] font-extrabold tracking-tight">Retos</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {created.length === 0 ? (
+              <div className="mt-8 rounded-[28px] bg-white px-6 py-10 text-center shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF1EA] text-[#FF4F1A]">
+                  <IconTrophy className="h-8 w-8" />
+                </div>
+                <h3 className="mt-4 text-[18px] font-extrabold">Todavía no publicas</h3>
+                <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Crea un reto, una trivia o un juego. Va a aparecer como nuevo para unirse.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {created.map((item) => (
+                  <ExperienceCard key={item.id} item={item} joined={joinedIds.includes(item.id)} onOpen={() => onOpen(item.id)} />
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="px-4 pb-3">
+            <PrimaryButton testid="crear-retos" onClick={onCreate}>Crear reto</PrimaryButton>
+          </div>
+          <TabBar active="retos" onChange={onTab} />
+        </div>
+      );
+    }
+
+    function RankingScreen({ item, joined, onOpen, onTab }) {
+      const rows = rankingRows(item, joined);
+      return (
+        <div className="flex h-full flex-col">
+          <StatusBar />
+          <div className="px-5 pb-2">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Esta semana</p>
+            <h2 className="text-[24px] font-extrabold tracking-tight">Ranking</h2>
+            <p className="text-[13px] font-semibold text-[#8D7366]">{item.titulo}</p>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {rows.length === 0 ? (
+              <div className="mt-6 rounded-[28px] bg-white px-6 py-8 text-center">
+                <p className="text-[15px] font-extrabold">Nadie se ha unido todavía</p>
+                <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Entra al reto y únete para aparecer aquí.</p>
+                <button type="button" onClick={() => onOpen(item.id)} className="mt-4 text-[14px] font-extrabold text-[#FF4F1A]">Ver para unirme</button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {rows.map((row) => (
+                  <div key={row.name + row.pos} className={`flex items-center gap-3 rounded-2xl px-3 py-3 ${row.you ? "bg-[#FFF1EA] ring-1 ring-[#FFD3C2]" : "bg-white"}`}>
+                    <span className={`w-6 text-center text-[16px] font-extrabold ${row.pos === "1" ? "text-[#E0A106]" : "text-[#B6A297]"}`}>{row.pos}</span>
+                    <Avatar initials={row.initials} bg={row.bg} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-extrabold">{row.name}{row.you ? " · Tú" : ""}</p>
+                      <p className="truncate text-[12px] font-semibold text-[#A08B80]">{item.negocio}</p>
+                    </div>
+                    <p className="font-extrabold tabular-nums">{formato(row.pts)} pts</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <TabBar active="ranking" onChange={onTab} />
+        </div>
+      );
+    }
+
+    const EMPTY_FORM = { tipo: "reto", nombre: "", premio: "", pregunta: "", opciones: ["", "", "", ""] };
+
+    function CreateScreen({ onBack, onPublish }) {
+      const [form, setForm] = useState(EMPTY_FORM);
+      const [error, setError] = useState("");
+      const tipos = [
+        { id: "reto", label: "Reto" },
+        { id: "trivia", label: "Trivia" },
+        { id: "juego", label: "Juego" },
+      ];
+
+      function setOpcion(index, value) {
+        setForm((prev) => {
+          const opciones = prev.opciones.slice();
+          opciones[index] = value;
+          return { ...prev, opciones };
+        });
+      }
+
+      function publish(event) {
+        event.preventDefault();
+        const nombre = form.nombre.trim();
+        const premio = form.premio.trim();
+        const pregunta = form.pregunta.trim();
+        const opciones = form.opciones.map((op) => op.trim());
+        if (!nombre || !premio || !pregunta || opciones.some((op) => !op)) {
+          setError("Completa el local, el premio, la pregunta y las 4 respuestas.");
+          return;
+        }
+        onPublish({
+          id: `c_${Date.now()}`,
+          tipo: form.tipo,
+          kind: form.tipo,
+          creado: true,
+          titulo: `${tipoLabel(form.tipo)} ${nombre}`,
+          negocio: nombre,
+          rubro: form.tipo === "trivia" ? "Trivia" : form.tipo === "juego" ? "Juego" : "Reto local",
+          premio,
+          jugadores: 0,
+          distancia: "cerca",
+          preguntas: [{ texto: pregunta, opciones, correcta: 0 }],
+        });
+      }
+
+      return (
+        <form onSubmit={publish} className="flex h-full flex-col">
+          <StatusBar />
+          <div className="flex h-11 items-center px-4">
+            <BackButton onClick={onBack} />
+            <p className="flex-1 pr-9 text-center text-[15px] font-extrabold">Crear</p>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            <h2 className="text-[22px] font-extrabold tracking-tight">Nuevo reto</h2>
+            <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Se publica al instante y queda listo para unirse.</p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {tipos.map((tipo) => (
+                <button
+                  key={tipo.id}
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, tipo: tipo.id }))}
+                  className={`h-11 rounded-2xl text-[13px] font-extrabold ${form.tipo === tipo.id ? "bg-[#FF4F1A] text-white" : "bg-white text-[#8D7366]"}`}
+                >
+                  {tipo.label}
+                </button>
+              ))}
+            </div>
+            <label className="mt-4 block">
+              <span className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Nombre del local</span>
+              <input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Café Aurora" className="w-full rounded-2xl bg-white px-3.5 py-3 text-[16px] font-bold outline-none ring-1 ring-[#F3E4D8] placeholder:font-semibold placeholder:text-[#C4B0A6] focus:ring-2 focus:ring-[#FF4F1A]" />
+            </label>
+            <label className="mt-3 block">
+              <span className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Premio de la semana</span>
+              <input value={form.premio} onChange={(e) => setForm({ ...form, premio: e.target.value })} placeholder="Café gratis por una semana" className="w-full rounded-2xl bg-white px-3.5 py-3 text-[16px] font-bold outline-none ring-1 ring-[#F3E4D8] placeholder:font-semibold placeholder:text-[#C4B0A6] focus:ring-2 focus:ring-[#FF4F1A]" />
+            </label>
+            <label className="mt-3 block">
+              <span className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Pregunta</span>
+              <textarea value={form.pregunta} onChange={(e) => setForm({ ...form, pregunta: e.target.value })} rows="2" placeholder="¿De qué país es originario el café?" className="w-full resize-none rounded-2xl bg-white px-3.5 py-3 text-[16px] font-bold outline-none ring-1 ring-[#F3E4D8] placeholder:font-semibold placeholder:text-[#C4B0A6] focus:ring-2 focus:ring-[#FF4F1A]" />
+            </label>
+            <p className="mb-2 mt-3 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Respuestas · la A es la correcta</p>
+            <div className="flex flex-col gap-2">
+              {form.opciones.map((opcion, index) => (
+                <input
+                  key={index}
+                  value={opcion}
+                  onChange={(e) => setOpcion(index, e.target.value)}
+                  placeholder={`Respuesta ${"ABCD"[index]}`}
+                  className="w-full rounded-2xl bg-white px-3.5 py-3 text-[16px] font-bold outline-none ring-1 ring-[#F3E4D8] placeholder:font-semibold placeholder:text-[#C4B0A6] focus:ring-2 focus:ring-[#FF4F1A]"
+                />
+              ))}
+            </div>
+            {error && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
+          </div>
+          <div className="shrink-0 px-4 pb-7 pt-2">
+            <button type="submit" data-testid="publicar" className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#FF4F1A] text-[17px] font-extrabold text-white shadow-[0_12px_24px_rgba(255,79,26,0.35)]">
+              Publicar
+            </button>
+          </div>
+        </form>
+      );
+    }
+
+    function App() {
+      const [store, setStore] = useState(loadStore);
+      const [screen, setScreen] = useState("home");
+      const [selectedId, setSelectedId] = useState("aurora");
+      const [notice, setNotice] = useState("");
+      const [createFrom, setCreateFrom] = useState("home");
+
+      useEffect(() => {
+        localStorage.setItem(STORE_KEY, JSON.stringify(store));
+      }, [store]);
+
+      useEffect(() => {
+        if (!notice) return undefined;
+        const timer = setTimeout(() => setNotice(""), 2400);
+        return () => clearTimeout(timer);
+      }, [notice]);
+
+      const experiences = useMemo(() => [...store.created, ...MOCKS], [store.created]);
+      const selected = experiences.find((item) => item.id === selectedId) || experiences[0];
+      const puntos = 2480 + Object.values(store.scores).reduce((sum, n) => sum + n, 0);
+      const joined = store.joined.includes(selected.id);
+
+      function open(id) {
+        setSelectedId(id);
+        setScreen("detail");
+      }
+
+      function join() {
+        if (store.joined.includes(selected.id)) return;
+        setStore((prev) => ({ ...prev, joined: [...prev.joined, selected.id] }));
+        setNotice("Te uniste. Ya puedes jugar.");
+      }
+
+      function finishGame(score) {
+        if (score > 0) {
+          setStore((prev) => ({
+            ...prev,
+            scores: { ...prev.scores, [selected.id]: (prev.scores[selected.id] || 0) + score },
+          }));
+          setNotice(`Sumaste ${score} puntos`);
+        }
+        setScreen("detail");
+      }
+
+      function publish(item) {
+        setStore((prev) => ({ ...prev, created: [item, ...prev.created] }));
+        setSelectedId(item.id);
+        setScreen("detail");
+        setNotice("Publicado. Aparece como nuevo para unirse.");
+      }
+
+      function onTab(id) {
+        if (id === "home") setScreen("home");
+        if (id === "retos") setScreen("retos");
+        if (id === "ranking") setScreen("ranking");
+        if (id === "perfil") setScreen("perfil");
+      }
+
+      function openCreate(from) {
+        setCreateFrom(from);
+        setScreen("create");
+      }
+
+      return (
+        <Shell>
+          <div className="relative h-full">
+            {screen === "home" && (
+              <HomeScreen
+                featured={experiences[0]}
+                list={experiences}
+                joinedIds={store.joined}
+                puntos={puntos}
+                onOpen={open}
+                onCreate={() => openCreate("home")}
+                onTab={onTab}
+              />
+            )}
+            {screen === "detail" && (
+              <DetailScreen item={selected} joined={joined} onBack={() => setScreen("home")} onJoin={join} onPlay={() => { setNotice(""); setScreen("game"); }} />
+            )}
+            {screen === "game" && <GameScreen key={selected.id} item={selected} onClose={finishGame} />}
+            {screen === "perfil" && <ProfileScreen puntos={puntos} creados={store.created.length} onTab={onTab} />}
+            {screen === "retos" && (
+              <RetosScreen created={store.created} joinedIds={store.joined} onOpen={open} onCreate={() => openCreate("retos")} onTab={onTab} />
+            )}
+            {screen === "ranking" && <RankingScreen item={selected} joined={joined} onOpen={open} onTab={onTab} />}
+            {screen === "create" && <CreateScreen onBack={() => setScreen(createFrom)} onPublish={publish} />}
+            {notice && (
+              <div className="absolute left-4 right-4 top-[62px] z-[60] rounded-2xl bg-[#241710] px-4 py-3 text-center text-[13px] font-bold text-white shadow-lg">
+                {notice}
+              </div>
+            )}
+          </div>
+        </Shell>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
