@@ -3,10 +3,10 @@ import { SEED_TRANSACTIONS, USERS } from "@/data/mock/catalog";
 import type { Game, Participation, PointsTransaction, UserProfile } from "@/types/pulse";
 
 const SESSION_KEY = "pulse-session";
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "https://ruxwiztdildgnyshajnk.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "https://ovgwqeoslaitsmhdkxbl.supabase.co";
 const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1eHdpenRkaWxkZ255c2hham5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NzE3NDMsImV4cCI6MjA5MzA0Nzc0M30.7iHXDo1DBk2sLnVwg8Qg_W8QwTM9P-18vIK2YIOrsy8";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92Z3dxZW9zbGFpdHNtaGRreGJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMDA3NDcsImV4cCI6MjEwNTc3Njc0N30.T6e7hMV-BkuI_RJtRm2qMax5n7DmbTJpNYLVGpO-Vd8";
 
 export interface AccountSnapshot {
   token: string;
@@ -26,9 +26,12 @@ interface ApiResult extends Partial<AccountSnapshot> {
   gamePoints?: number;
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+function supabaseClient() {
+  if (!SUPABASE_ANON_KEY) return null;
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export function readSessionToken() {
   return localStorage.getItem(SESSION_KEY) ?? "";
@@ -68,6 +71,8 @@ async function post(body: Record<string, unknown>): Promise<ApiResult> {
 }
 
 async function rpcRegister(phone: string, alias: string): Promise<ApiResult | null> {
+  const supabase = supabaseClient();
+  if (!supabase) return null;
   const { data, error } = await supabase.rpc("pulse_register", { p_phone: phone, p_alias: alias });
   if (error) {
     if (error.code === "PGRST202" || error.message.includes("Could not find the function")) return null;
@@ -77,6 +82,8 @@ async function rpcRegister(phone: string, alias: string): Promise<ApiResult | nu
 }
 
 async function rpcLogin(phone: string, accessCode: string): Promise<ApiResult | null> {
+  const supabase = supabaseClient();
+  if (!supabase) return null;
   const { data, error } = await supabase.rpc("pulse_login", { p_phone: phone, p_access_code: accessCode });
   if (error) {
     if (error.code === "PGRST202" || error.message.includes("Could not find the function")) return null;
@@ -86,6 +93,8 @@ async function rpcLogin(phone: string, accessCode: string): Promise<ApiResult | 
 }
 
 async function rpcLoad(token: string): Promise<ApiResult | null> {
+  const supabase = supabaseClient();
+  if (!supabase) return null;
   const { data, error } = await supabase.rpc("pulse_load", { p_token: token });
   if (error) {
     if (error.code === "PGRST202" || error.message.includes("Could not find the function")) return null;

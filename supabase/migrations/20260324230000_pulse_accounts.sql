@@ -120,27 +120,27 @@ begin
 end;
 $$;
 
-create or replace function public.pulse_public_profile(row public.pulse_profiles)
+create or replace function public.pulse_public_profile(profile_row public.pulse_profiles)
 returns jsonb
 language sql
 immutable
 as $$
   select jsonb_build_object(
-    'id', row.id,
-    'alias', row.alias,
-    'handle', row.handle,
-    'initials', row.initials,
-    'avatarColor', row.avatar_color
+    'id', profile_row.id,
+    'alias', profile_row.alias,
+    'handle', profile_row.handle,
+    'initials', profile_row.initials,
+    'avatarColor', profile_row.avatar_color
   );
 $$;
 
-create or replace function public.pulse_profile_private(row public.pulse_profiles)
+create or replace function public.pulse_profile_private(profile_row public.pulse_profiles)
 returns jsonb
 language sql
 immutable
 as $$
-  select public.pulse_public_profile(row)
-    || jsonb_build_object('phone', row.phone, 'accessCode', row.access_code);
+  select public.pulse_public_profile(profile_row)
+    || jsonb_build_object('phone', profile_row.phone, 'accessCode', profile_row.access_code);
 $$;
 
 create or replace function public.pulse_snapshot(p_user_id text, p_token text default null)
@@ -216,31 +216,31 @@ security definer
 set search_path = public
 as $$
 declare
-  phone text;
-  alias text;
+  v_phone text;
+  v_alias text;
   profile public.pulse_profiles;
   token text;
   colors text[] := array['#FF5A78', '#FF8A3D', '#5C4DDB', '#1F9D62', '#E0A106', '#241710'];
   color_count integer;
 begin
-  phone := public.pulse_normalize_phone(p_phone);
-  alias := trim(regexp_replace(coalesce(p_alias, ''), '\s+', ' ', 'g'));
-  if phone = '' then
+  v_phone := public.pulse_normalize_phone(p_phone);
+  v_alias := trim(regexp_replace(coalesce(p_alias, ''), '\s+', ' ', 'g'));
+  if v_phone = '' then
     return jsonb_build_object('ok', false, 'error', 'Escribe un celular de Venezuela, por ejemplo 0412 000 0000.');
   end if;
-  if length(alias) < 2 or length(alias) > 24 then
+  if length(v_alias) < 2 or length(v_alias) > 24 then
     return jsonb_build_object('ok', false, 'error', 'El alias público necesita entre 2 y 24 caracteres.');
   end if;
-  if exists (select 1 from public.pulse_profiles where phone = phone) then
+  if exists (select 1 from public.pulse_profiles pr where pr.phone = v_phone) then
     return jsonb_build_object('ok', false, 'error', 'Ese número ya tiene perfil. Entra con tu clave.');
   end if;
 
   select count(*) into color_count from public.pulse_profiles;
   profile.id := 'user_' || replace(gen_random_uuid()::text, '-', '');
-  profile.phone := phone;
-  profile.alias := alias;
-  profile.handle := public.pulse_make_handle(alias);
-  profile.initials := public.pulse_initials(alias);
+  profile.phone := v_phone;
+  profile.alias := v_alias;
+  profile.handle := public.pulse_make_handle(v_alias);
+  profile.initials := public.pulse_initials(v_alias);
   profile.avatar_color := colors[1 + (color_count % array_length(colors, 1))];
   profile.access_code := public.pulse_random_code();
 
@@ -260,14 +260,14 @@ security definer
 set search_path = public
 as $$
 declare
-  phone text;
-  code text;
+  v_phone text;
+  v_code text;
   profile public.pulse_profiles;
   token text;
 begin
-  phone := public.pulse_normalize_phone(p_phone);
-  code := upper(trim(coalesce(p_access_code, '')));
-  select * into profile from public.pulse_profiles where phone = phone and access_code = code;
+  v_phone := public.pulse_normalize_phone(p_phone);
+  v_code := upper(trim(coalesce(p_access_code, '')));
+  select * into profile from public.pulse_profiles pr where pr.phone = v_phone and pr.access_code = v_code;
   if profile.id is null then
     return jsonb_build_object('ok', false, 'error', 'No coincide el número y la clave.');
   end if;

@@ -15,7 +15,7 @@ const EMPTY: CloudFile = {
 };
 
 function adminClient(): SupabaseClient | null {
-  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "https://ruxwiztdildgnyshajnk.supabase.co";
+  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "https://ovgwqeoslaitsmhdkxbl.supabase.co";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!key) return null;
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
