@@ -70,6 +70,11 @@ export function ExperiencePage() {
             </span>
           </div>
           <p className="mt-3 max-w-[320px] text-center text-[13px] font-semibold text-[#8D7366]">{experience.description}</p>
+          {experience.id === "exp_tobo" && (
+            <button type="button" onClick={() => navigate("/mission/route_tobo")} className="mt-4 text-[14px] font-extrabold text-[#FF4F1A]">
+              Ver La Ruta del Tobo
+            </button>
+          )}
         </div>
 
         {rewards[0] && (

@@ -5,7 +5,9 @@ import { ChallengesPage } from "@/pages/Challenges";
 import { ExperiencePage } from "@/pages/ExperiencePage";
 import { GamePage } from "@/pages/GamePage";
 import { EnterPage } from "@/pages/EnterPage";
+import { DiscoverPage } from "@/pages/DiscoverPage";
 import { HomePage } from "@/pages/Home";
+import { MissionRoutePage } from "@/pages/MissionRoutePage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { RankingPage } from "@/pages/RankingPage";
 import { usePulse } from "@/state/PulseContext";
@@ -37,6 +39,8 @@ export function App() {
       <div className="relative flex h-[100dvh] flex-col">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/mission/:missionId" element={<MissionRoutePage />} />
+          <Route path="/discover/:qrId" element={<DiscoverPage />} />
           <Route path="/experience/:experienceId" element={<ExperiencePage />} />
           <Route path="/play/:gameId" element={<GamePage />} />
           <Route path="/challenges" element={<ChallengesPage />} />

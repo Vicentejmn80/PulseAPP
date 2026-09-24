@@ -22,6 +22,79 @@ export interface Experience {
   missionIds: string[];
   rewardIds: string[];
   visual: ExperienceVisual;
+  /** Hidden until the player completes enough experience missions. */
+  unlock?: {
+    missionIds: string[];
+    count: number;
+  };
+}
+
+export type QREffectKind = "points" | "unlock" | "checkin" | "challenge" | "clue" | "reward" | "progress";
+
+export interface QRInteraction {
+  id: string;
+  experienceId: string;
+  code: string;
+  title: string;
+  venueId?: string;
+  hint: string;
+  distanceLabel?: string;
+  activeUntil?: string;
+  secret?: boolean;
+  effect: {
+    kind: QREffectKind;
+    points?: number;
+    gameId?: string;
+    clue?: string;
+    rewardId?: string;
+    stepId?: string;
+  };
+}
+
+export type MissionLayer = "exploration" | "presence" | "collection" | "competition" | "time" | "social" | "discovery" | "chain";
+
+export interface ExperienceMissionStep {
+  id: string;
+  label: string;
+  layer: MissionLayer;
+  qrId?: string;
+  gameId?: string;
+  venueId?: string;
+  collectionItemId?: string;
+}
+
+export interface ExperienceMission {
+  id: string;
+  experienceId: string;
+  title: string;
+  description: string;
+  layers: MissionLayer[];
+  steps: ExperienceMissionStep[];
+  points: number;
+  badgeName: string;
+  rewardId?: string;
+  hideRewardUntilComplete?: boolean;
+  deadlineLabel?: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  label: string;
+  qrId: string;
+}
+
+export interface Collection {
+  id: string;
+  experienceId: string;
+  title: string;
+  items: CollectionItem[];
+  unlockLabel: string;
+}
+
+export interface LivePulseEvent {
+  id: string;
+  text: string;
+  at: string;
 }
 
 export interface ExperienceVisual {

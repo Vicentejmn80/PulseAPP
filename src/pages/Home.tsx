@@ -1,70 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { ExperienceCard } from "@/components/experience/ExperienceCard";
-import { ExperienceHero } from "@/components/experience/ExperienceHero";
-import { NextActionCard } from "@/components/experience/NextActionCard";
-import { MissionCard } from "@/components/missions/MissionCard";
-import { RewardCard } from "@/components/rewards/RewardCard";
+import { LIVE_EVENTS } from "@/data/mock/world";
+import { formato } from "@/lib/format";
+import { useWorld } from "@/state/useWorld";
+import { Countdown, WowBurst } from "@/components/world/Wow";
 import { IconCoin } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/LogoMark";
-import { ProgressBar } from "@/components/ui/Shell";
 import { TabBar } from "@/components/ui/TabBar";
-import { destinationForRequirement } from "@/lib/continue";
-import { formato } from "@/lib/format";
-import { getNextStep } from "@/lib/nextAction";
-import { rewardRepository, venueRepository } from "@/services/repositories";
-import { usePulse } from "@/state/PulseContext";
-import type { MissionRequirementType } from "@/types/pulse";
+import { ProgressBar } from "@/components/ui/Shell";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const {
-    featured,
-    experiences,
-    games,
-    rewards,
-    missions,
-    totalPoints,
-    experiencePoints,
-    level,
-    leaderboard,
-    pointsToClimb,
-    hasPlayed,
-    setNotice,
-  } = usePulse();
-
-  const myRank = leaderboard.find((entry) => entry.isCurrentUser);
-  const activeMission = missions.find((item) => !item.completed) ?? missions[0];
-  const reward = rewards[0];
-  const later = experiences.filter((item) => item.id !== featured.id);
-  const step = getNextStep({ games, missions, hasPlayed, status: featured.status });
-
-  function openStep() {
-    if (step.kind === "play") {
-      navigate(`/play/${step.game.id}`);
-      return;
-    }
-    if (step.kind === "checkin") {
-      navigate(`/experience/${featured.id}`);
-      return;
-    }
-    if (step.kind === "done") {
-      navigate("/ranking");
-      return;
-    }
-  }
-
-  function continueRequirement(type: MissionRequirementType) {
-    const destination = destinationForRequirement(type, games, hasPlayed);
-    if (destination.notice) {
-      setNotice(destination.notice);
-      if (type === "checkin") navigate(`/experience/${featured.id}`);
-      return;
-    }
-    if (destination.gameId) navigate(`/play/${destination.gameId}`);
-  }
+  const world = useWorld();
+  const myRank = world.leaderboard.find((entry) => entry.isCurrentUser);
+  const above = world.leaderboard.find((entry) => entry.position === (myRank?.position ?? 2) - 1);
+  const gap = world.pointsToClimb;
+  const predictionPlayed = world.hasPlayed("game_prediction_today");
+  const rewardKnown = world.routeProgress.done > 0 || world.experiencePoints >= 800;
+  const happening = [
+    !predictionPlayed ? { id: "pred", icon: "🎯", title: "Predice el juego de hoy", meta: "+100 pts", to: "/play/game_prediction_today" } : null,
+    world.nextQr ? { id: "qr", icon: "📍", title: world.nextQr.secret ? "Encuentra el código escondido" : world.nextQr.title, meta: `+${world.nextQr.effect.points ?? 0} pts`, to: `/discover/${world.nextQr.id}` } : null,
+    gap ? { id: "rank", icon: "🏆", title: above ? `Alcanza a ${above.user.handle}` : "Sube en el ranking", meta: `${formato(gap)} pts`, to: "/ranking" } : null,
+  ].filter(Boolean) as Array<{ id: string; icon: string; title: string; meta: string; to: string }>;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
+      <WowBurst message={world.wow} onDone={world.clearWow} />
       <div className="flex items-center justify-between px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-2.5">
           <LogoMark />
@@ -73,84 +33,121 @@ export function HomePage() {
             <p className="mt-0.5 text-[11px] font-semibold text-[#A08B80]">¿Qué puedes hacer ahora?</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate("/profile")}
-          className="flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 shadow-[0_6px_16px_rgba(80,40,10,0.08)]"
-        >
+        <button type="button" onClick={() => navigate("/profile")} className="flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 shadow-[0_6px_16px_rgba(80,40,10,0.08)]">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFC53D] text-[#8A4E00]">
             <IconCoin className="h-4 w-4" />
           </span>
-          <span className="text-[13px] font-extrabold tabular-nums">{formato(totalPoints)}</span>
+          <span className="text-[13px] font-extrabold tabular-nums">{formato(world.totalPoints + world.discoveryPoints)}</span>
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <ExperienceHero experience={featured} players={leaderboard.length} onOpen={() => navigate(`/experience/${featured.id}`)} />
+        <section className="rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] p-4 text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-white/80">{world.featured.name}</p>
+          <h2 className="mt-1 text-[26px] font-extrabold leading-tight tracking-tight">{happening.length} cosas están pasando ahora</h2>
+          <div className="mt-3 flex flex-col gap-2">
+            {happening.map((item) => (
+              <button key={item.id} type="button" onClick={() => navigate(item.to)} className="flex items-center gap-3 rounded-2xl bg-white/15 px-3 py-3 text-left">
+                <span className="text-[20px]">{item.icon}</span>
+                <span className="flex-1 text-[15px] font-extrabold">{item.title}</span>
+                <span className="text-[12px] font-extrabold text-white/85">{item.meta}</span>
+              </button>
+            ))}
+            {happening.length === 0 && <p className="text-[14px] font-bold">Listo por ahora. Mira el ranking o la ruta.</p>}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(happening[0]?.to ?? `/mission/${world.route.id}`)}
+            className="mt-4 flex h-14 w-full items-center justify-center rounded-2xl bg-white text-[17px] font-extrabold text-[#FF4F1A]"
+          >
+            Empezar
+          </button>
+        </section>
 
-        <div className="mt-3 rounded-[22px] bg-white px-4 py-3 shadow-[0_8px_22px_rgba(80,40,10,0.05)]">
-          <div className="flex items-center justify-between text-[12px] font-extrabold">
-            <span>Nivel {level.level}</span>
-            <span className="text-[#8D7366]">{formato(level.pointsToNext)} pts para el siguiente</span>
+        <button type="button" onClick={() => navigate(`/mission/${world.route.id}`)} className="mt-3 w-full rounded-[24px] bg-white p-4 text-left shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Misión activa</p>
+          <h3 className="mt-1 text-[20px] font-extrabold">{world.route.title}</h3>
+          <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">{world.route.description}</p>
+          <div className="mt-3">
+            <ProgressBar value={world.routeProgress.total ? world.routeProgress.done / world.routeProgress.total : 0} />
+            <p className="mt-1.5 text-[12px] font-extrabold text-[#8D7366]">
+              {world.routeProgress.done} / {world.routeProgress.total} · +{formato(world.route.points)} pts · {world.route.badgeName}
+            </p>
           </div>
-          <div className="mt-2">
-            <ProgressBar value={level.ratio} />
-          </div>
+          <p className="mt-3 text-[14px] font-extrabold text-[#FF4F1A]">Ver ruta</p>
+        </button>
+
+        {world.nextQr && (
+          <button type="button" onClick={() => navigate(`/discover/${world.nextQr!.id}`)} className="mt-3 w-full rounded-[24px] bg-white p-4 text-left shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Hay algo cerca</p>
+            <h3 className="mt-1 text-[18px] font-extrabold">{world.nextQr.secret ? "Un código secreto está activo." : world.nextQr.hint}</h3>
+            <Countdown until={world.nextQr.activeUntil} />
+            <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">{world.nextQr.distanceLabel ? `A ${world.nextQr.distanceLabel}.` : "En un local participante."}</p>
+            <p className="mt-3 text-[14px] font-extrabold text-[#FF4F1A]">Ir a descubrir</p>
+          </button>
+        )}
+
+        <button type="button" onClick={() => navigate("/ranking")} className="mt-3 w-full rounded-[24px] bg-white p-4 text-left shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Competencia</p>
+          <h3 className="mt-1 text-[22px] font-extrabold">Estás #{myRank?.position ?? "—"}</h3>
+          <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
+            {above && gap ? `Te faltan ${formato(gap)} pts para alcanzar a ${above.user.handle}.` : "Vas primero en esta experiencia."}
+          </p>
+          <p className="mt-3 text-[14px] font-extrabold text-[#FF4F1A]">Ver ranking</p>
+        </button>
+
+        <div className="mt-3 rounded-[24px] bg-white p-4 shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Recompensa</p>
+          {rewardKnown ? (
+            <>
+              <h3 className="mt-1 text-[20px] font-extrabold">Tobo de cerveza</h3>
+              <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
+                {world.experiencePoints >= 800 ? "Listo para canjear cuando el local lo active." : `Te faltan ${formato(800 - world.experiencePoints)} pts de juego. La ruta suma aparte.`}
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="mt-1 text-[20px] font-extrabold">???</h3>
+              <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Avanza la ruta para descubrir qué se desbloquea.</p>
+            </>
+          )}
         </div>
 
-        <h3 className="mb-3 mt-5 text-[15px] font-extrabold leading-tight">Qué puedes hacer ahora</h3>
-        <NextActionCard step={step} onAction={openStep} />
-
-        {activeMission && (
-          <div className="mt-3">
-            <MissionCard progress={activeMission} compact onContinue={continueRequirement} />
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => navigate("/challenges")}
-          className="mt-3 w-full text-left text-[13px] font-extrabold text-[#FF4F1A]"
-        >
-          Ver todos los retos
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate("/ranking")}
-          className="mt-2 w-full rounded-[22px] bg-white px-4 py-3 text-left shadow-[0_8px_22px_rgba(80,40,10,0.06)]"
-        >
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Ranking</p>
-          <p className="mt-1 text-[18px] font-extrabold">
-            #{myRank?.position ?? "—"} · {formato(experiencePoints)} pts
-          </p>
-          <p className="mt-0.5 text-[12px] font-semibold text-[#8D7366]">
-            {pointsToClimb ? `Estás a ${formato(pointsToClimb)} puntos de subir 1 posición.` : "Vas primero. Sigue sumando."}
+        <button type="button" onClick={() => navigate(`/mission/${world.route.id}`)} className="mt-3 w-full rounded-[24px] bg-white p-4 text-left shadow-[0_8px_22px_rgba(80,40,10,0.06)]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Colección</p>
+          <h3 className="mt-1 text-[18px] font-extrabold">{world.collection.title}</h3>
+          <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
+            {world.collected} / {world.collection.items.length} · {world.collection.unlockLabel}
           </p>
         </button>
 
-        {reward && (
-          <div className="mt-3">
-            <RewardCard reward={reward} points={experiencePoints} />
-          </div>
-        )}
+        <div className="mt-3 rounded-[24px] border-2 border-dashed border-[#F3C7B4] bg-white/70 p-4">
+          {world.secretOpen ? (
+            <>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Desbloqueado</p>
+              <h3 className="mt-1 text-[18px] font-extrabold">{world.secretExperience.name}</h3>
+              <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">{world.secretExperience.description}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#A08B80]">Bloqueado</p>
+              <h3 className="mt-1 text-[18px] font-extrabold">Hay una noche que todavía no ves</h3>
+              <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Completa La Ruta del Tobo para abrirla.</p>
+            </>
+          )}
+        </div>
 
-        {later.length > 0 && (
-          <>
-            <h3 className="mb-3 mt-5 text-[15px] font-extrabold leading-tight">Después</h3>
-            <div className="flex flex-col gap-2.5">
-              {later.map((experience) => (
-                <ExperienceCard
-                  key={experience.id}
-                  experience={experience}
-                  venueCount={venueRepository.getByIds(experience.venueIds).length}
-                  rewardName={rewardRepository.getByExperience(experience.id)[0]?.name}
-                  onOpen={() => navigate(`/experience/${experience.id}`)}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        <div className="mt-4">
+          <p className="px-1 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#A08B80]">Ahora en Pulse</p>
+          <div className="mt-2 flex flex-col gap-2">
+            {LIVE_EVENTS.map((event) => (
+              <div key={event.id} className="flex items-center justify-between rounded-2xl bg-white px-3 py-3">
+                <p className="text-[13px] font-extrabold">{event.text}</p>
+                <p className="text-[11px] font-bold text-[#A08B80]">{event.at}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       <TabBar />
     </div>
