@@ -1,0 +1,9 @@
+mockup-preview.png
+mockup-detail.png
+_preview.mjs
+*.log
+.DS_Store
+node_modules
+dist
+.vite
+data/pulse-cloud.json
