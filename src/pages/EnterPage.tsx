@@ -18,6 +18,8 @@ export function EnterPage() {
       if (mode === "new") await register(phone, alias);
       else await login(phone, accessCode);
     } catch {
+      /* authError lives in context */
+    } finally {
       setPending(false);
     }
   }

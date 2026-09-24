@@ -1,28 +1,17 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { GAMES, MISSIONS, SEED_TRANSACTIONS, USERS } from "@/data/mock/catalog";
+import type { CloudFile, CloudProfile } from "@/server/engineTypes";
+import { loadRemoteStore, saveRemoteStore, useRemoteStore } from "@/server/storageStore";
 import { createId } from "@/lib/format";
 import { isGamePlayable } from "@/lib/games";
 import { getMissionProgress } from "@/lib/missions";
 import type { Game, Participation, PointsTransaction, UserProfile } from "@/types/pulse";
 
+export type { CloudFile, CloudProfile } from "@/server/engineTypes";
+
 const COLORS = ["#FF5A78", "#FF8A3D", "#5C4DDB", "#1F9D62", "#E0A106", "#241710"];
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-export interface CloudProfile extends UserProfile {
-  phone: string;
-  accessCode: string;
-}
-
-interface CloudFile {
-  profiles: CloudProfile[];
-  sessions: Array<{ token: string; userId: string }>;
-  participations: Participation[];
-  transactions: PointsTransaction[];
-  completedMissionIds: Record<string, string[]>;
-  predictionPicks: Record<string, Record<string, string>>;
-  extraGames: Game[];
-}
 
 const EMPTY: CloudFile = {
   profiles: [],
@@ -38,7 +27,7 @@ function storePath() {
   return path.resolve(process.cwd(), "data", "pulse-cloud.json");
 }
 
-function load(): CloudFile {
+function loadLocal(): CloudFile {
   try {
     const raw = JSON.parse(readFileSync(storePath(), "utf8")) as Partial<CloudFile>;
     return {
@@ -57,10 +46,23 @@ function load(): CloudFile {
   }
 }
 
-function save(file: CloudFile) {
+function saveLocal(file: CloudFile) {
   const target = storePath();
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, JSON.stringify(file, null, 2));
+}
+
+async function readStore() {
+  if (useRemoteStore()) return loadRemoteStore();
+  return loadLocal();
+}
+
+async function writeStore(file: CloudFile) {
+  if (useRemoteStore()) {
+    await saveRemoteStore(file);
+    return;
+  }
+  saveLocal(file);
 }
 
 export function normalizePhone(input: string) {
@@ -159,17 +161,16 @@ function awardMissions(file: CloudFile, userId: string, experienceId: string) {
   return created.reduce((sum, tx) => sum + tx.points, 0);
 }
 
-export function handlePulse(body: Record<string, unknown>) {
-  const file = load();
+function runPulse(file: CloudFile, body: Record<string, unknown>) {
   const action = String(body.action ?? "");
 
   if (action === "register") {
     const phone = normalizePhone(String(body.phone ?? ""));
     const alias = String(body.alias ?? "").trim().replace(/\s+/g, " ");
-    if (!phone) return { ok: false, error: "Escribe un celular de Venezuela, por ejemplo 0412 000 0000." };
-    if (alias.length < 2 || alias.length > 24) return { ok: false, error: "El alias público necesita entre 2 y 24 caracteres." };
+    if (!phone) return { ok: false as const, error: "Escribe un celular de Venezuela, por ejemplo 0412 000 0000." };
+    if (alias.length < 2 || alias.length > 24) return { ok: false as const, error: "El alias público necesita entre 2 y 24 caracteres." };
     if (file.profiles.some((profile) => profile.phone === phone)) {
-      return { ok: false, error: "Ese número ya tiene perfil. Entra con tu clave." };
+      return { ok: false as const, error: "Ese número ya tiene perfil. Entra con tu clave." };
     }
     const profile: CloudProfile = {
       id: createId("user"),
@@ -183,34 +184,32 @@ export function handlePulse(body: Record<string, unknown>) {
     const token = createId("sess");
     file.profiles.push(profile);
     file.sessions.push({ token, userId: profile.id });
-    save(file);
-    return { ok: true, token, ...snapshot(file, profile.id) };
+    return { ok: true as const, token, ...snapshot(file, profile.id)!, persist: true };
   }
 
   if (action === "login") {
     const phone = normalizePhone(String(body.phone ?? ""));
     const code = String(body.accessCode ?? "").trim().toUpperCase();
     const profile = file.profiles.find((item) => item.phone === phone && item.accessCode === code);
-    if (!profile) return { ok: false, error: "No coincide el número y la clave." };
+    if (!profile) return { ok: false as const, error: "No coincide el número y la clave." };
     const token = createId("sess");
     file.sessions.push({ token, userId: profile.id });
-    save(file);
-    return { ok: true, token, ...snapshot(file, profile.id) };
+    return { ok: true as const, token, ...snapshot(file, profile.id)!, persist: true };
   }
 
   if (action === "load") {
     const profile = sessionUser(file, String(body.token ?? ""));
-    if (!profile) return { ok: false, error: "La sesión expiró. Entra de nuevo." };
-    return { ok: true, ...snapshot(file, profile.id) };
+    if (!profile) return { ok: false as const, error: "La sesión expiró. Entra de nuevo." };
+    return { ok: true as const, ...snapshot(file, profile.id)!, persist: false };
   }
 
   if (action === "complete") {
     const profile = sessionUser(file, String(body.token ?? ""));
-    if (!profile) return { ok: false, error: "La sesión expiró. Entra de nuevo." };
+    if (!profile) return { ok: false as const, error: "La sesión expiró. Entra de nuevo." };
     const game = gamesOf(file).find((item) => item.id === String(body.gameId ?? ""));
-    if (!game || !isGamePlayable(game)) return { ok: false, error: "Esta actividad no está abierta." };
+    if (!game || !isGamePlayable(game)) return { ok: false as const, error: "Esta actividad no está abierta." };
     const already = file.participations.some((item) => item.userId === profile.id && item.gameId === game.id);
-    if (already) return { ok: true, awarded: 0, ...snapshot(file, profile.id) };
+    if (already) return { ok: true as const, awarded: 0, ...snapshot(file, profile.id)!, persist: false };
 
     let points = 0;
     let metadata: Participation["metadata"];
@@ -219,12 +218,12 @@ export function handlePulse(body: Record<string, unknown>) {
     if (game.configuration.kind === "prediction") {
       optionId = String(body.optionId ?? "");
       const option = game.configuration.options.find((item) => item.id === optionId);
-      if (!option) return { ok: false, error: "Elige una opción." };
+      if (!option) return { ok: false as const, error: "Elige una opción." };
       points = game.points;
       metadata = { optionId };
     } else if (game.configuration.kind === "trivia") {
       const answers = Array.isArray(body.answers) ? body.answers.map((value) => Number(value)) : [];
-      if (answers.length !== game.configuration.questions.length) return { ok: false, error: "Faltan respuestas." };
+      if (answers.length !== game.configuration.questions.length) return { ok: false as const, error: "Faltan respuestas." };
       let correct = 0;
       game.configuration.questions.forEach((question, index) => {
         if (answers[index] === question.correctAnswer) {
@@ -235,7 +234,9 @@ export function handlePulse(body: Record<string, unknown>) {
       metadata = { questionsAnswered: answers.length, correct };
     } else {
       const picked = Number(body.answer);
-      if (picked !== game.configuration.correctAnswer) return { ok: true, awarded: 0, ...snapshot(file, profile.id) };
+      if (picked !== game.configuration.correctAnswer) {
+        return { ok: true as const, awarded: 0, ...snapshot(file, profile.id)!, persist: false };
+      }
       points = game.configuration.points;
       metadata = { correct: 1 };
     }
@@ -264,19 +265,31 @@ export function handlePulse(body: Record<string, unknown>) {
       file.predictionPicks[profile.id] = { ...(file.predictionPicks[profile.id] ?? {}), [game.id]: optionId };
     }
     const missionPoints = awardMissions(file, profile.id, game.experienceId);
-    save(file);
-    return { ok: true, awarded: points + missionPoints, gamePoints: points, ...snapshot(file, profile.id) };
+    return {
+      ok: true as const,
+      awarded: points + missionPoints,
+      gamePoints: points,
+      ...snapshot(file, profile.id)!,
+      persist: true,
+    };
   }
 
   if (action === "addGame") {
     const profile = sessionUser(file, String(body.token ?? ""));
-    if (!profile) return { ok: false, error: "La sesión expiró. Entra de nuevo." };
+    if (!profile) return { ok: false as const, error: "La sesión expiró. Entra de nuevo." };
     const game = body.game as Game;
-    if (!game?.id || !game.experienceId) return { ok: false, error: "El juego está incompleto." };
+    if (!game?.id || !game.experienceId) return { ok: false as const, error: "El juego está incompleto." };
     file.extraGames = [game, ...file.extraGames.filter((item) => item.id !== game.id)];
-    save(file);
-    return { ok: true, ...snapshot(file, profile.id) };
+    return { ok: true as const, ...snapshot(file, profile.id)!, persist: true };
   }
 
-  return { ok: false, error: "Acción desconocida." };
+  return { ok: false as const, error: "Acción desconocida." };
+}
+
+export async function handlePulse(body: Record<string, unknown>) {
+  const file = await readStore();
+  const result = runPulse(file, body);
+  if ("persist" in result && result.persist) await writeStore(file);
+  const { persist: _persist, ...response } = result as typeof result & { persist?: boolean };
+  return response;
 }

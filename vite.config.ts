@@ -26,7 +26,7 @@ function pulseApi(): Plugin {
           const raw = await readBody(req);
           const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
           const { handlePulse } = await server.ssrLoadModule("/src/server/engine.ts");
-          const result = handlePulse(body);
+          const result = await handlePulse(body);
           response.statusCode = result.ok ? 200 : 400;
           response.setHeader("Content-Type", "application/json");
           response.end(JSON.stringify(result));
