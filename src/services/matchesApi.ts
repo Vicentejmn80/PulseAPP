@@ -26,6 +26,9 @@ export interface BaseballMatch {
   awayScore: number | null;
   inning: number;
   half: "alta" | "baja";
+  outs: number;
+  featured: boolean;
+  lastEventText: string;
   simulation: boolean;
   prediction: MatchPrediction | null;
 }
@@ -74,6 +77,9 @@ function asMatch(value: unknown): BaseballMatch {
     awayScore: asNumber(row.awayScore),
     inning: asNumber(row.inning) ?? 1,
     half: row.half === "baja" ? "baja" : "alta",
+    outs: asNumber(row.outs) ?? 0,
+    featured: Boolean(row.featured),
+    lastEventText: String(row.lastEventText ?? ""),
     simulation: Boolean(row.simulation),
     prediction: asPrediction(row.prediction),
   };
