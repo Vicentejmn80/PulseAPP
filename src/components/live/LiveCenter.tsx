@@ -192,12 +192,19 @@ export function LiveCenter({ matchId }: { matchId: string }) {
 
   const { match, prediction, closeness, events, bingo, live } = center;
   const width = closeness ? Math.max(8, Math.round((closeness.closenessPoints / 40) * 100)) : 0;
+  const momentum = Math.max(8, Math.min(94, match.momentum || 50));
 
   return (
     <div className="flex flex-col gap-3">
       <section className="rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] px-5 py-5 text-white">
         {match.simulation && <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]">Simulación</p>}
         <p className="mt-1 text-[13px] font-extrabold uppercase tracking-[0.14em] text-white/80">{halfLabel(match.half, match.inning)}</p>
+        <div className="mt-2 flex items-center gap-1.5">
+          {[0, 1, 2].map((dot) => (
+            <span key={dot} className={`h-2.5 w-2.5 rounded-full ${dot < (match.outs ?? 0) ? "bg-white" : "bg-white/30"}`} />
+          ))}
+          <span className="ml-1 text-[12px] font-bold text-white/80">outs</span>
+        </div>
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
           <div>
             <p className="text-[40px] font-extrabold leading-none tabular-nums">{match.awayScore ?? 0}</p>
@@ -208,6 +215,9 @@ export function LiveCenter({ matchId }: { matchId: string }) {
             <p className="text-[40px] font-extrabold leading-none tabular-nums">{match.homeScore ?? 0}</p>
             <p className="mt-1 text-[13px] font-bold text-white/80">{match.homeTeam}</p>
           </div>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/25">
+          <div className="momentum-bar h-full rounded-full bg-white" style={{ width: `${momentum}%` }} />
         </div>
       </section>
 
@@ -263,7 +273,11 @@ function LivePrompt({ question, onDone }: { question: MatchCenter["live"][number
     <section className="rounded-[24px] border-2 border-[#FF4F1A] bg-white px-4 py-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#E23B2F]">Pregunta en vivo</p>
-        {question.status === "open" && <p className="text-[13px] font-extrabold"><Countdown until={question.closesAt} /></p>}
+        {question.status === "open" && (
+          <p className="text-[13px] font-extrabold">
+            {question.closesAt ? <Countdown until={question.closesAt} /> : "Cierra al terminar el inning"}
+          </p>
+        )}
       </div>
       <h3 className="mt-2 text-[18px] font-extrabold leading-tight">{question.prompt}</h3>
       {question.status === "open" && !question.myOption && (

@@ -199,7 +199,7 @@ export function MatchPredictPage() {
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         {missing && <p className="rounded-[28px] bg-white px-6 py-8 text-center text-[16px] font-extrabold">Ese partido no está publicado.</p>}
-        {match && phase === "live" && <LiveCenter matchId={match.id} />}
+        {match && phase === "live" && match.featured && <LiveCenter matchId={match.id} />}
         {match && phase === "finished" && (
           <FinishedCard match={match} />
         )}

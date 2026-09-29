@@ -60,3 +60,16 @@ button:disabled {
 .bingo-pop {
   animation: bingo-pop 0.55s ease;
 }
+
+@keyframes live-badge {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.86); }
+}
+
+.live-badge {
+  animation: live-badge 1.4s ease-in-out infinite;
+}
+
+.momentum-bar {
+  transition: width 700ms ease;
+}
