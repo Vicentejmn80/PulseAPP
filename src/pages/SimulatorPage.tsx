@@ -9,7 +9,7 @@ const KEY = "pulse-admin-key";
 export function SimulatorPage() {
   const navigate = useNavigate();
   const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY) ?? "");
-  const [seconds, setSeconds] = useState("25");
+  const [seconds, setSeconds] = useState("120");
   const [running, setRunning] = useState(false);
   const [line, setLine] = useState("");
   const [error, setError] = useState("");
@@ -49,7 +49,7 @@ export function SimulatorPage() {
     setPending(true);
     setError("");
     try {
-      await startSimulation(adminKey.trim(), Number(seconds) || 25);
+      await startSimulation(adminKey.trim(), Number(seconds) || 120);
       setRunning(true);
       navigate("/partidos/sim_live");
     } catch (reason: unknown) {
@@ -79,7 +79,7 @@ export function SimulatorPage() {
         <BackButton onClick={() => navigate("/admin/partidos")} />
         <p className="mt-3 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Simulación</p>
         <h2 className="text-[24px] font-extrabold tracking-tight">Partido de prueba</h2>
-        <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Equipo Rojo contra Equipo Azul. No entra al ranking ni a octubre.</p>
+        <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Leones contra Magallanes, con badge de simulación. No entra al ranking, a los tobos ni a octubre.</p>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-8">
         <label className="block rounded-[24px] bg-white px-4 py-4">
@@ -87,7 +87,7 @@ export function SimulatorPage() {
           <input value={adminKey} onChange={(event) => setAdminKey(event.target.value)} className="mt-2 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold outline-none" autoComplete="off" />
         </label>
         <label className="mt-3 block rounded-[24px] bg-white px-4 py-4">
-          <span className="text-[13px] font-extrabold">Segundos entre jugadas</span>
+          <span className="text-[13px] font-extrabold">Segundos entre reportes</span>
           <input value={seconds} onChange={(event) => setSeconds(event.target.value)} inputMode="numeric" aria-label="Segundos" className="mt-2 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold outline-none" />
         </label>
         {line && <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-[14px] font-extrabold">{line}</p>}
