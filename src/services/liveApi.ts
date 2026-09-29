@@ -64,6 +64,10 @@ export interface MatchCenter {
     awayScore: number | null;
     inning: number;
     half: "alta" | "baja";
+    outs: number;
+    featured: boolean;
+    momentum: number;
+    lastEventText: string;
     status: string;
     simulation: boolean;
   };
@@ -150,4 +154,49 @@ export async function stopSimulation(adminKey: string) {
 
 export function simulationStatus(adminKey: string) {
   return callRpc<OkResult>("pulse_admin_sim_status", { p_admin_key: adminKey });
+}
+
+export interface ReporterState {
+  ok?: boolean;
+  error?: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+  inning: number;
+  half: "alta" | "baja";
+  outs: number;
+  status: string;
+  featured: boolean;
+  simulation: boolean;
+  lastEventText: string;
+  reports: number;
+}
+
+export function reporterState(adminKey: string, matchId: string) {
+  return callRpc<ReporterState>("pulse_reporter_state", { p_admin_key: adminKey, p_match: matchId });
+}
+
+export async function reporterTap(adminKey: string, matchId: string, action: "run_home" | "run_away" | "out" | "inning_change") {
+  return ok(await callRpc<ReporterState & OkResult>("pulse_reporter_tap", {
+    p_admin_key: adminKey,
+    p_match: matchId,
+    p_action: action,
+  }));
+}
+
+export async function reporterFinish(adminKey: string, matchId: string) {
+  return ok(await callRpc<OkResult>("pulse_reporter_finish", { p_admin_key: adminKey, p_match: matchId }));
+}
+
+export async function featureLive(adminKey: string, matchId: string) {
+  return ok(await callRpc<OkResult>("pulse_admin_feature_live", { p_admin_key: adminKey, p_match: matchId }));
+}
+
+export async function unfeatureLive(adminKey: string, matchId: string) {
+  return ok(await callRpc<OkResult>("pulse_admin_unfeature", { p_admin_key: adminKey, p_match: matchId }));
+}
+
+export async function setInningKind(adminKey: string, kind: "runs" | "count" | "first") {
+  return ok(await callRpc<OkResult>("pulse_admin_set_inning_kind", { p_admin_key: adminKey, p_kind: kind }));
 }

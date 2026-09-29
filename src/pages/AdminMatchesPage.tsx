@@ -1,9 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
-import { EventComposer } from "@/components/live/EventComposer";
 import { AdminMechanics } from "@/components/tobo/AdminMechanics";
-import { openLive } from "@/services/liveApi";
+import { featureLive, setInningKind, unfeatureLive } from "@/services/liveApi";
 import { cancelMatch, closeRound, createMatch, listMatches, postponeMatch, redeemPrize, saveTasca, setMatchResult, type BaseballMatch } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 
@@ -131,6 +130,14 @@ export function AdminMatchesPage() {
         <button type="button" onClick={() => navigate("/admin/simulador")} className="mt-4 text-[13px] font-extrabold text-[#FF4F1A]">
           Simulador de partido
         </button>
+        <div className="mt-3 rounded-[24px] bg-white px-4 py-4">
+          <p className="text-[14px] font-extrabold">Pregunta de cada inning</p>
+          <div className="mt-2 grid grid-cols-1 gap-2">
+            <button type="button" onClick={() => void setInningKind(adminKey.trim(), "runs").then(() => setNotice("Cada inning pregunta si anotan.")).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No se pudo guardar."))} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">¿Anotan carreras?</button>
+            <button type="button" onClick={() => void setInningKind(adminKey.trim(), "count").then(() => setNotice("Cada inning pregunta cuántas carreras.")).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No se pudo guardar."))} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">¿Cuántas carreras?</button>
+            <button type="button" onClick={() => void setInningKind(adminKey.trim(), "first").then(() => setNotice("Cada inning pregunta quién anota primero.")).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No se pudo guardar."))} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">¿Quién anota primero?</button>
+          </div>
+        </div>
         <PilotTools adminKey={adminKey} disabled={pending} onDone={setNotice} onFail={setError} />
         <AdminMechanics adminKey={adminKey} matches={matches} onDone={setNotice} onFail={setError} />
 
@@ -163,7 +170,7 @@ export function AdminMatchesPage() {
               } finally {
                 setPending(false);
               }
-            }} />
+            }} onOpenReporter={() => navigate(`/reportar/${match.id}`)} />
           ))}
         </div>
       </div>
@@ -236,6 +243,7 @@ function ResultCard({
   onSave,
   onPostpone,
   onCancel,
+  onOpenReporter,
 }: {
   match: BaseballMatch;
   disabled: boolean;
@@ -245,6 +253,7 @@ function ResultCard({
   onSave: (match: BaseballMatch, homeScore: number, awayScore: number) => Promise<void>;
   onPostpone: (startsAt: string) => Promise<void>;
   onCancel: () => Promise<void>;
+  onOpenReporter: () => void;
 }) {
   const [home, setHome] = useState(match.homeScore === null ? "" : String(match.homeScore));
   const [away, setAway] = useState(match.awayScore === null ? "" : String(match.awayScore));
@@ -267,13 +276,16 @@ function ResultCard({
         </span>
       </div>
       <p className="mt-1 text-[12px] font-semibold text-[#8D7366]">{when(match.startsAt)}</p>
-      {(match.status === "scheduled" || match.status === "postponed") && (
-        <button type="button" onClick={() => void openLive(adminKey.trim(), match.id).then(() => onDone("Juego en vivo.")).catch((reason: unknown) => onFail(reason instanceof Error ? reason.message : "No se pudo abrir."))} className="mt-3 h-11 w-full rounded-2xl bg-[#241710] text-[13px] font-extrabold text-white">
-          Abrir en vivo
+      {match.status !== "finished" && match.status !== "cancelled" && !match.featured && (
+        <button type="button" onClick={() => void featureLive(adminKey.trim(), match.id).then(() => onDone("Juego estelar en vivo.")).catch((reason: unknown) => onFail(reason instanceof Error ? reason.message : "No se pudo abrir."))} className="mt-3 h-11 w-full rounded-2xl bg-[#241710] text-[13px] font-extrabold text-white">
+          Hacer juego estelar
         </button>
       )}
-      {(match.status === "in_progress" || match.status === "locked") && (
-        <EventComposer match={match} adminKey={adminKey} onDone={onDone} onFail={onFail} />
+      {match.featured && match.status === "in_progress" && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button type="button" onClick={onOpenReporter} className="h-11 rounded-2xl bg-[#FF4F1A] text-[13px] font-extrabold text-white">Reportar</button>
+          <button type="button" onClick={() => void unfeatureLive(adminKey.trim(), match.id).then(() => onDone("Estelar apagado.")).catch((reason: unknown) => onFail(reason instanceof Error ? reason.message : "No se pudo quitar."))} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#E23B2F]">Quitar estelar</button>
+        </div>
       )}
       <div className="mt-3 flex items-center gap-2">
         <input inputMode="numeric" value={home} onChange={(event) => setHome(event.target.value)} aria-label={`Resultado ${match.homeTeam}`} className="h-12 w-full rounded-2xl bg-[#FFF7F1] text-center text-[18px] font-extrabold outline-none" />

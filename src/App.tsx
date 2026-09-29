@@ -8,6 +8,7 @@ import { MatchPredictPage, MatchesPage } from "@/pages/MatchesPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { QrPage } from "@/pages/QrPage";
 import { RankingPage } from "@/pages/RankingPage";
+import { ReporterPage } from "@/pages/ReporterPage";
 import { SimulatorPage } from "@/pages/SimulatorPage";
 import { TascasPage } from "@/pages/TascasPage";
 import { usePulse } from "@/state/PulseContext";
@@ -70,6 +71,7 @@ export function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin/partidos" element={<AdminMatchesPage />} />
           <Route path="/admin/simulador" element={<SimulatorPage />} />
+          <Route path="/reportar/:matchId" element={<ReporterPage />} />
           <Route path="/q/:token" element={<QrPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
