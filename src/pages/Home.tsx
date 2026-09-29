@@ -30,26 +30,31 @@ export function HomePage() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([reload(), listMatches(), listRanking("ronda_1")])
-      .then(([, rows, ranking]) => {
-        if (!alive) return;
-        setMatches(rows);
-        const mine = ranking.find((entry) => entry.isCurrentUser);
-        setPosition(mine?.position ?? null);
-        setCyclePoints(mine?.points ?? 0);
-      })
-      .catch((reason: unknown) => {
-        if (alive) setError(reason instanceof Error ? reason.message : "No se pudo cargar la jornada.");
-      });
+    function load() {
+      Promise.all([reload(), listMatches(), listRanking("ronda_1")])
+        .then(([, rows, ranking]) => {
+          if (!alive) return;
+          setMatches(rows);
+          const mine = ranking.find((entry) => entry.isCurrentUser);
+          setPosition(mine?.position ?? null);
+          setCyclePoints(mine?.points ?? 0);
+        })
+        .catch((reason: unknown) => {
+          if (alive) setError(reason instanceof Error ? reason.message : "No se pudo cargar la jornada.");
+        });
+    }
+    load();
+    const id = window.setInterval(load, 6000);
     return () => {
       alive = false;
+      window.clearInterval(id);
     };
   }, [reload]);
 
-  const real = matches.filter((match) => !match.simulation);
-  const live = real.find((match) => match.status === "in_progress");
+  const featured = matches.find((match) => match.featured && match.status === "in_progress");
+  const real = matches.filter((match) => !match.simulation && match.id !== featured?.id);
   const upcoming = real.filter((match) => matchPhase(match) === "open" || matchPhase(match) === "locked");
-  const next = live ?? upcoming[0] ?? real.find((match) => match.status !== "cancelled");
+  const next = upcoming[0] ?? real.find((match) => match.status !== "cancelled");
   const rest = upcoming.filter((match) => match.id !== next?.id).slice(0, 3);
 
   return (
@@ -68,17 +73,32 @@ export function HomePage() {
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
-        {next ? (
-          <button type="button" onClick={() => navigate(`/partidos/${next.id}`)} className="w-full rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] p-4 text-left text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]">
-            <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-white/80">{live ? "En vivo" : "Próximo juego"}</p>
-            <h2 className="mt-2 text-[22px] font-extrabold leading-tight">{next.awayTeam}</h2>
-            <p className="text-[13px] font-bold text-white/80">visitante</p>
+        {featured && (
+          <button type="button" onClick={() => navigate(`/partidos/${featured.id}`)} className="mb-3 w-full rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] p-4 text-left text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]">
+            <p className="flex items-center gap-2 text-[12px] font-extrabold uppercase tracking-[0.14em]">
+              <span className="live-badge inline-block h-2.5 w-2.5 rounded-full bg-white" />
+              En vivo
+            </p>
+            {featured.simulation && <p className="mt-2 text-[12px] font-extrabold uppercase tracking-[0.16em]">Simulación</p>}
+            <h2 className="mt-2 text-[22px] font-extrabold leading-tight">{featured.awayTeam}</h2>
+            <p className="text-[13px] font-bold text-white/80">visitante · {featured.awayScore ?? 0}</p>
             <p className="mt-2 text-[13px] font-extrabold text-white/80">vs.</p>
+            <h2 className="text-[22px] font-extrabold leading-tight">{featured.homeTeam}</h2>
+            <p className="text-[13px] font-bold text-white/80">local · {featured.homeScore ?? 0}</p>
+            <span className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-white text-[16px] font-extrabold text-[#FF4F1A]">Ver en vivo</span>
+          </button>
+        )}
+        {next ? (
+          <button type="button" onClick={() => navigate(`/partidos/${next.id}`)} className={`w-full rounded-[28px] p-4 text-left ${featured ? "bg-white text-[#241710]" : "bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]"}`}>
+            <p className={`text-[12px] font-extrabold uppercase tracking-[0.14em] ${featured ? "text-[#FF4F1A]" : "text-white/80"}`}>Próximo juego</p>
+            <h2 className="mt-2 text-[22px] font-extrabold leading-tight">{next.awayTeam}</h2>
+            <p className={`text-[13px] font-bold ${featured ? "text-[#8D7366]" : "text-white/80"}`}>visitante</p>
+            <p className={`mt-2 text-[13px] font-extrabold ${featured ? "text-[#A08B80]" : "text-white/80"}`}>vs.</p>
             <h2 className="text-[22px] font-extrabold leading-tight">{next.homeTeam}</h2>
-            <p className="text-[13px] font-bold text-white/80">local</p>
+            <p className={`text-[13px] font-bold ${featured ? "text-[#8D7366]" : "text-white/80"}`}>local</p>
             <p className="mt-3 text-[14px] font-bold">{when(next.startsAt)}</p>
-            <span className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-white text-[16px] font-extrabold text-[#FF4F1A]">
-              {live ? "Ver en vivo" : next.prediction ? "Ver pronóstico" : "Pronosticar"}
+            <span className={`mt-4 flex h-12 items-center justify-center rounded-2xl text-[16px] font-extrabold ${featured ? "bg-[#FF4F1A] text-white" : "bg-white text-[#FF4F1A]"}`}>
+              {next.prediction ? "Ver pronóstico" : "Pronosticar"}
             </span>
           </button>
         ) : (
