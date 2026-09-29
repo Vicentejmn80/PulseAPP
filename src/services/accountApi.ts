@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { SEED_TRANSACTIONS, USERS } from "@/data/mock/catalog";
 import type { Game, Participation, PointsTransaction, UserProfile } from "@/types/pulse";
 
 const SESSION_KEY = "pulse-session";
@@ -31,6 +30,14 @@ function supabaseClient() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+export async function callRpc<T>(fn: string, args: Record<string, unknown>) {
+  const supabase = supabaseClient();
+  if (!supabase) throw new Error("No hay conexión con el servidor.");
+  const { data, error } = await supabase.rpc(fn, args);
+  if (error) throw new Error(error.message);
+  return data as T;
 }
 
 export function readSessionToken() {
@@ -103,22 +110,15 @@ async function rpcLoad(token: string): Promise<ApiResult | null> {
   return data as ApiResult;
 }
 
-function mergeUsers(users: UserProfile[] = []) {
-  const map = new Map<string, UserProfile>();
-  for (const user of USERS) map.set(user.id, user);
-  for (const user of users) map.set(user.id, user);
-  return [...map.values()];
-}
-
 function asSnapshot(result: ApiResult, token: string): AccountSnapshot {
   if (!result.currentUser) throw new Error("El servidor no devolvió el perfil.");
   const userTx = (result.transactions ?? []).filter((tx) => tx.userId === result.currentUser!.id);
   return {
     token,
     currentUser: result.currentUser,
-    users: mergeUsers(result.users),
+    users: result.users ?? [],
     participations: result.participations ?? [],
-    transactions: [...SEED_TRANSACTIONS, ...userTx],
+    transactions: userTx,
     completedMissionIds: result.completedMissionIds ?? [],
     predictionPicks: result.predictionPicks ?? {},
     extraGames: result.extraGames ?? [],

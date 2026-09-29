@@ -3,6 +3,7 @@ import type { LeaderboardEntry, PointsTransaction, UserProfile } from "@/types/p
 export function totalPointsForUser(transactions: PointsTransaction[], userId: string, experienceId?: string) {
   return transactions
     .filter((tx) => tx.userId === userId && (!experienceId || tx.experienceId === experienceId))
+    .filter((tx) => !String(tx.metadata?.matchId ?? "").startsWith("sim_"))
     .reduce((sum, tx) => sum + tx.points, 0);
 }
 
@@ -14,6 +15,10 @@ export function filterTransactions(transactions: PointsTransaction[], since?: st
   });
 }
 
+function countsForRank(transactions: PointsTransaction[]) {
+  return transactions.filter((tx) => !String(tx.metadata?.matchId ?? "").startsWith("sim_"));
+}
+
 export function buildLeaderboard(input: {
   users: UserProfile[];
   transactions: PointsTransaction[];
@@ -21,7 +26,7 @@ export function buildLeaderboard(input: {
   experienceId?: string;
   since?: string;
 }): LeaderboardEntry[] {
-  const scoped = filterTransactions(input.transactions, input.since, input.experienceId);
+  const scoped = countsForRank(filterTransactions(input.transactions, input.since, input.experienceId));
   const userIds = new Set(scoped.map((tx) => tx.userId));
   userIds.add(input.currentUserId);
 

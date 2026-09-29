@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { COLLECTIONS, EXPERIENCE_MISSIONS, QR_INTERACTIONS, SECRET_EXPERIENCE } from "@/data/mock/world";
 import { usePulse } from "@/state/PulseContext";
-import type { ExperienceMission, QRInteraction } from "@/types/pulse";
+import type { ExperienceMission, ExperienceMissionStep, QRInteraction } from "@/types/pulse";
 
 const KEY = "pulse-world-v1";
 
@@ -29,15 +29,16 @@ export function useWorld() {
 
   const found = useMemo(() => new Set(foundQrIds), [foundQrIds]);
 
-  function stepDone(step: ExperienceMission["steps"][number]) {
+  function stepDone(step: ExperienceMissionStep) {
     if (step.qrId) return found.has(step.qrId);
     if (step.gameId) return pulse.hasPlayed(step.gameId);
     return false;
   }
 
   function missionProgress(mission: ExperienceMission) {
-    const done = mission.steps.filter(stepDone).length;
-    return { done, total: mission.steps.length, complete: done >= mission.steps.length };
+    const steps = mission.steps ?? [];
+    const done = steps.filter(stepDone).length;
+    return { done, total: steps.length, complete: steps.length > 0 && done >= steps.length };
   }
 
   const route = EXPERIENCE_MISSIONS.find((mission) => mission.experienceId === pulse.featured.id) ?? EXPERIENCE_MISSIONS[0];

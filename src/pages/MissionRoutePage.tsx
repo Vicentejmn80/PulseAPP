@@ -29,7 +29,7 @@ export function MissionRoutePage() {
           </p>
         </div>
         <div className="mt-4 flex flex-col gap-2">
-          {mission.steps.map((step) => {
+          {(mission.steps ?? []).map((step) => {
             const done = world.stepDone(step);
             const qr = QR_INTERACTIONS.find((item) => item.id === step.qrId);
             return (
@@ -84,7 +84,7 @@ export function MissionRoutePage() {
           <div className="mt-5">
             <PrimaryButton
               onClick={() => {
-                const next = mission.steps.find((step) => !world.stepDone(step));
+                const next = (mission.steps ?? []).find((step) => !world.stepDone(step));
                 if (next?.qrId) navigate(`/discover/${next.qrId}`);
                 else if (next?.gameId) navigate(`/play/${next.gameId}`);
               }}

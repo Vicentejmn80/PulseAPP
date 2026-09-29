@@ -8,6 +8,12 @@ export function gameTypeLabel(type: string) {
   if (type === "quick_challenge") return "Reto rápido";
   if (type === "checkin") return "Check-in";
   if (type === "mission") return "Misión";
+  if (type === "live_answer") return "Pregunta en vivo";
+  if (type === "bingo") return "Bingo";
+  if (type === "pleno") return "Pleno de la jornada";
+  if (type === "streak") return "Racha";
+  if (type === "qr_scan") return "Visita a la tasca";
+  if (type === "flash") return "Pregunta relámpago";
   return "Actividad";
 }
 

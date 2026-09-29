@@ -17,6 +17,8 @@ import {
   rewardRepository,
   venueRepository,
 } from "@/services/repositories";
+import { isJourney } from "@/data/mock/journey";
+import { JourneyView } from "@/pages/JourneyPages";
 import { usePulse } from "@/state/PulseContext";
 
 export function ExperiencePage() {
@@ -46,6 +48,10 @@ export function ExperiencePage() {
 
   function openStep() {
     if (step.kind === "play") navigate(`/play/${step.game.id}`);
+  }
+
+  if (isJourney(experience.id)) {
+    return <JourneyView experienceId={experience.id} />;
   }
 
   return (

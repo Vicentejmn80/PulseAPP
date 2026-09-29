@@ -1,3 +1,4 @@
+import { CITY_STOPS, JOURNEY_EXPERIENCES, JOURNEY_REWARDS, JOURNEY_VENUES } from "@/data/mock/journey";
 import type {
   Badge,
   Experience,
@@ -17,12 +18,15 @@ export const USERS: UserProfile[] = [
 ];
 
 export const VENUES: Venue[] = [
+  ...JOURNEY_VENUES,
+  ...CITY_STOPS.filter((venue) => venue.id.startsWith("venue_city_")),
   { id: "venue_tasca_a", name: "Tasca Central", category: "Tasca", address: "Av. Principal 120", city: "Caracas", status: "active" },
   { id: "venue_tasca_b", name: "Tasca del Este", category: "Tasca", address: "Calle 8, C.C. El Recreo", city: "Caracas", status: "active" },
   { id: "venue_tasca_c", name: "Tasca 27", category: "Tasca", address: "Bulevar de Sabana Grande", city: "Caracas", status: "active" },
 ];
 
 export const EXPERIENCES: Experience[] = [
+  ...JOURNEY_EXPERIENCES,
   {
     id: "exp_tobo",
     name: "Juégate el Tobo",
@@ -184,6 +188,7 @@ export const MISSIONS: Mission[] = [
 ];
 
 export const REWARDS: Reward[] = [
+  ...JOURNEY_REWARDS,
   {
     id: "reward_tobo",
     experienceId: "exp_tobo",

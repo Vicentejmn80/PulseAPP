@@ -3,7 +3,7 @@ import { PrimaryButton } from "@/components/ui/Buttons";
 import { LogoMark } from "@/components/ui/LogoMark";
 import { usePulse } from "@/state/PulseContext";
 
-export function EnterPage() {
+export function EnterPage({ hint = "" }: { hint?: string }) {
   const { register, login, authError } = usePulse();
   const [mode, setMode] = useState<"new" | "back">("new");
   const [phone, setPhone] = useState("");
@@ -28,14 +28,15 @@ export function EnterPage() {
     <div className="flex h-full flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <div className="flex items-center gap-2.5">
         <LogoMark />
-        <p className="text-[18px] font-extrabold tracking-tight">Pulse</p>
+        <p className="text-[18px] font-extrabold tracking-tight">Juégate el Tobo</p>
       </div>
       <h1 className="mt-8 text-[32px] font-extrabold leading-tight tracking-tight">
         {mode === "new" ? "Crea tu perfil" : "Entra en este teléfono"}
       </h1>
+      {hint && <p className="mt-3 text-[14px] font-extrabold text-[#FF4F1A]">{hint}</p>}
       <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">
         {mode === "new"
-          ? "Tu celular queda privado. En el ranking solo se ve tu alias."
+          ? "Pronostica la temporada, suma puntos y compite por el tobo. Tu celular queda privado."
           : "Usa el mismo número y la clave que aparece en tu perfil."}
       </p>
       <form onSubmit={submit} className="mt-6 flex flex-1 flex-col gap-3">

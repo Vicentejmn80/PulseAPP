@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { buildLeaderboard, pointsToNextPosition, totalPointsForUser } from "@/lib/leaderboard";
 import { getMissionProgress } from "@/lib/missions";
 import { getLevelProgress } from "@/lib/progress";
@@ -58,6 +58,7 @@ interface PulseContextValue {
   completeGame: (input: CompleteGameInput) => Promise<number>;
   submitPrediction: (game: Game, optionId: string) => Promise<number>;
   addGame: (game: Game) => void;
+  reload: () => Promise<void>;
 }
 
 const PulseContext = createContext<PulseContextValue | null>(null);
@@ -101,6 +102,16 @@ export function PulseProvider({ children }: { children: ReactNode }) {
     const timer = window.setTimeout(() => setNotice(""), 2400);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  const reload = useCallback(async () => {
+    const snapshot = await loadAccount();
+    if (!snapshot) {
+      setAccount(null);
+      setStatus("guest");
+      return;
+    }
+    setAccount(snapshot);
+  }, []);
 
   const currentUser = account?.currentUser ?? null;
   const experiences = experienceRepository.getAll();
@@ -206,6 +217,7 @@ export function PulseProvider({ children }: { children: ReactNode }) {
           .then(setAccount)
           .catch((error: unknown) => setNotice(error instanceof Error ? error.message : "No se pudo publicar."));
       },
+      reload,
     };
   }, [
     account?.predictionPicks,
@@ -223,6 +235,7 @@ export function PulseProvider({ children }: { children: ReactNode }) {
     myTransactions,
     notice,
     participations,
+    reload,
     pointsToClimb,
     rewards,
     status,

@@ -22,10 +22,15 @@ export function RankingRow({ entry, subtitle }: { entry: LeaderboardEntry; subti
         </p>
         <p className="truncate text-[12px] font-semibold text-[#A08B80]">{subtitle ?? entry.user.handle}</p>
       </div>
-      <p className="font-extrabold tabular-nums">
-        {formato(entry.points)}
-        <span className="ml-0.5 text-[11px] font-bold text-[#A08B80]">pts</span>
-      </p>
+      <div className="text-right">
+        <p className="font-extrabold tabular-nums">
+          {formato(entry.points)}
+          <span className="ml-0.5 text-[11px] font-bold text-[#A08B80]">pts</span>
+        </p>
+        {subtitle !== "Puntos acumulados" && entry.lifetimePoints !== undefined && (
+          <p className="text-[10px] font-bold text-[#A08B80]">{formato(entry.lifetimePoints)} acum.</p>
+        )}
+      </div>
     </div>
   );
 }
