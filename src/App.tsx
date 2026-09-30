@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { Notice, Shell } from "@/components/ui/Shell";
 import { AdminMatchesPage } from "@/pages/AdminMatchesPage";
+import { AdminTascasPage } from "@/pages/AdminTascasPage";
 import { EnterPage } from "@/pages/EnterPage";
 import { HomePage } from "@/pages/Home";
 import { MatchPredictPage, MatchesPage } from "@/pages/MatchesPage";
@@ -11,6 +12,7 @@ import { RankingPage } from "@/pages/RankingPage";
 import { ReporterPage } from "@/pages/ReporterPage";
 import { SimulatorPage } from "@/pages/SimulatorPage";
 import { TascasPage } from "@/pages/TascasPage";
+import { VenuePage } from "@/pages/VenuePage";
 import { usePulse } from "@/state/PulseContext";
 
 function GuestQr() {
@@ -21,11 +23,19 @@ function GuestQr() {
   return <EnterPage hint="Entra para registrar tu visita en la tasca." />;
 }
 
+function GuestVenue() {
+  const { slug = "" } = useParams();
+  useEffect(() => {
+    sessionStorage.setItem("pulse-after-login", `/venue/${slug}`);
+  }, [slug]);
+  return <VenuePage guest />;
+}
+
 function ResumeVisit() {
   const navigate = useNavigate();
   useEffect(() => {
     const next = sessionStorage.getItem("pulse-after-login");
-    if (next?.startsWith("/q/")) {
+    if (next?.startsWith("/q/") || next?.startsWith("/venue/") || next?.startsWith("/partidos/demo_")) {
       sessionStorage.removeItem("pulse-after-login");
       navigate(next, { replace: true });
     }
@@ -50,6 +60,7 @@ export function App() {
         <div className="relative flex h-[100dvh] flex-col">
           <Routes>
             <Route path="/q/:token" element={<GuestQr />} />
+            <Route path="/venue/:slug" element={<GuestVenue />} />
             <Route path="*" element={<EnterPage />} />
           </Routes>
           <Notice message={notice} />
@@ -68,8 +79,10 @@ export function App() {
           <Route path="/partidos/:matchId" element={<MatchPredictPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/tascas" element={<TascasPage />} />
+          <Route path="/venue/:slug" element={<VenuePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin/partidos" element={<AdminMatchesPage />} />
+          <Route path="/admin/tascas" element={<AdminTascasPage />} />
           <Route path="/admin/simulador" element={<SimulatorPage />} />
           <Route path="/reportar/:matchId" element={<ReporterPage />} />
           <Route path="/q/:token" element={<QrPage />} />

@@ -51,7 +51,8 @@ export function HomePage() {
     };
   }, [reload]);
 
-  const featured = matches.find((match) => match.featured && match.status === "in_progress");
+  const demo = matches.find((match) => match.demo);
+  const featured = matches.find((match) => match.featured && match.status === "in_progress" && !match.demo);
   const real = matches.filter((match) => !match.simulation && match.id !== featured?.id);
   const upcoming = real.filter((match) => matchPhase(match) === "open" || matchPhase(match) === "locked");
   const next = upcoming[0] ?? real.find((match) => match.status !== "cancelled");
@@ -73,6 +74,18 @@ export function HomePage() {
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
+        {demo && (
+          <button type="button" onClick={() => navigate(`/partidos/${demo.id}`)} className="mb-3 w-full rounded-[28px] bg-[#241710] p-4 text-left text-white shadow-[0_16px_32px_rgba(36,23,16,0.25)]">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.16em] text-[#FF8A3C]">Experiencia del partido</p>
+            <p className="mt-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/60">Simulación</p>
+            <h2 className="mt-2 text-[26px] font-extrabold leading-tight">{demo.awayTeam}</h2>
+            <p className="text-[13px] font-extrabold text-white/70">vs.</p>
+            <h2 className="text-[26px] font-extrabold leading-tight">{demo.homeTeam}</h2>
+            <p className="mt-2 text-[14px] font-semibold text-white/80">Experiencia interactiva</p>
+            <p className="text-[14px] font-semibold text-white/70">Predice el partido y vive la experiencia</p>
+            <span className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-[#FF4F1A] text-[16px] font-extrabold uppercase tracking-wide text-white">Entrar al partido</span>
+          </button>
+        )}
         {featured && (
           <button type="button" onClick={() => navigate(`/partidos/${featured.id}`)} className="mb-3 w-full rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] p-4 text-left text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]">
             <p className="flex items-center gap-2 text-[12px] font-extrabold uppercase tracking-[0.14em]">

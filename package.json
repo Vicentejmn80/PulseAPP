@@ -8,6 +8,7 @@
     "seed:test": "node scripts/seed-test.mjs",
     "cleanup:test": "node scripts/cleanup-test.mjs",
     "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "vitest": "^5.0.2"
   }
 }

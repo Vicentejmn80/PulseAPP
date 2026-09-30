@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TabBar } from "@/components/ui/TabBar";
+import { venueQrPath } from "@/lib/demoMatch";
 import { listTascas, type Tasca } from "@/services/matchesApi";
 
 function when(value: string) {
@@ -20,6 +22,7 @@ function externalHref(kind: "instagram" | "whatsapp", value: string) {
 }
 
 export function TascasPage() {
+  const navigate = useNavigate();
   const [tascas, setTascas] = useState<Tasca[]>([]);
   const [error, setError] = useState("");
   const [scanHint, setScanHint] = useState("");
@@ -60,11 +63,17 @@ export function TascasPage() {
             const games = tasca.gamesAiring ?? [];
             return (
               <article key={tasca.id} className="rounded-[24px] bg-white px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-[18px] font-extrabold">{tasca.name}</h3>
-                  {tasca.isFounder && <span className="rounded-full bg-[#FFF1EA] px-2 py-1 text-[11px] font-extrabold text-[#FF4F1A]">Tasca fundadora</span>}
+                <div className="flex items-start gap-3">
+                  {tasca.logoUrl ? <img src={tasca.logoUrl} alt="" className="h-12 w-12 rounded-full object-cover" /> : <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF1EA] text-[22px]">🍻</span>}
+                  <div>
+                    <h3 className="text-[18px] font-extrabold">{tasca.name}</h3>
+                    <p className="text-[14px] font-semibold text-[#8D7366]">{tasca.zone || "Por confirmar"}{tasca.city ? ` · ${tasca.city}` : ""}</p>
+                  </div>
+                  {tasca.isFounder && <span className="ml-auto rounded-full bg-[#FFF1EA] px-2 py-1 text-[11px] font-extrabold text-[#FF4F1A]">Tasca fundadora</span>}
                 </div>
-                <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">{tasca.zone || "Por confirmar"}</p>
+                <p className="mt-3 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Premio</p>
+                <p className="mt-1 text-[16px] font-extrabold">{tasca.roundPrize || "Por confirmar"}</p>
+                <p className="mt-1 text-[12px] font-extrabold text-[#FF4F1A]">{tasca.active === false ? "Inactiva" : "Activa"}</p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {instagram ? (
                     <a href={instagram} className="flex h-11 items-center justify-center rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">Instagram</a>
@@ -84,9 +93,14 @@ export function TascasPage() {
                 ))}
                 <p className="mt-4 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Premio de la ronda</p>
                 <p className="mt-1 text-[16px] font-extrabold">{tasca.roundPrize || "Por confirmar"}</p>
-                <button type="button" onClick={() => setScanHint(tasca.id)} className="mt-4 h-12 w-full rounded-2xl bg-[#241710] text-[14px] font-extrabold text-white">
+                <button type="button" onClick={() => setScanHint(tasca.id)} className="mt-4 h-12 w-full rounded-2xl bg-[#FFF1EA] text-[14px] font-extrabold text-[#FF4F1A]">
                   Escanear QR en el local
                 </button>
+                {tasca.slug && (
+                  <button type="button" onClick={() => navigate(venueQrPath(tasca.slug ?? ""))} className="mt-2 h-12 w-full rounded-2xl bg-[#241710] text-[14px] font-extrabold text-white">
+                    Ver tasca
+                  </button>
+                )}
                 {scanHint === tasca.id && <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">Apunta la cámara al código de esta tasca. El cartel está en el local.</p>}
               </article>
             );

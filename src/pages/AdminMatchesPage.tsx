@@ -127,9 +127,14 @@ export function AdminMatchesPage() {
           </div>
         </form>
 
-        <button type="button" onClick={() => navigate("/admin/simulador")} className="mt-4 text-[13px] font-extrabold text-[#FF4F1A]">
-          Simulador de partido
-        </button>
+        <div className="mt-4 flex gap-4">
+          <button type="button" onClick={() => navigate("/admin/tascas")} className="text-[13px] font-extrabold text-[#FF4F1A]">
+            Tascas
+          </button>
+          <button type="button" onClick={() => navigate("/admin/simulador")} className="text-[13px] font-extrabold text-[#FF4F1A]">
+            Simulador de partido
+          </button>
+        </div>
         <div className="mt-3 rounded-[24px] bg-white px-4 py-4">
           <p className="text-[14px] font-extrabold">Pregunta de cada inning</p>
           <div className="mt-2 grid grid-cols-1 gap-2">

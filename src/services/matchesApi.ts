@@ -30,6 +30,7 @@ export interface BaseballMatch {
   featured: boolean;
   lastEventText: string;
   simulation: boolean;
+  demo: boolean;
   prediction: MatchPrediction | null;
 }
 
@@ -81,6 +82,7 @@ function asMatch(value: unknown): BaseballMatch {
     featured: Boolean(row.featured),
     lastEventText: String(row.lastEventText ?? ""),
     simulation: Boolean(row.simulation),
+    demo: Boolean(row.demo),
     prediction: asPrediction(row.prediction),
   };
 }
@@ -156,6 +158,15 @@ export interface Tasca {
   roundPrize: string;
   gamesAiring: { id: string; awayTeam: string; homeTeam: string; startsAt: string }[];
   isFounder: boolean;
+  slug?: string;
+  logoUrl?: string;
+  city?: string;
+  description?: string;
+  sponsorText?: string;
+  prizeDetail?: string;
+  prizeQuantity?: number;
+  prizeTerms?: string;
+  active?: boolean;
 }
 
 export interface ToboPrize {

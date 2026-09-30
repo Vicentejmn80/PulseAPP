@@ -5,6 +5,7 @@ import { MatchExtras } from "@/components/tobo/PilotExtras";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
 import { matchCenter, type MatchCenter } from "@/services/liveApi";
+import { DemoExperience } from "@/components/demo/DemoExperience";
 import { getMatch, listMatches, matchPhase, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
 
 function when(value: string) {
@@ -54,6 +55,13 @@ export function MatchesPage() {
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
+        {matches.filter((match) => match.demo).map((match) => (
+          <button key={match.id} type="button" onClick={() => navigate(`/partidos/${match.id}`)} className="mb-3 w-full rounded-[24px] bg-[#241710] px-4 py-4 text-left text-white">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#FF8A3C]">Experiencia demo</p>
+            <p className="mt-1 text-[18px] font-extrabold">{match.awayTeam} vs {match.homeTeam}</p>
+            <p className="mt-1 text-[13px] font-semibold text-white/70">Predice y entra a la simulación</p>
+          </button>
+        ))}
         {matches.length === 0 && !error && (
           <div className="rounded-[28px] bg-white px-6 py-8 text-center">
             <p className="text-[16px] font-extrabold">Todavía no hay partidos</p>
@@ -191,6 +199,8 @@ export function MatchPredictPage() {
 
   const phase = match ? matchPhase(match) : "closed";
   const saved = match?.prediction;
+
+  if (match?.demo) return <DemoExperience match={match} onMatch={setMatch} />;
 
   return (
     <div className="flex h-full flex-col">
