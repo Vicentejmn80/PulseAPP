@@ -73,3 +73,82 @@ button:disabled {
 .momentum-bar {
   transition: width 700ms ease;
 }
+
+/* --- Experiencia Pulse: simulación ---------------------------------------- */
+
+@keyframes sim-event-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.sim-event-in {
+  animation: sim-event-in 0.45s ease;
+}
+
+@keyframes sim-moment-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.sim-moment-in {
+  animation: sim-moment-in 0.4s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes sim-inning-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.sim-inning-in {
+  animation: sim-inning-in 0.5s ease;
+}
+
+@keyframes sim-ultimate {
+  0% { opacity: 0; transform: scale(0.94); }
+  12% { opacity: 1; transform: scale(1); }
+  88% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.03); }
+}
+
+.sim-ultimate {
+  animation: sim-ultimate 3.4s ease forwards;
+}
+
+/* Reacción del tablero según el tipo de jugada. */
+@keyframes sim-ring-cheer {
+  from { box-shadow: 0 0 0 0 rgba(255, 138, 60, 0.45); }
+  to { box-shadow: 0 0 0 22px rgba(255, 138, 60, 0); }
+}
+
+@keyframes sim-ring-tense {
+  from { box-shadow: 0 0 0 0 rgba(226, 59, 47, 0.4); }
+  to { box-shadow: 0 0 0 22px rgba(226, 59, 47, 0); }
+}
+
+@keyframes sim-ring-turn {
+  from { box-shadow: 0 0 0 0 rgba(255, 79, 26, 0.5); }
+  to { box-shadow: 0 0 0 26px rgba(255, 79, 26, 0); }
+}
+
+@keyframes sim-ring-climax {
+  0% { box-shadow: 0 0 0 0 rgba(255, 79, 26, 0.7); }
+  100% { box-shadow: 0 0 0 34px rgba(255, 79, 26, 0); }
+}
+
+.ring-cheer { animation: sim-ring-cheer 0.7s ease-out; }
+.ring-tense { animation: sim-ring-tense 0.7s ease-out; }
+.ring-turn { animation: sim-ring-turn 0.8s ease-out; }
+.ring-climax { animation: sim-ring-climax 1s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-event-in,
+  .sim-moment-in,
+  .sim-inning-in,
+  .sim-ultimate,
+  .ring-cheer,
+  .ring-tense,
+  .ring-turn,
+  .ring-climax {
+    animation: none;
+  }
+}

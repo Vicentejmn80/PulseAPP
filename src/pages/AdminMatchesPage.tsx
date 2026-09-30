@@ -134,6 +134,9 @@ export function AdminMatchesPage() {
           <button type="button" onClick={() => navigate("/admin/simulador")} className="text-[13px] font-extrabold text-[#FF4F1A]">
             Simulador de partido
           </button>
+          <button type="button" onClick={() => navigate("/admin/simulacion")} className="text-[13px] font-extrabold text-[#FF4F1A]">
+            Demo Control
+          </button>
         </div>
         <div className="mt-3 rounded-[24px] bg-white px-4 py-4">
           <p className="text-[14px] font-extrabold">Pregunta de cada inning</p>

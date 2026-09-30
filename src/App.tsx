@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { Notice, Shell } from "@/components/ui/Shell";
 import { AdminMatchesPage } from "@/pages/AdminMatchesPage";
+import { AdminSimulationPage } from "@/pages/AdminSimulationPage";
 import { AdminTascasPage } from "@/pages/AdminTascasPage";
 import { EnterPage } from "@/pages/EnterPage";
 import { HomePage } from "@/pages/Home";
@@ -84,6 +85,7 @@ export function App() {
           <Route path="/admin/partidos" element={<AdminMatchesPage />} />
           <Route path="/admin/tascas" element={<AdminTascasPage />} />
           <Route path="/admin/simulador" element={<SimulatorPage />} />
+          <Route path="/admin/simulacion" element={<AdminSimulationPage />} />
           <Route path="/reportar/:matchId" element={<ReporterPage />} />
           <Route path="/q/:token" element={<QrPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
