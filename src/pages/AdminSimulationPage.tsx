@@ -5,9 +5,9 @@ import { SimulationStage, type SimulationVenue } from "@/components/simulation/S
 import { listScenarios } from "@/services/simulationApi";
 import { adminSimulationPreview, logSimulationEvent } from "@/services/simulationApi";
 import { listMatches, listTascas, type BaseballMatch } from "@/services/matchesApi";
+import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import type { ScenarioSummary } from "@/lib/simulation/types";
-
-const KEY = "pulse-admin-key";
+import { usePulse } from "@/state/PulseContext";
 
 /**
  * Demo Control de la experiencia.
@@ -18,7 +18,8 @@ const KEY = "pulse-admin-key";
  */
 export function AdminSimulationPage() {
   const navigate = useNavigate();
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY) ?? "");
+  const { currentUser } = usePulse();
+  const [adminKey, setAdminKey] = useState(() => storedAdminKey(currentUser?.accessCode ?? ""));
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
   const [selected, setSelected] = useState("cerrado");
   const [inning, setInning] = useState(1);
@@ -29,8 +30,10 @@ export function AdminSimulationPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (adminKey) sessionStorage.setItem(KEY, adminKey);
-  }, [adminKey]);
+    const key = adminKey.trim() || storedAdminKey(currentUser?.accessCode ?? "");
+    if (key && key !== adminKey) setAdminKey(key);
+    if (key) rememberAdminKey(key);
+  }, [adminKey, currentUser?.accessCode]);
 
   useEffect(() => {
     let alive = true;

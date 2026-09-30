@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/Buttons";
 import { halfLabel } from "@/components/live/LiveCenter";
+import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import { simulationStatus, startSimulation, stopSimulation } from "@/services/liveApi";
-
-const KEY = "pulse-admin-key";
+import { usePulse } from "@/state/PulseContext";
 
 export function SimulatorPage() {
   const navigate = useNavigate();
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY) ?? "");
+  const { currentUser } = usePulse();
+  const [adminKey, setAdminKey] = useState(() => storedAdminKey(currentUser?.accessCode ?? ""));
   const [seconds, setSeconds] = useState("120");
   const [running, setRunning] = useState(false);
   const [line, setLine] = useState("");
@@ -16,8 +17,10 @@ export function SimulatorPage() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    sessionStorage.setItem(KEY, adminKey);
-  }, [adminKey]);
+    const key = adminKey.trim() || storedAdminKey(currentUser?.accessCode ?? "");
+    if (key && key !== adminKey) setAdminKey(key);
+    if (key) rememberAdminKey(key);
+  }, [adminKey, currentUser?.accessCode]);
 
   useEffect(() => {
     if (!adminKey.trim()) return;

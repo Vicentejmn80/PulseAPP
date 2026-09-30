@@ -46,6 +46,7 @@ export function DemoExperience({
   const [scenarioId, setScenarioId] = useState("");
   const [tascas, setTascas] = useState<Tasca[]>([]);
   const [error, setError] = useState("");
+  const [scenarioNote, setScenarioNote] = useState("");
   const [pending, setPending] = useState(false);
 
   const live = session?.status === "live";
@@ -62,9 +63,16 @@ export function DemoExperience({
       .then((rows) => {
         if (!alive) return;
         setScenarios(rows);
-        if (rows.length) setScenarioId(rows[0].id);
+        if (rows.length) {
+          setScenarioId(rows[0].id);
+          setScenarioNote("");
+        } else {
+          setScenarioNote("PLAY BALL se habilita cuando el partido simulado termina de cargar.");
+        }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (alive) setScenarioNote("No se pudo cargar el partido simulado. Recarga la pantalla.");
+      });
     listTascas()
       .then((rows) => {
         if (alive) setTascas(rows);
@@ -397,6 +405,9 @@ export function DemoExperience({
             >
               PLAY BALL
             </button>
+            {canStartSimulator(saved) && !scenario && scenarioNote && (
+              <p className="mt-2 text-[13px] font-bold text-[#E23B2F]">{scenarioNote}</p>
+            )}
           </div>
         </form>
       </div>

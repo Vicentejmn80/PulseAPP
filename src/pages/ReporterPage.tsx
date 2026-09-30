@@ -2,22 +2,25 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { halfLabel } from "@/components/live/LiveCenter";
 import { BackButton } from "@/components/ui/Buttons";
+import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import { reporterFinish, reporterState, reporterTap, type ReporterState } from "@/services/liveApi";
-
-const KEY = "pulse-admin-key";
+import { usePulse } from "@/state/PulseContext";
 
 export function ReporterPage() {
   const { matchId = "" } = useParams();
   const navigate = useNavigate();
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY) ?? "");
+  const { currentUser } = usePulse();
+  const [adminKey, setAdminKey] = useState(() => storedAdminKey(currentUser?.accessCode ?? ""));
   const [board, setBoard] = useState<ReporterState | null>(null);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
-    sessionStorage.setItem(KEY, adminKey);
-  }, [adminKey]);
+    const key = adminKey.trim() || storedAdminKey(currentUser?.accessCode ?? "");
+    if (key && key !== adminKey) setAdminKey(key);
+    if (key) rememberAdminKey(key);
+  }, [adminKey, currentUser?.accessCode]);
 
   async function load(key = adminKey) {
     if (!key.trim() || !matchId) return;

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QrBlock } from "@/components/demo/QrBlock";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
+import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import { canAccessSuperAdmin, slugify, venueQrPath } from "@/lib/demoMatch";
 import { adminVenueList, saveVenue, type VenueCard } from "@/services/demoApi";
-
-const KEY = "pulse-admin-key";
+import { usePulse } from "@/state/PulseContext";
 
 const blank = {
   id: "",
@@ -31,7 +31,8 @@ const blank = {
 
 export function AdminTascasPage() {
   const navigate = useNavigate();
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY) ?? "");
+  const { currentUser } = usePulse();
+  const [adminKey, setAdminKey] = useState(() => storedAdminKey(currentUser?.accessCode ?? ""));
   const [unlocked, setUnlocked] = useState(false);
   const [venues, setVenues] = useState<VenueCard[]>([]);
   const [form, setForm] = useState(blank);
@@ -54,7 +55,7 @@ export function AdminTascasPage() {
     setError("");
     try {
       const rows = await adminVenueList(trimmed);
-      sessionStorage.setItem(KEY, trimmed);
+      rememberAdminKey(trimmed);
       setAdminKey(trimmed);
       setVenues(rows);
       setUnlocked(true);
@@ -65,6 +66,15 @@ export function AdminTascasPage() {
       setPending(false);
     }
   }
+
+  useEffect(() => {
+    const key = storedAdminKey(currentUser?.accessCode ?? "");
+    if (!key) return;
+    setAdminKey(key);
+    void unlock(key);
+    // Solo al entrar: si la clave del perfil es de admin, abre el área sola.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.accessCode]);
 
   function edit(venue: VenueCard) {
     setRegen(false);
@@ -151,6 +161,10 @@ export function AdminTascasPage() {
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Super Admin</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Tascas</h2>
+          <div className="mt-1 flex gap-3">
+            <button type="button" onClick={() => navigate("/admin/partidos")} className="text-[12px] font-extrabold text-[#FF4F1A]">Partidos</button>
+            <button type="button" onClick={() => navigate("/admin/simulacion")} className="text-[12px] font-extrabold text-[#FF4F1A]">Demo</button>
+          </div>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-8">

@@ -4,9 +4,8 @@ import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { AdminMechanics } from "@/components/tobo/AdminMechanics";
 import { featureLive, setInningKind, unfeatureLive } from "@/services/liveApi";
 import { cancelMatch, closeRound, createMatch, listMatches, postponeMatch, redeemPrize, saveTasca, setMatchResult, type BaseballMatch } from "@/services/matchesApi";
+import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import { usePulse } from "@/state/PulseContext";
-
-const KEY = "pulse-admin-key";
 
 function toCaracasTimestamp(value: string) {
   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value) ? `${value}:00-04:00` : value;
@@ -28,8 +27,8 @@ function defaultStart() {
 
 export function AdminMatchesPage() {
   const navigate = useNavigate();
-  const { reload } = usePulse();
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY) ?? "");
+  const { reload, currentUser } = usePulse();
+  const [adminKey, setAdminKey] = useState(() => storedAdminKey(currentUser?.accessCode ?? ""));
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [homeTeam, setHomeTeam] = useState("");
   const [awayTeam, setAwayTeam] = useState("");
@@ -43,12 +42,17 @@ export function AdminMatchesPage() {
   }
 
   useEffect(() => {
+    const key = storedAdminKey(currentUser?.accessCode ?? "");
+    if (key) {
+      setAdminKey(key);
+      rememberAdminKey(key);
+    }
     refresh().catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "No se pudieron cargar los partidos."));
-  }, []);
+  }, [currentUser?.accessCode]);
 
   function rememberKey(value: string) {
     setAdminKey(value);
-    sessionStorage.setItem(KEY, value);
+    rememberAdminKey(value);
   }
 
   async function onCreate(event: FormEvent) {

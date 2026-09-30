@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IconMedal } from "@/components/ui/icons";
 import { TabBar } from "@/components/ui/TabBar";
 import { StreakPanel } from "@/components/tobo/PilotExtras";
 import { formato, gameTypeLabel } from "@/lib/format";
+import { adminVenueList } from "@/services/demoApi";
 import { listRanking, myPrizes, type ToboPrize } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import type { PointsTransaction } from "@/types/pulse";
@@ -15,11 +17,13 @@ function movementLabel(tx: PointsTransaction) {
 }
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const { currentUser, totalPoints, transactions, logout, reload } = usePulse();
   const [position, setPosition] = useState<number | null>(null);
   const [rankPoints, setRankPoints] = useState<number | null>(null);
   const [prizes, setPrizes] = useState<ToboPrize[]>([]);
   const [eligible, setEligible] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -35,10 +39,20 @@ export function ProfilePage() {
       .catch(() => {
         if (alive) setPosition(null);
       });
+    const adminCode = currentUser.accessCode ?? "";
+    if (adminCode) {
+      adminVenueList(adminCode)
+        .then(() => {
+          if (alive) setIsAdmin(true);
+        })
+        .catch(() => {
+          if (alive) setIsAdmin(false);
+        });
+    }
     return () => {
       alive = false;
     };
-  }, [reload]);
+  }, [reload, currentUser.accessCode]);
   const recent = [...transactions].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
 
   return (
@@ -118,6 +132,15 @@ export function ProfilePage() {
             </div>
           ))}
         </div>
+        {isAdmin && <div className="mx-5 mt-5 rounded-[22px] bg-white px-4 py-4">
+          <p className="text-[14px] font-extrabold">Super Admin</p>
+          <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Partidos, tascas, premios y la demo. Usa la misma clave del perfil.</p>
+          <div className="mt-3 flex flex-col gap-2">
+            <button type="button" onClick={() => navigate("/admin/partidos")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">Partidos y resultados</button>
+            <button type="button" onClick={() => navigate("/admin/tascas")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">Tascas y premios</button>
+            <button type="button" onClick={() => navigate("/admin/simulacion")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[13px] font-extrabold text-[#FF4F1A]">Demo del partido</button>
+          </div>
+        </div>}
         <button type="button" onClick={logout} className="mx-5 mb-4 mt-4 text-[14px] font-extrabold text-[#E23B2F]">
           Cerrar sesión en este teléfono
         </button>
