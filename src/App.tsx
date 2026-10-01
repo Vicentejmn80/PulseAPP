@@ -1,18 +1,25 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { Notice, Shell } from "@/components/ui/Shell";
+import { AdminCyclesPage } from "@/pages/AdminCyclesPage";
+import { AdminLeaguesPage } from "@/pages/AdminLeaguesPage";
 import { AdminMatchesPage } from "@/pages/AdminMatchesPage";
 import { AdminSimulationPage } from "@/pages/AdminSimulationPage";
 import { AdminTascasPage } from "@/pages/AdminTascasPage";
+import { AdminTriviasPage } from "@/pages/AdminTriviasPage";
 import { EnterPage } from "@/pages/EnterPage";
 import { HomePage } from "@/pages/Home";
+import { LeaguePage } from "@/pages/LeaguePage";
 import { MatchPredictPage, MatchesPage } from "@/pages/MatchesPage";
+import { MiQuinielaPage } from "@/pages/MiQuinielaPage";
+import { PrizesPage } from "@/pages/PrizesPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { QrPage } from "@/pages/QrPage";
 import { RankingPage } from "@/pages/RankingPage";
 import { ReporterPage } from "@/pages/ReporterPage";
 import { SimulatorPage } from "@/pages/SimulatorPage";
 import { TascasPage } from "@/pages/TascasPage";
+import { TriviaPage } from "@/pages/TriviaPage";
 import { VenuePage } from "@/pages/VenuePage";
 import { usePulse } from "@/state/PulseContext";
 
@@ -76,14 +83,21 @@ export function App() {
         <ResumeVisit />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/mi-quiniela" element={<MiQuinielaPage />} />
           <Route path="/partidos" element={<MatchesPage />} />
           <Route path="/partidos/:matchId" element={<MatchPredictPage />} />
           <Route path="/ranking" element={<RankingPage />} />
+          <Route path="/ligas/:leagueId?" element={<LeaguePage />} />
+          <Route path="/trivias" element={<TriviaPage />} />
           <Route path="/tascas" element={<TascasPage />} />
+          <Route path="/premios" element={<PrizesPage />} />
           <Route path="/venue/:slug" element={<VenuePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin/partidos" element={<AdminMatchesPage />} />
           <Route path="/admin/tascas" element={<AdminTascasPage />} />
+          <Route path="/admin/trivias" element={<AdminTriviasPage />} />
+          <Route path="/admin/ciclos" element={<AdminCyclesPage />} />
+          <Route path="/admin/ligas" element={<AdminLeaguesPage />} />
           <Route path="/admin/simulador" element={<SimulatorPage />} />
           <Route path="/admin/simulacion" element={<AdminSimulationPage />} />
           <Route path="/reportar/:matchId" element={<ReporterPage />} />

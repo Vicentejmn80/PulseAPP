@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { AdminMechanics } from "@/components/tobo/AdminMechanics";
 import { featureLive, setInningKind, unfeatureLive } from "@/services/liveApi";
@@ -27,6 +27,7 @@ function defaultStart() {
 
 export function AdminMatchesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { reload, currentUser } = usePulse();
   const [adminKey, setAdminKey] = useState(() => storedAdminKey(currentUser?.accessCode ?? ""));
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
@@ -104,10 +105,33 @@ export function AdminMatchesPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/partidos")} />
+        <BackButton onClick={() => navigate("/profile")} />
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Admin</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Super Admin</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Partidos</h2>
+        </div>
+      </div>
+      <div className="px-4 pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {[
+            { label: "Partidos", to: "/admin/partidos" },
+            { label: "Tascas", to: "/admin/tascas" },
+            { label: "Trivias", to: "/admin/trivias" },
+            { label: "Ciclos", to: "/admin/ciclos" },
+            { label: "Ligas", to: "/admin/ligas" },
+            { label: "Demo", to: "/admin/simulacion" },
+          ].map((link) => (
+            <button
+              key={link.to}
+              type="button"
+              onClick={() => navigate(link.to)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-extrabold ${
+                location.pathname === link.to ? "bg-[#FF4F1A] text-white" : "bg-white text-[#8D7366]"
+              }`}
+            >
+              {link.label}
+            </button>
+          ))}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-8">

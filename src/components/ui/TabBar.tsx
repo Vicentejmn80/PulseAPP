@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const items = [
   { id: "inicio", to: "/", label: "Inicio" },
-  { id: "partidos", to: "/partidos", label: "Partidos" },
+  { id: "quiniela", to: "/mi-quiniela", label: "Mi Quiniela" },
   { id: "ranking", to: "/ranking", label: "Ranking" },
   { id: "tascas", to: "/tascas", label: "Tascas" },
   { id: "perfil", to: "/profile", label: "Perfil" },

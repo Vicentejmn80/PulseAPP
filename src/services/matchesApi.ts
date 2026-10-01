@@ -231,6 +231,16 @@ export async function closeRound(input: { adminKey: string; cycleId: string }) {
   }));
 }
 
+export async function createCycle(input: { adminKey: string; id: string; name: string; startsOn: string; endsOn: string }) {
+  return expectOk(await callRpc<RpcResult>("pulse_admin_create_cycle", {
+    p_admin_key: input.adminKey,
+    p_id: input.id,
+    p_name: input.name,
+    p_starts_on: input.startsOn,
+    p_ends_on: input.endsOn,
+  }));
+}
+
 export async function redeemPrize(input: { adminKey: string; code: string }) {
   return expectOk(await callRpc<RpcResult & { already?: boolean }>("pulse_admin_redeem", {
     p_admin_key: input.adminKey,
