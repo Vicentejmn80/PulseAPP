@@ -74,7 +74,7 @@ export function TascasPage() {
           </div>
           <button
             type="button"
-            onClick={() => navigate("/premios")}
+            onClick={() => navigate("/tobo/premios")}
             className="mt-4 h-12 w-full rounded-2xl bg-white text-[16px] font-extrabold text-[#FF4F1A]"
           >
             Ver premios
@@ -131,7 +131,7 @@ export function TascasPage() {
                 {tasca.slug && (
                   <button
                     type="button"
-                    onClick={() => navigate(`/venue/${tasca.slug}`)}
+                    onClick={() => navigate(`/tobo/venue/${tasca.slug}`)}
                     className="mt-2 h-12 w-full rounded-2xl bg-[#241710] text-[14px] font-extrabold text-white"
                   >
                     Ver tasca

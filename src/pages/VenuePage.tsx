@@ -35,7 +35,7 @@ export function VenuePage({ guest = false }: { guest?: boolean }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        {!guest && <BackButton onClick={() => navigate("/tascas")} />}
+        {!guest && <BackButton onClick={() => navigate("/tobo/tascas")} />}
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-8">
         {error && <p className="rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
@@ -69,11 +69,11 @@ export function VenuePage({ guest = false }: { guest?: boolean }) {
               <PrimaryButton
                 onClick={() => {
                   if (guest) {
-                    sessionStorage.setItem("pulse-after-login", `/partidos/${DEMO_MATCH_ID}`);
+                    sessionStorage.setItem("pulse-after-login", `/tobo/partidos/${DEMO_MATCH_ID}`);
                     navigate("/entrar");
                     return;
                   }
-                  navigate(`/partidos/${DEMO_MATCH_ID}`);
+                  navigate(`/tobo/partidos/${DEMO_MATCH_ID}`);
                 }}
               >
                 Jugar en Pulse

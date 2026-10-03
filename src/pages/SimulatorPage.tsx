@@ -54,7 +54,7 @@ export function SimulatorPage() {
     try {
       await startSimulation(adminKey.trim(), Number(seconds) || 120);
       setRunning(true);
-      navigate("/partidos/sim_live");
+      navigate("/tobo/partidos/sim_live");
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo crear la simulación.");
     } finally {
@@ -100,7 +100,7 @@ export function SimulatorPage() {
         </button>
         {running && (
           <>
-            <button type="button" onClick={() => navigate("/partidos/sim_live")} className="mt-2 h-12 w-full rounded-2xl bg-[#241710] text-[14px] font-extrabold text-white">
+            <button type="button" onClick={() => navigate("/tobo/partidos/sim_live")} className="mt-2 h-12 w-full rounded-2xl bg-[#241710] text-[14px] font-extrabold text-white">
               Ver el partido
             </button>
             <button type="button" disabled={pending} onClick={() => void stop()} className="mt-2 h-12 w-full rounded-2xl bg-white text-[14px] font-extrabold text-[#E23B2F]">

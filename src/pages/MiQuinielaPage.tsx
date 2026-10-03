@@ -83,7 +83,7 @@ export function MiQuinielaPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/")} />
+        <BackButton onClick={() => navigate("/tobo")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Mi Quiniela</h2>
@@ -135,7 +135,7 @@ export function MiQuinielaPage() {
                   <button
                     key={match.id}
                     type="button"
-                    onClick={() => navigate(`/partidos/${match.id}`)}
+                    onClick={() => navigate(`/tobo/partidos/${match.id}`)}
                     className="rounded-[24px] bg-white px-4 py-4 text-left shadow-[0_8px_20px_rgba(80,40,10,0.05)]"
                   >
                     <div className="flex items-start justify-between gap-3">

@@ -103,7 +103,7 @@ export function ProfilePage() {
         <div className="mt-5 px-5">
           <div className="flex items-center justify-between">
             <h3 className="text-[14px] font-extrabold">Mis ligas</h3>
-            <button type="button" onClick={() => navigate("/ligas")} className="text-[12px] font-extrabold text-[#FF4F1A]">
+            <button type="button" onClick={() => navigate("/tobo/ligas")} className="text-[12px] font-extrabold text-[#FF4F1A]">
               Gestionar
             </button>
           </div>
@@ -116,7 +116,7 @@ export function ProfilePage() {
             <button
               key={league.id}
               type="button"
-              onClick={() => navigate(`/ligas/${league.id}`)}
+              onClick={() => navigate(`/tobo/ligas/${league.id}`)}
               className="rounded-2xl bg-white px-4 py-3 text-left"
             >
               <div className="flex items-center justify-between">
@@ -131,7 +131,7 @@ export function ProfilePage() {
         <div className="mt-5 px-5">
           <div className="flex items-center justify-between">
             <h3 className="text-[14px] font-extrabold">Mis premios</h3>
-            <button type="button" onClick={() => navigate("/premios")} className="text-[12px] font-extrabold text-[#FF4F1A]">
+            <button type="button" onClick={() => navigate("/tobo/premios")} className="text-[12px] font-extrabold text-[#FF4F1A]">
               Ver todos
             </button>
           </div>

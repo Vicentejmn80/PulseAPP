@@ -213,7 +213,7 @@ export function AdminSimulationPage() {
                 venue={venue}
                 demo
                 startInning={inning}
-                onVenue={() => venue?.slug && navigate(`/venue/${venue.slug}`)}
+                  onVenue={() => venue?.slug && navigate(`/tobo/venue/${venue.slug}`)}
                 onTelemetry={(type, dedupe) => {
                   void logSimulationEvent("", type, `demo:${dedupe}`);
                 }}

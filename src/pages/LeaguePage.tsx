@@ -69,7 +69,7 @@ export function LeaguePage() {
       setSuccess(`Liga "${league.name}" creada. Codigo: ${league.code}`);
       setLeagues((prev) => [league, ...prev]);
       setName("");
-      navigate(`/ligas/${league.id}`);
+      navigate(`/tobo/ligas/${league.id}`);
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo crear la liga.");
     } finally {
@@ -90,7 +90,7 @@ export function LeaguePage() {
       setSuccess(`Te uniste a "${league.name}".`);
       setLeagues((prev) => (prev.some((l) => l.id === league.id) ? prev : [league, ...prev]));
       setCode("");
-      navigate(`/ligas/${league.id}`);
+      navigate(`/tobo/ligas/${league.id}`);
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo unir a la liga.");
     } finally {
@@ -101,7 +101,7 @@ export function LeaguePage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/ranking")} />
+        <BackButton onClick={() => navigate("/tobo/ranking")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">{current ? current.name : "Mis Ligas"}</h2>

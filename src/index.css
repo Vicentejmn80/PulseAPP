@@ -18,6 +18,91 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ─────────────────────────────────────────
+   Pulse home theme tokens (root-level)
+   ───────────────────────────────────────── */
+:root {
+  --p-bg: #EEF9F6;
+  --p-card: #FFFFFF;
+  --p-accent: #18A085;
+  --p-accent-dim: #0D7A65;
+  --p-text: #0D2E28;
+  --p-muted: #4A7067;
+  --p-coral: #FF6B4A;
+}
+
+/* ─────────────────────────────────────────
+   Tobo experience theme tokens + overrides
+   Only active inside [data-theme="tobo"]
+   ───────────────────────────────────────── */
+[data-theme="tobo"] {
+  --t-bg: #0B1A3C;
+  --t-card: #132A55;
+  --t-border: #1E3A6E;
+  --t-tint: rgba(255, 201, 74, 0.12);
+  --t-dark: #070E1F;
+  --t-accent: #FFC94A;
+  --t-accent-dim: #C49500;
+  --t-accent-text: #0B1A3C;
+  --t-text: #FFFFFF;
+  --t-muted: #8BA3CC;
+  --t-muted-light: #5A7AB0;
+}
+
+/* Background overrides */
+[data-theme="tobo"] .bg-white             { background-color: var(--t-card)   !important; }
+[data-theme="tobo"] .bg-\[\#FFF7F1\]      { background-color: var(--t-bg)     !important; }
+[data-theme="tobo"] .bg-\[\#FFF1EA\]      { background-color: var(--t-tint)   !important; }
+[data-theme="tobo"] .bg-\[\#F3E4D8\]      { background-color: var(--t-tint)   !important; }
+[data-theme="tobo"] .bg-\[\#241710\]      { background-color: var(--t-dark)   !important; }
+[data-theme="tobo"] .bg-\[\#FF4F1A\]      { background-color: var(--t-accent) !important; }
+[data-theme="tobo"] .bg-\[\#FF8A3C\]      { background-color: var(--t-accent-dim) !important; }
+[data-theme="tobo"] .bg-\[\#FFC53D\]      { background-color: var(--t-accent) !important; }
+[data-theme="tobo"] .bg-gradient-to-br    { background-image: none !important; background-color: var(--t-card) !important; }
+[data-theme="tobo"] .bg-gradient-to-b     { background-image: none !important; background-color: var(--t-card) !important; }
+
+/* Accent bg → needs dark text */
+[data-theme="tobo"] .bg-\[\#FF4F1A\]      { color: var(--t-dark) !important; }
+[data-theme="tobo"] .bg-\[\#FF8A3C\]      { color: var(--t-dark) !important; }
+
+/* Text overrides */
+[data-theme="tobo"] .text-\[\#FF4F1A\]    { color: var(--t-accent)       !important; }
+[data-theme="tobo"] .text-\[\#FF8A3C\]    { color: var(--t-accent-dim)   !important; }
+[data-theme="tobo"] .text-\[\#8D7366\]    { color: var(--t-muted)        !important; }
+[data-theme="tobo"] .text-\[\#A08B80\]    { color: var(--t-muted-light)  !important; }
+[data-theme="tobo"] .text-\[\#B6A297\]    { color: var(--t-muted)        !important; }
+[data-theme="tobo"] .text-\[\#241710\]    { color: var(--t-text)         !important; }
+[data-theme="tobo"] .text-\[\#C47B12\]    { color: var(--t-accent)       !important; }
+[data-theme="tobo"] .text-\[\#8A4E00\]    { color: var(--t-dark)         !important; }
+
+/* Border overrides */
+[data-theme="tobo"] .border-\[\#F3E4D8\]  { border-color: var(--t-border) !important; }
+
+/* Shadow overrides */
+[data-theme="tobo"] .shadow-\[0_8px_20px_rgba\(80\,40\,10\,0\.05\)\]      { box-shadow: 0 8px 20px rgba(0,0,0,0.25) !important; }
+[data-theme="tobo"] .shadow-\[0_12px_28px_rgba\(80\,40\,10\,0\.08\)\]     { box-shadow: 0 12px 28px rgba(0,0,0,0.35) !important; }
+[data-theme="tobo"] .shadow-\[0_16px_32px_rgba\(255\,79\,26\,0\.28\)\]    { box-shadow: 0 16px 32px rgba(255,201,74,0.18) !important; }
+[data-theme="tobo"] .shadow-\[0_6px_16px_rgba\(80\,40\,10\,0\.08\)\]      { box-shadow: 0 6px 16px rgba(0,0,0,0.25) !important; }
+[data-theme="tobo"] .shadow-\[0_0_80px_rgba\(70\,32\,10\,0\.08\)\]        { box-shadow: 0 0 80px rgba(0,0,0,0.25) !important; }
+
+/* ─────────────────────────────────────────
+   Category transition (Phase 4)
+   ───────────────────────────────────────── */
+@keyframes tobo-intro {
+  0%   { opacity: 0; }
+  14%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+.tobo-intro {
+  animation: tobo-intro 1.5s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tobo-intro { animation: none; display: none; }
+}
+
 button,
 [role="button"] {
   cursor: pointer;

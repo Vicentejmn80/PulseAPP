@@ -56,7 +56,7 @@ export function QrPage() {
 
   return (
     <div className="flex h-full flex-col px-4 pb-6 pt-[max(1rem,env(safe-area-inset-top))]">
-      <button type="button" onClick={() => navigate("/")} className="text-[13px] font-extrabold text-[#FF4F1A]">Volver al inicio</button>
+      <button type="button" onClick={() => navigate("/tobo")} className="text-[13px] font-extrabold text-[#FF4F1A]">Volver al inicio</button>
       {error && <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
       {venue && (
         <section className="mt-3 rounded-[28px] bg-white px-5 py-5">

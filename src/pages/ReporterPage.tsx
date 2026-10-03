@@ -55,7 +55,7 @@ export function ReporterPage() {
     setError("");
     try {
       await reporterFinish(adminKey.trim(), matchId);
-      navigate(`/partidos/${matchId}`);
+      navigate(`/tobo/partidos/${matchId}`);
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo finalizar.");
       setPending(false);

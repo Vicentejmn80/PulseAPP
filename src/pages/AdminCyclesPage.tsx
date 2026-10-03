@@ -78,7 +78,7 @@ export function AdminCyclesPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/profile")} />
+        <BackButton onClick={() => navigate("/tobo/profile")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Super Admin</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Ciclos y premios</h2>

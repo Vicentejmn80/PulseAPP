@@ -119,7 +119,7 @@ export function RankingPage() {
             </select>
             <button
               type="button"
-              onClick={() => navigate("/ligas")}
+              onClick={() => navigate("/tobo/ligas")}
               className="h-11 rounded-2xl bg-[#FFF1EA] px-3 text-[12px] font-extrabold text-[#FF4F1A]"
             >
               Gestionar

@@ -39,7 +39,7 @@ export function PrizesPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/tascas")} />
+        <BackButton onClick={() => navigate("/tobo/tascas")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Premios</h2>
@@ -74,7 +74,7 @@ export function PrizesPage() {
             </p>
             <button
               type="button"
-              onClick={() => navigate("/ranking")}
+              onClick={() => navigate("/tobo/ranking")}
               className="mt-4 h-12 w-full rounded-2xl bg-white text-[16px] font-extrabold text-[#FF4F1A]"
             >
               Ver ranking

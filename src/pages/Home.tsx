@@ -75,7 +75,7 @@ export function HomePage() {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/profile")}
+          onClick={() => navigate("/tobo/profile")}
           className="flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-1.5 pr-3 shadow-[0_6px_16px_rgba(80,40,10,0.08)]"
         >
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFC53D] text-[#8A4E00]">
@@ -119,7 +119,7 @@ export function HomePage() {
             type="button"
             onClick={() => {
               trackEvent("venue_viewed", { from: "home_next_match", matchId: next.id });
-              navigate(`/partidos/${next.id}`);
+              navigate(`/tobo/partidos/${next.id}`);
             }}
             className="mb-3 w-full rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] p-4 text-left text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]"
           >
@@ -147,7 +147,7 @@ export function HomePage() {
         {/* TRIVIA DEL DÍA */}
         <button
           type="button"
-          onClick={() => navigate("/trivias")}
+          onClick={() => navigate("/tobo/trivias")}
           className="mb-3 w-full rounded-[28px] bg-[#241710] p-4 text-left text-white shadow-[0_16px_32px_rgba(36,23,16,0.25)]"
         >
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF8A3C]">Trivia del dia</p>
@@ -165,12 +165,12 @@ export function HomePage() {
 
         {/* MI POSICIÓN */}
         <div className="mb-3 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => navigate("/ranking")} className="rounded-[22px] bg-white px-3 py-3 text-left">
+          <button type="button" onClick={() => navigate("/tobo/ranking")} className="rounded-[22px] bg-white px-3 py-3 text-left">
             <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#A08B80]">Ronda 1</p>
             <p className="mt-1 text-[22px] font-extrabold tabular-nums">{formato(cyclePoints)}</p>
             <p className="text-[12px] font-bold text-[#8D7366]">puntos del ciclo</p>
           </button>
-          <button type="button" onClick={() => navigate("/ranking")} className="rounded-[22px] bg-white px-3 py-3 text-left">
+          <button type="button" onClick={() => navigate("/tobo/ranking")} className="rounded-[22px] bg-white px-3 py-3 text-left">
             <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#A08B80]">Ranking</p>
             <p className="mt-1 text-[22px] font-extrabold tabular-nums">#{position ?? "—"}</p>
             <p className="text-[12px] font-bold text-[#8D7366]">tu posicion</p>
@@ -181,7 +181,7 @@ export function HomePage() {
         <div className="mb-3 rounded-[28px] bg-white p-4 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
           <div className="flex items-center justify-between">
             <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Premios de esta semana</p>
-            <button type="button" onClick={() => navigate("/premios")} className="text-[12px] font-extrabold text-[#A08B80]">
+            <button type="button" onClick={() => navigate("/tobo/premios")} className="text-[12px] font-extrabold text-[#A08B80]">
               Ver todos
             </button>
           </div>
@@ -198,7 +198,7 @@ export function HomePage() {
         {/* ACTIVIDAD RÁPIDA */}
         <button
           type="button"
-          onClick={() => navigate("/mi-quiniela")}
+          onClick={() => navigate("/tobo/mi-quiniela")}
           className="w-full rounded-[22px] bg-white px-4 py-4 text-left"
         >
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Tu actividad</p>

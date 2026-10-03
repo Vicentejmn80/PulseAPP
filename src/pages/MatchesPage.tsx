@@ -47,7 +47,7 @@ export function MatchesPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/")} />
+        <BackButton onClick={() => navigate("/tobo")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Próximos partidos</h2>
@@ -56,7 +56,7 @@ export function MatchesPage() {
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
         {matches.filter((match) => match.demo).map((match) => (
-          <button key={match.id} type="button" onClick={() => navigate(`/partidos/${match.id}`)} className="mb-3 w-full rounded-[24px] bg-[#241710] px-4 py-4 text-left text-white">
+          <button key={match.id} type="button" onClick={() => navigate(`/tobo/partidos/${match.id}`)} className="mb-3 w-full rounded-[24px] bg-[#241710] px-4 py-4 text-left text-white">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#FF8A3C]">Experiencia demo</p>
             <p className="mt-1 text-[18px] font-extrabold">{match.awayTeam} vs {match.homeTeam}</p>
             <p className="mt-1 text-[13px] font-semibold text-white/70">Predice y entra a la simulación</p>
@@ -75,7 +75,7 @@ export function MatchesPage() {
               <button
                 key={match.id}
                 type="button"
-                onClick={() => navigate(`/partidos/${match.id}`)}
+                onClick={() => navigate(`/tobo/partidos/${match.id}`)}
                 className="rounded-[24px] bg-white px-4 py-4 text-left shadow-[0_8px_20px_rgba(80,40,10,0.05)]"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -205,7 +205,7 @@ export function MatchPredictPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/partidos")} />
+        <BackButton onClick={() => navigate("/tobo/partidos")} />
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         {missing && <p className="rounded-[28px] bg-white px-6 py-8 text-center text-[16px] font-extrabold">Ese partido no está publicado.</p>}

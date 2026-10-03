@@ -49,7 +49,7 @@ export function TriviaPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/")} />
+        <BackButton onClick={() => navigate("/tobo")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Trivia del dia</h2>
@@ -106,7 +106,7 @@ export function TriviaPage() {
             {result?.explanation && <p className="mt-3 text-[14px] font-semibold text-[#8D7366]">{result.explanation}</p>}
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/tobo")}
               className="mt-5 h-12 w-full rounded-2xl bg-[#FF4F1A] text-[16px] font-extrabold text-white"
             >
               Volver al inicio
