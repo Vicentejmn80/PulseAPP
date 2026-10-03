@@ -46,6 +46,12 @@ export interface DemoState {
   finished: boolean;
 }
 
+export interface VenueHighlight {
+  icon: string;
+  title: string;
+  desc: string;
+}
+
 export interface VenueCard {
   id: string;
   name: string;
@@ -72,6 +78,9 @@ export interface VenueCard {
   cycleId?: string;
   prizeStarts?: string | null;
   prizeEnds?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  highlights?: VenueHighlight[];
 }
 
 function asState(value: unknown): DemoState {
@@ -124,6 +133,11 @@ function asVenue(value: unknown): VenueCard | null {
     cycleId: row.cycleId ? String(row.cycleId) : undefined,
     prizeStarts: row.prizeStarts ? String(row.prizeStarts) : null,
     prizeEnds: row.prizeEnds ? String(row.prizeEnds) : null,
+    lat: row.lat != null ? Number(row.lat) : null,
+    lng: row.lng != null ? Number(row.lng) : null,
+    highlights: Array.isArray(row.highlights)
+      ? (row.highlights as VenueHighlight[])
+      : [],
   };
 }
 

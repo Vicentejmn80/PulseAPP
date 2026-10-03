@@ -167,6 +167,10 @@ export interface Tasca {
   prizeQuantity?: number;
   prizeTerms?: string;
   active?: boolean;
+  lat?: number | null;
+  lng?: number | null;
+  highlights?: Array<{ icon: string; title: string; desc: string }>;
+  imageUrl?: string;
 }
 
 export interface ToboPrize {

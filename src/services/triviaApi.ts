@@ -71,11 +71,13 @@ function asQuestion(value: unknown): TriviaQuestion | null {
   };
 }
 
-/** Devuelve las 2 preguntas del día (mismo par para todos los usuarios). */
-export async function todayTrivia() {
+export type TriviaLevel = "beginner" | "intermediate" | "advanced";
+
+/** Devuelve las 4 preguntas del día filtradas por nivel. */
+export async function todayTrivia(level: TriviaLevel = "beginner") {
   const result = await callRpc<OkResult & { questions?: unknown; message?: string }>(
     "pulse_trivia_today",
-    { p_token: readSessionToken() },
+    { p_token: readSessionToken(), p_level: level },
   );
   if (!result?.ok) throw new Error(result?.error || "No se pudo cargar la trivia.");
 

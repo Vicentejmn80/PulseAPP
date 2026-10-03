@@ -37,7 +37,7 @@ export function HomePage() {
   useEffect(() => {
     let alive = true;
     function load() {
-      Promise.all([reload(), listMatches(), listRanking("ronda_1"), todayTrivia(), myPrizes(), myStats()])
+      Promise.all([reload(), listMatches(), listRanking("ronda_1"), todayTrivia((localStorage.getItem("tobo-trivia-level") as import("@/services/triviaApi").TriviaLevel) ?? "beginner"), myPrizes(), myStats()])
         .then(([, matchRows, ranking, trivia, prizeStatus, userStats]) => {
           if (!alive) return;
           setMatches(matchRows);
@@ -99,7 +99,7 @@ export function HomePage() {
               <p className="text-[12px] font-bold text-[#8D7366]">pronosticos pendientes</p>
             </div>
             <div className="rounded-2xl bg-[#FFF1EA] p-3">
-              <p className="text-[22px] font-extrabold">{triviaAnsweredCount}/{triviaTotal || 2}</p>
+              <p className="text-[22px] font-extrabold">{triviaAnsweredCount}/{triviaTotal || 4}</p>
               <p className="text-[12px] font-bold text-[#8D7366]">trivias respondidas</p>
             </div>
             <div className="rounded-2xl bg-[#FFF1EA] p-3">

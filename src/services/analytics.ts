@@ -8,6 +8,7 @@ export type AnalyticsEvent =
   | "prediction_scored"
   | "trivia_started"
   | "trivia_completed"
+  | "trivia_answered"
   | "league_created"
   | "league_joined"
   | "venue_viewed"
