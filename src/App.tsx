@@ -15,7 +15,10 @@ import { MatchPredictPage, MatchesPage } from "@/pages/MatchesPage";
 import { MiQuinielaPage } from "@/pages/MiQuinielaPage";
 import { PrizesPage } from "@/pages/PrizesPage";
 import { ProfilePage } from "@/pages/ProfilePage";
+import { PulseExperienciasPage } from "@/pages/PulseExperienciasPage";
 import { PulseHomePage } from "@/pages/PulseHomePage";
+import { PulsePerfilPage } from "@/pages/PulsePerfilPage";
+import { PulsePremiosPage } from "@/pages/PulsePremiosPage";
 import { QrPage } from "@/pages/QrPage";
 import { RankingPage } from "@/pages/RankingPage";
 import { ReporterPage } from "@/pages/ReporterPage";
@@ -103,8 +106,11 @@ export function App() {
       <div className="relative flex h-[100dvh] flex-col">
         <ResumeVisit />
         <Routes>
-          {/* ── Pulse home ── */}
-          <Route path="/" element={<PulseHomePage />} />
+          {/* ── Pulse home + top-level Pulse pages ── */}
+          <Route path="/"              element={<PulseHomePage />} />
+          <Route path="/experiencias"  element={<PulseExperienciasPage />} />
+          <Route path="/premios"       element={<PulsePremiosPage />} />
+          <Route path="/perfil"        element={<PulsePerfilPage />} />
 
           {/* ── Tobo experience (all under /tobo) ── */}
           <Route path="/tobo" element={<ToboLayout />}>

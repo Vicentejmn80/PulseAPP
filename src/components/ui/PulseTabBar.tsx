@@ -1,19 +1,21 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
+/** NavBar exclusivo de la capa Pulse.
+ *  Ningún botón apunta a rutas /tobo — esas son de ToboTabBar. */
 const items = [
-  { id: "inicio",       to: "/",             label: "Inicio"       },
-  { id: "experiencias", to: "/tobo",          label: "Experiencias" },
-  { id: "premios",      to: "/tobo/premios",  label: "Premios"      },
-  { id: "perfil",       to: "/tobo/profile",  label: "Perfil"       },
+  { id: "inicio",       to: "/",               label: "Inicio"       },
+  { id: "experiencias", to: "/experiencias",    label: "Experiencias" },
+  { id: "premios",      to: "/premios",         label: "Premios"      },
+  { id: "perfil",       to: "/perfil",          label: "Perfil"       },
 ];
 
 export function PulseTabBar() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
 
   return (
     <div
-      className="flex h-[74px] shrink-0 items-start justify-around border-t px-1 pt-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] bg-white"
+      className="flex h-[74px] shrink-0 items-start justify-around border-t bg-white px-1 pt-2 pb-[max(0.4rem,env(safe-area-inset-bottom))]"
       style={{ borderColor: "rgba(24,160,133,0.18)" }}
     >
       {items.map((item) => {

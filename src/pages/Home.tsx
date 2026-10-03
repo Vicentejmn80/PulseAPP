@@ -28,8 +28,8 @@ export function HomePage() {
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [position, setPosition] = useState<number | null>(null);
   const [cyclePoints, setCyclePoints] = useState(0);
-  const [triviaAvailable, setTriviaAvailable] = useState(false);
-  const [triviaAnswered, setTriviaAnswered] = useState(false);
+  const [triviaAnsweredCount, setTriviaAnsweredCount] = useState(0);
+  const [triviaTotal, setTriviaTotal] = useState(0);
   const [prizes, setPrizes] = useState<ToboPrize[]>([]);
   const [stats, setStats] = useState({ predictionsMade: 0, triviaCorrect: 0 });
   const [error, setError] = useState("");
@@ -44,8 +44,8 @@ export function HomePage() {
           const mine = ranking.find((entry) => entry.isCurrentUser);
           setPosition(mine?.position ?? null);
           setCyclePoints(mine?.points ?? 0);
-          setTriviaAvailable(Boolean(trivia.question));
-          setTriviaAnswered(Boolean(trivia.question?.answered));
+          setTriviaAnsweredCount(trivia.answeredCount);
+          setTriviaTotal(trivia.questions.length);
           setPrizes(prizeStatus.prizes ?? []);
           setStats(userStats);
         })
@@ -99,8 +99,8 @@ export function HomePage() {
               <p className="text-[12px] font-bold text-[#8D7366]">pronosticos pendientes</p>
             </div>
             <div className="rounded-2xl bg-[#FFF1EA] p-3">
-              <p className="text-[22px] font-extrabold">{triviaAvailable && !triviaAnswered ? "1" : "0"}</p>
-              <p className="text-[12px] font-bold text-[#8D7366]">trivia disponible</p>
+              <p className="text-[22px] font-extrabold">{triviaAnsweredCount}/{triviaTotal || 2}</p>
+              <p className="text-[12px] font-bold text-[#8D7366]">trivias respondidas</p>
             </div>
             <div className="rounded-2xl bg-[#FFF1EA] p-3">
               <p className="text-[22px] font-extrabold">#{position ?? "-"}</p>
@@ -150,16 +150,23 @@ export function HomePage() {
           onClick={() => navigate("/tobo/trivias")}
           className="mb-3 w-full rounded-[28px] bg-[#241710] p-4 text-left text-white shadow-[0_16px_32px_rgba(36,23,16,0.25)]"
         >
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF8A3C]">Trivia del dia</p>
-          <p className="mt-2 text-[16px] font-semibold text-white/80">
-            {triviaAvailable
-              ? triviaAnswered
-                ? "Ya respondiste la trivia de hoy."
-                : "Pregunta disponible. Responde y gana puntos."
-              : "Hoy no hay trivia disponible. Vuelve manana."}
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF8A3C]">Trivia del día</p>
+            {triviaTotal > 0 && (
+              <span className="rounded-full bg-[#FF4F1A]/20 px-2.5 py-1 text-[12px] font-extrabold text-[#FF8A3C]">
+                {triviaAnsweredCount}/{triviaTotal}
+              </span>
+            )}
+          </div>
+          <p className="mt-2 text-[15px] font-semibold text-white/80">
+            {triviaTotal === 0
+              ? "Hoy no hay trivia disponible. Vuelve mañana."
+              : triviaAnsweredCount === triviaTotal
+                ? `¡Completaste las ${triviaTotal} preguntas de hoy!`
+                : `${triviaTotal - triviaAnsweredCount} pregunta${triviaTotal - triviaAnsweredCount !== 1 ? "s" : ""} pendiente${triviaTotal - triviaAnsweredCount !== 1 ? "s" : ""}. Responde y gana puntos.`}
           </p>
-          <span className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-[#FF4F1A] text-[16px] font-extrabold uppercase tracking-wide text-white">
-            {triviaAvailable && !triviaAnswered ? "Jugar trivia" : "Ver trivia"}
+          <span className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-[#FF4F1A] text-[15px] font-extrabold uppercase tracking-wide text-white">
+            {triviaAnsweredCount < triviaTotal ? "Jugar trivia" : "Ver trivia"}
           </span>
         </button>
 

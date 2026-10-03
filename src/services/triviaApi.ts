@@ -40,6 +40,7 @@ interface OkResult {
   ok?: boolean;
   error?: string;
   question?: unknown;
+  questions?: unknown;
 }
 
 function expectOk<T extends OkResult>(result: T) {
@@ -70,14 +71,21 @@ function asQuestion(value: unknown): TriviaQuestion | null {
   };
 }
 
+/** Devuelve las 2 preguntas del día (mismo par para todos los usuarios). */
 export async function todayTrivia() {
-  const result = await callRpc<OkResult & { question?: unknown; message?: string }>("pulse_trivia_today", {
-    p_token: readSessionToken(),
-  });
+  const result = await callRpc<OkResult & { questions?: unknown; message?: string }>(
+    "pulse_trivia_today",
+    { p_token: readSessionToken() },
+  );
   if (!result?.ok) throw new Error(result?.error || "No se pudo cargar la trivia.");
+
+  const rawList = Array.isArray(result.questions) ? result.questions : [];
+  const questions = rawList.map(asQuestion).filter(Boolean) as TriviaQuestion[];
   return {
-    question: result.question ? asQuestion(result.question) : null,
+    questions,
     message: result.message,
+    /** Cuántas han sido respondidas hoy */
+    answeredCount: questions.filter((q) => q.answered).length,
   };
 }
 
@@ -132,7 +140,7 @@ export async function saveTriviaAdmin(
     status: TriviaAdminQuestion["status"];
     publishDate: string | null;
     points: number;
-  }
+  },
 ) {
   const result = await callRpc<OkResult & { id?: string }>("pulse_trivia_admin_save", {
     p_admin_key: adminKey,
@@ -150,7 +158,11 @@ export async function saveTriviaAdmin(
   return expectOk(result);
 }
 
-export async function setTriviaStatusAdmin(adminKey: string, questionId: string, status: TriviaAdminQuestion["status"]) {
+export async function setTriviaStatusAdmin(
+  adminKey: string,
+  questionId: string,
+  status: TriviaAdminQuestion["status"],
+) {
   const result = await callRpc<OkResult>("pulse_trivia_admin_set_status", {
     p_admin_key: adminKey,
     p_question_id: questionId,
