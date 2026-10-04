@@ -142,6 +142,49 @@ async function dispatch(body: Record<string, unknown>) {
   return post(body);
 }
 
+async function postAuth(path: string, body: Record<string, unknown>): Promise<ApiResult & { isNew?: boolean; ticket?: string; phone?: string }> {
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase()}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("No hay conexión con el servidor. Revisa tu internet e intenta otra vez.");
+  }
+
+  let result: ApiResult & { isNew?: boolean; ticket?: string; phone?: string };
+  try {
+    result = (await response.json()) as ApiResult & { isNew?: boolean; ticket?: string; phone?: string };
+  } catch {
+    throw new Error("El servidor respondió de forma inesperada. Intenta en unos segundos.");
+  }
+  if (!result.ok) throw new Error(result.error || "No se pudo completar.");
+  return result;
+}
+
+export async function requestOtp(phone: string) {
+  return postAuth("/api/auth/send-otp", { phone });
+}
+
+export async function confirmOtp(phone: string, code: string) {
+  const result = await postAuth("/api/auth/verify-otp", { phone, code });
+  if (result.isNew) {
+    return { isNew: true as const, ticket: String(result.ticket ?? ""), phone: String(result.phone ?? phone) };
+  }
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return { isNew: false as const, snapshot: asSnapshot(result, token) };
+}
+
+export async function finishSignup(ticket: string, alias: string, city: string) {
+  const result = await postAuth("/api/auth/complete-profile", { ticket, alias, city });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
 export async function registerAccount(phone: string, alias: string) {
   const result = await dispatch({ action: "register", phone, alias });
   const token = result.token ?? "";

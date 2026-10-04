@@ -354,6 +354,7 @@ export interface UserProfile {
   avatarColor: string;
   phone?: string;
   accessCode?: string;
+  city?: string;
 }
 
 export interface MissionProgress {

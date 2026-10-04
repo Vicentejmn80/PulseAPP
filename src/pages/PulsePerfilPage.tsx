@@ -40,6 +40,7 @@ export function PulsePerfilPage() {
               <p className="text-[20px] font-extrabold leading-tight">{currentUser.alias}</p>
               <p className="text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
                 {currentUser.handle}
+                {currentUser.city ? ` · ${currentUser.city}` : ""}
               </p>
             </div>
           </div>
@@ -73,13 +74,13 @@ export function PulsePerfilPage() {
             className="text-[11px] font-extrabold uppercase tracking-[0.18em]"
             style={{ color: "var(--p-accent)" }}
           >
-            Tu clave de acceso
+            Tu celular
           </p>
-          <p className="mt-1 text-[28px] font-extrabold tracking-[0.14em]">
-            {currentUser.accessCode}
+          <p className="mt-1 text-[22px] font-extrabold tracking-tight">
+            {currentUser.phone || "WhatsApp"}
           </p>
           <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
-            Úsala en cualquier dispositivo para entrar con tu cuenta.
+            Entras con un código de 6 dígitos que llega por WhatsApp.
           </p>
         </div>
 

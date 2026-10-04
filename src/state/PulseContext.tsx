@@ -5,9 +5,12 @@ import { getLevelProgress } from "@/lib/progress";
 import {
   addGameOnServer,
   completeOnServer,
+  confirmOtp as confirmOtpRequest,
+  finishSignup as finishSignupRequest,
   loadAccount,
   loginAccount,
   registerAccount,
+  requestOtp as requestOtpRequest,
   writeSessionToken,
   type AccountSnapshot,
 } from "@/services/accountApi";
@@ -52,8 +55,12 @@ interface PulseContextValue {
   predictionPicks: Record<string, string>;
   hasPlayed: (gameId: string) => boolean;
   setNotice: (value: string) => void;
+  setAuthError: (value: string) => void;
   register: (phone: string, alias: string) => Promise<void>;
   login: (phone: string, accessCode: string) => Promise<void>;
+  requestOtp: (phone: string) => Promise<void>;
+  confirmOtp: (phone: string, code: string) => Promise<{ isNew: boolean; ticket?: string }>;
+  finishSignup: (ticket: string, alias: string, city: string) => Promise<void>;
   logout: () => void;
   completeGame: (input: CompleteGameInput) => Promise<number>;
   submitPrediction: (game: Game, optionId: string) => Promise<number>;
@@ -190,8 +197,30 @@ export function PulseProvider({ children }: { children: ReactNode }) {
       predictionPicks: account?.predictionPicks ?? {},
       hasPlayed,
       setNotice,
+      setAuthError,
       register: (phone: string, alias: string) => enter(registerAccount(phone, alias)),
       login: (phone: string, accessCode: string) => enter(loginAccount(phone, accessCode)),
+      async requestOtp(phone: string) {
+        setAuthError("");
+        try {
+          await requestOtpRequest(phone);
+        } catch (error) {
+          setAuthError(error instanceof Error ? error.message : "No se pudo enviar el código.");
+          throw error;
+        }
+      },
+      async confirmOtp(phone: string, code: string) {
+        setAuthError("");
+        try {
+          const result = await confirmOtpRequest(phone, code);
+          if (!result.isNew) await enter(Promise.resolve(result.snapshot));
+          return { isNew: result.isNew, ticket: result.isNew ? result.ticket : undefined };
+        } catch (error) {
+          setAuthError(error instanceof Error ? error.message : "No se pudo validar el código.");
+          throw error;
+        }
+      },
+      finishSignup: (ticket: string, alias: string, city: string) => enter(finishSignupRequest(ticket, alias, city)),
       logout: () => {
         writeSessionToken("");
         setAccount(null);

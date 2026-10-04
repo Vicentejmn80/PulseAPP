@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 function readBody(req: IncomingMessage) {
@@ -10,6 +10,12 @@ function readBody(req: IncomingMessage) {
     req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
     req.on("error", reject);
   });
+}
+
+function json(res: ServerResponse, status: number, payload: unknown) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(payload));
 }
 
 function pulseApi(): Plugin {
@@ -27,28 +33,60 @@ function pulseApi(): Plugin {
           const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
           const { handlePulse } = await server.ssrLoadModule("/src/server/engine.ts");
           const result = await handlePulse(body);
-          response.statusCode = result.ok ? 200 : 400;
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify(result));
+          json(response, result.ok ? 200 : 400, result);
         } catch (error) {
-          response.statusCode = 500;
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : "Error del servidor" }));
+          json(response, 500, { ok: false, error: error instanceof Error ? error.message : "Error del servidor" });
+        }
+      });
+
+      server.middlewares.use("/api/auth", async (req, res, next) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        const response = res as ServerResponse;
+        const url = req.url ?? "";
+        const action = url.includes("complete-profile")
+          ? "complete-profile"
+          : url.includes("verify-otp")
+            ? "verify-otp"
+            : url.includes("send-otp")
+              ? "send-otp"
+              : "";
+        if (!action) {
+          next();
+          return;
+        }
+        try {
+          const raw = await readBody(req);
+          const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+          const { handleOtpAction } = await server.ssrLoadModule("/src/server/otpAuth.ts");
+          const result = await handleOtpAction(action, body);
+          json(response, result.ok ? 200 : 400, result);
+        } catch (error) {
+          json(response, 500, { ok: false, error: error instanceof Error ? error.message : "Error del servidor" });
         }
       });
     },
   };
 }
 
-export default defineConfig({
-  plugins: [react(), pulseApi()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  for (const [key, value] of Object.entries(env)) {
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+
+  return {
+    plugins: [react(), pulseApi()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src"),
+      },
     },
-  },
-  server: {
-    host: true,
-    port: 5173,
-  },
+    server: {
+      host: true,
+      port: 5173,
+    },
+  };
 });
