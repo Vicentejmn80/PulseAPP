@@ -1,8 +1,7 @@
 export {
+  checkAlias,
   completeOtpProfile,
   handleOtpAction,
-  normalizePhoneClient,
   sendOtp,
   verifyOtp,
-  type OtpJson,
-} from "../../api/_lib/otpAuth";
+} from "../../lib/registration/otpAuth.mjs";

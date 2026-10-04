@@ -205,7 +205,7 @@ export function PulseProvider({ children }: { children: ReactNode }) {
         try {
           await requestOtpRequest(phone);
         } catch (error) {
-          setAuthError(error instanceof Error ? error.message : "No se pudo enviar el código.");
+          setAuthError(error instanceof Error ? error.message : "No pudimos enviar el código. Inténtalo nuevamente.");
           throw error;
         }
       },

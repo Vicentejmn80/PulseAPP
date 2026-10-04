@@ -4,13 +4,13 @@
   "outputDirectory": "dist",
   "functions": {
     "api/pulse.ts": {
-      "includeFiles": "api/_lib/**"
+      "includeFiles": "lib/registration/**"
     },
     "api/send-otp.ts": {
-      "includeFiles": "api/_lib/**"
+      "includeFiles": "lib/registration/**"
     },
     "api/auth/*.ts": {
-      "includeFiles": "api/_lib/**"
+      "includeFiles": "lib/registration/**"
     }
   },
   "rewrites": [

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { checkAlias, FlowError } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
 type Step = "phone" | "otp" | "profile";
@@ -47,7 +48,9 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   const [city, setCity] = useState("Caracas");
   const [ticket, setTicket] = useState("");
   const [pending, setPending] = useState(false);
+  const [sentNote, setSentNote] = useState("");
   const [cooldown, setCooldown] = useState(0);
+  const [aliasState, setAliasState] = useState<"idle" | "checking" | "free" | "taken" | "invalid">("idle");
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
@@ -56,18 +59,45 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     return () => window.clearTimeout(id);
   }, [cooldown]);
 
+  useEffect(() => {
+    if (step !== "profile") return undefined;
+    const value = alias.trim();
+    if (value.length < 3) {
+      setAliasState(value ? "invalid" : "idle");
+      return undefined;
+    }
+    setAliasState("checking");
+    let alive = true;
+    const id = window.setTimeout(() => {
+      checkAlias(value)
+        .then((result) => {
+          if (!alive) return;
+          setAliasState(result.available ? "free" : result.code === "INVALID_ALIAS" ? "invalid" : "taken");
+        })
+        .catch(() => {
+          if (alive) setAliasState("idle");
+        });
+    }, 350);
+    return () => {
+      alive = false;
+      window.clearTimeout(id);
+    };
+  }, [alias, step]);
+
   async function sendCode(phone = composePhone(country.dial, localPhone)) {
     setPending(true);
     setAuthError("");
+    setSentNote("");
     try {
       await requestOtp(phone);
       setE164(phone);
       setStep("otp");
       setOtp(["", "", "", "", "", ""]);
-      setCooldown(45);
+      setCooldown(30);
+      setSentNote("Código enviado por WhatsApp.");
       window.setTimeout(() => inputs.current[0]?.focus(), 40);
-    } catch {
-      /* authError lives in context */
+    } catch (error) {
+      if (error instanceof FlowError && error.retryAfter) setCooldown(error.retryAfter);
     } finally {
       setPending(false);
     }
@@ -237,7 +267,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
               className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
               style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
             >
-              {pending ? "Enviando…" : "Enviar código por WhatsApp"}
+              {pending ? "Enviando código..." : "Enviar código por WhatsApp"}
             </button>
             <p className="mt-4 text-center text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>
               La primera vez, envía el mensaje de unión del sandbox de Twilio al +1 737 250 8034 y después pide el código.
@@ -276,6 +306,11 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
               />
             ))}
           </div>
+          {sentNote && !authError && (
+            <p className="mt-4 text-center text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
+              ✓ {sentNote}
+            </p>
+          )}
           {authError && <p className="mt-4 text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
           <div className="mt-auto">
             <button
@@ -316,13 +351,26 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
             Apodo / username
             <input
               value={alias}
-              onChange={(event) => setAlias(event.target.value)}
+              onChange={(event) => setAlias(event.target.value.replace(/\s/g, ""))}
               autoComplete="nickname"
-              placeholder="Cómo te ven en el ranking"
+              maxLength={20}
+              placeholder="vicente2"
               className={fieldClass}
               style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
             />
           </label>
+          {aliasState === "checking" && (
+            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>Revisando alias...</p>
+          )}
+          {aliasState === "free" && (
+            <p className="text-[13px] font-extrabold" style={{ color: "var(--p-accent)" }}>✓ Alias disponible</p>
+          )}
+          {aliasState === "taken" && (
+            <p className="text-[13px] font-extrabold text-[#E23B2F]">✕ Este alias ya está ocupado</p>
+          )}
+          {aliasState === "invalid" && (
+            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>De 3 a 20 letras, números o _.</p>
+          )}
           <div>
             <p className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               Ciudad / zona
@@ -356,7 +404,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
           <div className="mt-auto">
             <button
               type="submit"
-              disabled={pending || alias.trim().length < 2 || city.trim().length < 2}
+              disabled={pending || aliasState !== "free" || city.trim().length < 2}
               className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
               style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
             >

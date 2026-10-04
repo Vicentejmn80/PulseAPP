@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { completeOtpProfile } from "../_lib/otpAuth";
+import { completeOtpProfile } from "../../lib/registration/otpAuth.mjs";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
-    res.status(405).json({ ok: false, error: "Método no permitido." });
+    res.status(405).json({ ok: false, code: "REGISTRATION_ERROR", error: "Método no permitido." });
     return;
   }
   try {
@@ -13,7 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error instanceof Error ? error.message : "Error del servidor",
+      code: "REGISTRATION_ERROR",
+      error: error instanceof Error ? error.message : "No se pudo crear el perfil.",
     });
   }
 }

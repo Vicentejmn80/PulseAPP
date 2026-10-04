@@ -142,19 +142,54 @@ async function dispatch(body: Record<string, unknown>) {
   return post(body);
 }
 
-async function readJson(response: Response) {
-  const text = await response.text();
-  try {
-    return JSON.parse(text) as ApiResult & { isNew?: boolean; ticket?: string; phone?: string };
-  } catch {
-    if (response.status >= 500) {
-      throw new Error("El servidor de login falló. En unos segundos vuelve a intentar.");
-    }
-    throw new Error("El servidor respondió de forma inesperada. Intenta en unos segundos.");
+export class FlowError extends Error {
+  code: string;
+  retryAfter?: number;
+
+  constructor(message: string, code = "REGISTRATION_ERROR", retryAfter?: number) {
+    super(message);
+    this.code = code;
+    this.retryAfter = retryAfter;
   }
 }
 
-async function postAuth(path: string, body: Record<string, unknown>): Promise<ApiResult & { isNew?: boolean; ticket?: string; phone?: string }> {
+const FLOW_COPY: Record<string, string> = {
+  TWILIO_SANDBOX_NOT_JOINED:
+    "Este número todavía no está conectado al WhatsApp de Pulse. Envía el mensaje de unión al +1 737 250 8034 y vuelve a intentarlo.",
+  TWILIO_INVALID_NUMBER: "Revisa el número de teléfono.",
+  INVALID_PHONE: "Revisa el número de teléfono.",
+  TWILIO_AUTH_ERROR: "Hay un problema temporal con el servicio de WhatsApp. Inténtalo nuevamente.",
+  TWILIO_ERROR: "No pudimos enviar el código. Inténtalo nuevamente.",
+  OTP_RATE_LIMITED: "Has solicitado demasiados códigos. Espera unos minutos antes de intentarlo nuevamente.",
+  OTP_INVALID: "Código incorrecto.",
+  OTP_EXPIRED: "El código expiró. Pide uno nuevo.",
+  ALIAS_ALREADY_TAKEN: "Ese alias ya está ocupado.",
+  INVALID_ALIAS: "Usa de 3 a 20 letras, números o _. Sin espacios.",
+  PHONE_ALREADY_REGISTERED: "Ese número ya tiene perfil. Entra de nuevo.",
+  PHONE_NOT_VERIFIED: "La verificación expiró. Pide un código nuevo.",
+};
+
+async function readJson(response: Response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as ApiResult & {
+      isNew?: boolean;
+      ticket?: string;
+      phone?: string;
+      code?: string;
+      available?: boolean;
+      retryAfter?: number;
+      error?: string;
+    };
+  } catch {
+    if (response.status >= 500) {
+      throw new FlowError("No pudimos enviar el código. Inténtalo nuevamente.", "REGISTRATION_ERROR");
+    }
+    throw new FlowError("No pudimos completar el registro. Inténtalo nuevamente.", "REGISTRATION_ERROR");
+  }
+}
+
+async function postAuth(path: string, body: Record<string, unknown>): Promise<ApiResult & { isNew?: boolean; ticket?: string; phone?: string; code?: string; available?: boolean; retryAfter?: number }> {
   let response: Response;
   try {
     response = await fetch(`${apiBase()}${path}`, {
@@ -167,8 +202,15 @@ async function postAuth(path: string, body: Record<string, unknown>): Promise<Ap
   }
 
   const result = await readJson(response);
-  if (!result.ok) throw new Error(result.error || "No se pudo completar.");
+  if (!result.ok) {
+    const code = result.code || "REGISTRATION_ERROR";
+    throw new FlowError(result.error || FLOW_COPY[code] || "No pudimos completar el registro. Inténtalo nuevamente.", code, result.retryAfter);
+  }
   return result;
+}
+
+export async function checkAlias(alias: string) {
+  return postAuth("/api/pulse", { action: "check-alias", alias });
 }
 
 export async function requestOtp(phone: string) {

@@ -20,5 +20,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "api/_lib/otpAuth.ts"]
+  "include": ["src", "api", "lib/registration/otpAuth.d.mts"]
 }

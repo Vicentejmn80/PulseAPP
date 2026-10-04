@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleOtpAction } from "./_lib/otpAuth";
+import { handleOtpAction } from "../lib/registration/otpAuth.mjs";
 
 function readBody(req: VercelRequest) {
   const body = req.body;
@@ -14,21 +14,22 @@ function readBody(req: VercelRequest) {
 }
 
 function fail(res: VercelResponse, error: unknown) {
-  const message = error instanceof Error ? error.message : "Error del servidor";
-  res.status(500).json({ ok: false, error: message });
+  const message = error instanceof Error ? error.message : "No pudimos completar el registro. Inténtalo nuevamente.";
+  res.status(500).json({ ok: false, code: "REGISTRATION_ERROR", error: message });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
-    res.status(405).json({ ok: false, error: "Método no permitido." });
+    res.status(405).json({ ok: false, code: "REGISTRATION_ERROR", error: "Método no permitido." });
     return;
   }
 
   const body = readBody(req);
   const action = String(body.action ?? "");
 
-  if (action === "send-otp" || action === "verify-otp" || action === "complete-profile") {
+  if (action === "send-otp" || action === "verify-otp" || action === "check-alias" || action === "complete-profile") {
     try {
+      console.info(JSON.stringify({ event: "registration_started", action }));
       const result = await handleOtpAction(action, body);
       res.status(result.ok ? 200 : 400).json(result);
     } catch (error) {

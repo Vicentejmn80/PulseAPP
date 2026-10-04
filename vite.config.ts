@@ -32,7 +32,7 @@ function pulseApi(): Plugin {
           const raw = await readBody(req);
           const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
           const action = String(body.action ?? "");
-          if (action === "send-otp" || action === "verify-otp" || action === "complete-profile") {
+          if (action === "send-otp" || action === "verify-otp" || action === "check-alias" || action === "complete-profile") {
             const { handleOtpAction } = await server.ssrLoadModule("/src/server/otpAuth.ts");
             const result = await handleOtpAction(action, body);
             json(response, result.ok ? 200 : 400, result);
