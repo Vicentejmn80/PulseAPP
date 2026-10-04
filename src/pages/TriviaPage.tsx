@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { trackEvent } from "@/services/analytics";
 import {
@@ -14,7 +16,7 @@ import {
 type Phase = "picker" | "loading" | "playing" | "done";
 
 interface LevelMeta {
-  emoji: string;
+  icon: LucideIcon;
   label: string;
   sublabel: string;
   desc: string;
@@ -23,28 +25,28 @@ interface LevelMeta {
 }
 const LEVELS: Record<TriviaLevel, LevelMeta> = {
   beginner: {
-    emoji: "🏃",
-    label: "Principiante",
+    icon: CircleDot,
+    label: "Básica",
     sublabel: "Fácil",
     desc: "Reglas básicas y equipos de la LVBP. El punto de partida.",
     pts: "+5 pts por pregunta",
     color: "#22C55E",
   },
   intermediate: {
-    emoji: "⚾",
-    label: "Intermedio",
+    icon: Hand,
+    label: "Intermedia",
     sublabel: "Medio",
     desc: "Jugadores venezolanos y Grandes Ligas. Un reto real.",
     pts: "+10 pts por pregunta",
-    color: "#FFC94A",
+    color: "#60A5FA",
   },
   advanced: {
-    emoji: "🏆",
-    label: "Avanzado",
+    icon: Zap,
+    label: "Avanzada",
     sublabel: "Difícil",
     desc: "Historia, estadísticas y récords. Solo los que saben.",
     pts: "+15 pts por pregunta",
-    color: "#E23B2F",
+    color: "#C084FC",
   },
 };
 const LEVEL_KEY = "tobo-trivia-level";
@@ -202,7 +204,7 @@ export function TriviaPage() {
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>
             Juégate el Tobo
           </p>
-          <h2 className="text-[28px] font-extrabold tracking-tight">Trivia del día ⚾</h2>
+          <h2 className="text-[28px] font-extrabold tracking-tight">Trivia del día</h2>
           <p className="text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>
             ¿En qué nivel compites hoy?
           </p>
@@ -228,7 +230,7 @@ export function TriviaPage() {
                 }}
               >
                 <div className="flex items-start gap-4">
-                  <span className="mt-0.5 text-[42px] leading-none">{info.emoji}</span>
+                  <IconChip icon={info.icon} color={info.color} size="lg" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-[21px] font-extrabold">{info.label}</p>
@@ -250,7 +252,9 @@ export function TriviaPage() {
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>4 preguntas</span>
                   <span style={{ color: "var(--t-border)" }}>·</span>
-                  <span className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>⏱ 10 seg cada una</span>
+                  <span className="flex items-center gap-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+                    <Clock className="h-3.5 w-3.5" /> 10 seg cada una
+                  </span>
                   {key === level && (
                     <span className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-extrabold" style={{ background: "var(--t-tint)", color: "var(--t-accent)" }}>
                       actual
@@ -298,8 +302,10 @@ export function TriviaPage() {
         <div className="flex-1 overflow-y-auto px-4 pb-6 pt-[max(2rem,env(safe-area-inset-top))]">
           {alreadyDone ? (
             /* Already answered today */
-            <div className="trivia-celebration rounded-[32px] px-6 py-10 text-center" style={{ backgroundColor: "var(--t-card)" }}>
-              <p className="text-[56px]">✅</p>
+            <ToboCard className="text-center">
+              <div className="flex justify-center">
+                <IconChip icon={Check} color="#22C55E" size="lg" />
+              </div>
               <h2 className="mt-3 text-[26px] font-extrabold">¡Ya jugaste hoy!</h2>
               <p className="mt-2 text-[15px] font-semibold" style={{ color: "var(--t-muted)" }}>
                 Completaste las {questions.length} preguntas de {lvl.label}.
@@ -307,30 +313,24 @@ export function TriviaPage() {
               <p className="mt-1 text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>
                 Vuelve mañana para nuevas preguntas.
               </p>
-              <button
-                type="button"
-                onClick={() => navigate("/tobo")}
-                className="mt-8 h-14 w-full rounded-2xl text-[16px] font-extrabold"
-                style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
-              >
-                Volver al inicio
-              </button>
-              <button
-                type="button"
-                onClick={() => { localStorage.removeItem(LEVEL_KEY); setPhase("picker"); }}
-                className="mt-3 h-12 w-full rounded-2xl text-[14px] font-extrabold"
-                style={{ backgroundColor: "var(--t-border)", color: "var(--t-text)" }}
-              >
-                Cambiar nivel
-              </button>
-            </div>
+              <div className="mt-8">
+                <GoldCta icon={Play} onClick={() => navigate("/tobo")}>Volver al inicio</GoldCta>
+              </div>
+              <div className="mt-3">
+                <GhostCta icon={RefreshCw} onClick={() => { localStorage.removeItem(LEVEL_KEY); setPhase("picker"); }}>
+                  Cambiar nivel
+                </GhostCta>
+              </div>
+            </ToboCard>
           ) : (
             /* Score screen */
             <div className="trivia-celebration rounded-[32px] px-6 py-8 text-center" style={{ backgroundColor: "var(--t-card)" }}>
-              <p className="text-[64px] leading-none">🎉</p>
+              <div className="flex justify-center">
+                <IconChip icon={Trophy} color="var(--t-accent)" size="lg" />
+              </div>
               <h2 className="mt-3 text-[30px] font-extrabold">¡Trivia completa!</h2>
               <p className="mt-1 text-[15px] font-semibold" style={{ color: "var(--t-muted)" }}>
-                {lvl.emoji} Nivel {lvl.label}
+                Nivel {lvl.label}
               </p>
 
               {/* Stars */}
@@ -373,22 +373,14 @@ export function TriviaPage() {
                   : "Falta práctica, ¡pero volverás mañana más fuerte!"}
               </p>
 
-              <button
-                type="button"
-                onClick={() => navigate("/tobo")}
-                className="mt-6 h-14 w-full rounded-2xl text-[16px] font-extrabold transition-transform active:scale-[0.97]"
-                style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
-              >
-                Volver al inicio
-              </button>
-              <button
-                type="button"
-                onClick={() => { localStorage.removeItem(LEVEL_KEY); setPhase("picker"); }}
-                className="mt-3 h-12 w-full rounded-2xl text-[14px] font-extrabold"
-                style={{ backgroundColor: "var(--t-border)", color: "var(--t-text)" }}
-              >
-                Cambiar nivel
-              </button>
+              <div className="mt-6">
+                <GoldCta icon={Play} onClick={() => navigate("/tobo")}>Volver al inicio</GoldCta>
+              </div>
+              <div className="mt-3">
+                <GhostCta icon={RefreshCw} onClick={() => { localStorage.removeItem(LEVEL_KEY); setPhase("picker"); }}>
+                  Cambiar nivel
+                </GhostCta>
+              </div>
             </div>
           )}
         </div>
@@ -422,7 +414,7 @@ export function TriviaPage() {
             ←
           </button>
           <div className="flex flex-1 items-center gap-2">
-            <span className="text-[18px] leading-none">{lvl.emoji}</span>
+            <IconChip icon={lvl.icon} color={lvl.color} size="sm" />
             <p className="text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>
               {lvl.label}
             </p>
