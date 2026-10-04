@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Award, Trophy } from "lucide-react";
 import { BackButton } from "@/components/ui/Buttons";
+import { CardHead, GoldCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { listCycles, myPrizes, type ToboCycle, type ToboPrize } from "@/services/matchesApi";
 
@@ -65,21 +67,24 @@ export function PrizesPage() {
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
 
         {tab === "disponibles" && (
-          <div className="rounded-[28px] bg-gradient-to-br from-[#FF8A3C] via-[#FF4F1A] to-[#E8360C] p-5 text-white shadow-[0_16px_32px_rgba(255,79,26,0.28)]">
-            <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-white/80">Ciclo activo</p>
-            <p className="mt-1 text-[20px] font-extrabold">{active ? active.name : "Temporada"}</p>
-            <p className="text-[14px] font-semibold text-white/80">{active ? `${active.startsOn} al ${active.endsOn}` : "LVBP 2026-27"}</p>
-            <p className="mt-4 text-[14px] font-semibold text-white/90">
-              Los primeros puestos del ranking ganan premios de las tascas. Cierra el ciclo y revisa tu codigo de canje.
+          <ToboCard>
+            <CardHead icon={Trophy} title="Premios de esta ronda" />
+            <p className="text-[22px] font-extrabold leading-tight">{active ? active.name : "Temporada"}</p>
+            <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
+              {active ? `${active.startsOn} al ${active.endsOn}` : "LVBP 2026-27"}
             </p>
-            <button
-              type="button"
-              onClick={() => navigate("/tobo/ranking")}
-              className="mt-4 h-12 w-full rounded-2xl bg-white text-[16px] font-extrabold text-[#FF4F1A]"
-            >
-              Ver ranking
-            </button>
-          </div>
+            <p className="mt-3 text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>
+              Los primeros puestos del ranking ganan premios de las tascas.
+            </p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[1, 2, 3].map((place) => (
+                <PrizePlace key={place} place={place} />
+              ))}
+            </div>
+            <div className="mt-4">
+              <GoldCta icon={Trophy} onClick={() => navigate("/tobo/ranking")}>Ver ranking</GoldCta>
+            </div>
+          </ToboCard>
         )}
 
         {tab !== "disponibles" && displayed.length === 0 && (
@@ -94,27 +99,55 @@ export function PrizesPage() {
         {tab !== "disponibles" && (
           <div className="flex flex-col gap-2">
             {displayed.map((prize) => (
-              <div key={prize.id} className="rounded-[24px] bg-white px-4 py-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[16px] font-extrabold">{prize.cycleName}</p>
+              <ToboCard key={prize.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: "var(--t-tint)", color: "var(--t-accent)" }}>
+                      <Award className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <p className="text-[16px] font-extrabold">{prize.cycleName}</p>
+                      <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Puesto {prize.rank}</p>
+                    </div>
+                  </div>
                   <span
-                    className={`rounded-full px-2 py-1 text-[11px] font-extrabold ${
-                      prize.status === "redeemed" ? "bg-[#F3E4D8] text-[#8D7366]" : "bg-[#FFF1EA] text-[#FF4F1A]"
-                    }`}
+                    className="rounded-full px-2 py-1 text-[11px] font-extrabold"
+                    style={{ backgroundColor: "var(--t-tint)", color: "var(--t-accent)" }}
                   >
                     {prize.status === "redeemed" ? "Redimido" : "Disponible"}
                   </span>
                 </div>
-                <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Puesto {prize.rank}</p>
-                <p className="mt-3 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">Codigo de canje</p>
+                <p className="mt-3 text-[12px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--t-muted)" }}>Codigo de canje</p>
                 <p className="mt-1 text-[28px] font-extrabold uppercase tracking-[0.14em]">{prize.code}</p>
-                <p className="text-[13px] font-semibold text-[#8D7366]">Vence el {prize.expiresAt ? new Date(prize.expiresAt).toLocaleDateString("es-VE") : "Por confirmar"}</p>
-              </div>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Vence el {prize.expiresAt ? new Date(prize.expiresAt).toLocaleDateString("es-VE") : "Por confirmar"}</p>
+              </ToboCard>
             ))}
           </div>
         )}
       </div>
       <TabBar />
+    </div>
+  );
+}
+
+const PLACE_COLOR = ["#FFC94A", "#C5D0E0", "#D08A4A"];
+
+function PrizePlace({ place }: { place: number }) {
+  const color = PLACE_COLOR[place - 1] ?? "#FFC94A";
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-2xl px-2 py-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+      <span className="relative">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: `${color}22`, color }}>
+          <Trophy className="h-6 w-6" />
+        </span>
+        <span
+          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-extrabold"
+          style={{ backgroundColor: color, color: "#0B1A3C" }}
+        >
+          #{place}
+        </span>
+      </span>
+      <p className="text-center text-[11px] font-extrabold">Puesto {place}</p>
     </div>
   );
 }
