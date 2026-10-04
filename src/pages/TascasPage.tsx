@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Instagram, MapPin, Trophy } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
 import { listCycles, listTascas, type Tasca, type ToboCycle } from "@/services/matchesApi";
 
@@ -25,8 +26,8 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
 
   return (
     <article
-      className="venue-card-in overflow-hidden rounded-[28px]"
-      style={{ backgroundColor: "var(--t-card)" }}
+      className="venue-card-in overflow-hidden rounded-[20px] shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
+      style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}
     >
       {/* Photo / cover area */}
       <div
@@ -105,10 +106,10 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl text-[14px] font-extrabold transition-opacity active:opacity-80"
+              className="flex min-h-[48px] items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[14px] font-extrabold shadow-[0_8px_18px_rgba(255,201,74,0.22)]"
               style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
             >
-              <span className="text-[16px]">🗺️</span>
+              <MapPin className="h-4 w-4" />
               Abrir en Google Maps
             </a>
           ) : null}
@@ -120,10 +121,10 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
                 href={instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-11 items-center justify-center gap-1.5 rounded-2xl text-[13px] font-extrabold"
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[13px] font-extrabold"
                 style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)", border: "1px solid var(--t-border)" }}
               >
-                <span>📸</span> Instagram
+                <Instagram className="h-4 w-4" /> Instagram
               </a>
             ) : (
               <span
@@ -204,7 +205,7 @@ export function TascasPage() {
 
         {/* Stats banner */}
         <div
-          className="mb-4 rounded-[28px] p-5 text-white"
+          className="mb-4 rounded-[20px] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
           style={{ background: "linear-gradient(135deg, var(--t-accent-dim) 0%, var(--t-accent) 100%)", color: "var(--t-accent-text)" }}
         >
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] opacity-80">
@@ -228,10 +229,11 @@ export function TascasPage() {
           <button
             type="button"
             onClick={() => navigate("/tobo/premios")}
-            className="mt-4 h-12 w-full rounded-2xl text-[15px] font-extrabold"
-            style={{ backgroundColor: "rgba(0,0,0,0.2)", color: "var(--t-accent-text)" }}
+            className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[15px] font-extrabold"
+            style={{ backgroundColor: "rgba(11,26,60,0.28)", color: "var(--t-accent-text)" }}
           >
-            Ver mis premios →
+            <Trophy className="h-4 w-4" />
+            Ver mis premios
           </button>
         </div>
 
