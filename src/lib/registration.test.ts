@@ -59,4 +59,8 @@ describe("errores de Twilio", () => {
   it("traduce un error desconocido", () => {
     expect(mapTwilioFailure(500, { message: "boom" }).code).toBe("TWILIO_ERROR");
   });
+
+  it("explica cuando la cuenta exige plantilla y no texto libre", () => {
+    expect(mapTwilioFailure(400, { code: 21654, message: "ContentSid Required" }).code).toBe("TWILIO_TEMPLATE_REQUIRED");
+  });
 });

@@ -160,6 +160,8 @@ const FLOW_COPY: Record<string, string> = {
   INVALID_PHONE: "Revisa el número de teléfono.",
   TWILIO_AUTH_ERROR: "Hay un problema temporal con el servicio de WhatsApp. Inténtalo nuevamente.",
   TWILIO_ERROR: "No pudimos enviar el código. Inténtalo nuevamente.",
+  TWILIO_TEMPLATE_REQUIRED:
+    "WhatsApp no dejó enviar el código en texto libre. Esta cuenta de Twilio exige una plantilla OTP aprobada.",
   OTP_RATE_LIMITED: "Has solicitado demasiados códigos. Espera unos minutos antes de intentarlo nuevamente.",
   OTP_INVALID: "Código incorrecto.",
   OTP_EXPIRED: "El código expiró. Pide uno nuevo.",
