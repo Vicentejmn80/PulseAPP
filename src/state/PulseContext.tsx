@@ -10,7 +10,11 @@ import {
   finishSignup as finishSignupRequest,
   loadAccount,
   loginAccount,
+  loginWithPin as loginWithPinRequest,
+  logoutAccount,
+  readSessionToken,
   registerAccount,
+  registerWithPin as registerWithPinRequest,
   requestOtp as requestOtpRequest,
   writeSessionToken,
   type AccountSnapshot,
@@ -63,6 +67,8 @@ interface PulseContextValue {
   confirmOtp: (phone: string, code: string) => Promise<{ isNew: boolean; ticket?: string }>;
   finishSignup: (ticket: string, alias: string, city: string) => Promise<void>;
   directEnter: (phone: string, fullName: string, alias: string) => Promise<void>;
+  createAccount: (phone: string, fullName: string, alias: string, pin: string) => Promise<void>;
+  loginWithPin: (phone: string, pin: string) => Promise<void>;
   logout: () => void;
   completeGame: (input: CompleteGameInput) => Promise<number>;
   submitPrediction: (game: Game, optionId: string) => Promise<number>;
@@ -224,10 +230,20 @@ export function PulseProvider({ children }: { children: ReactNode }) {
       },
       finishSignup: (ticket: string, alias: string, city: string) => enter(finishSignupRequest(ticket, alias, city)),
       directEnter: (phone: string, fullName: string, alias: string) => enter(directEnterAccount(phone, fullName, alias)),
+      async createAccount(phone: string, fullName: string, alias: string, pin: string) {
+        await enter(registerWithPinRequest(phone, fullName, alias, pin));
+        setNotice("¡Bienvenido a Pulse!");
+      },
+      async loginWithPin(phone: string, pin: string) {
+        await enter(loginWithPinRequest(phone, pin));
+        setNotice("¡Bienvenido de nuevo!");
+      },
       logout: () => {
+        const token = readSessionToken();
         writeSessionToken("");
         setAccount(null);
         setStatus("guest");
+        void logoutAccount(token);
       },
       async completeGame(input: CompleteGameInput) {
         const result = await completeOnServer({

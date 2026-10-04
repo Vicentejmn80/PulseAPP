@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { decideSession } from "@/lib/sessionGate";
 import type { Game, Participation, PointsTransaction, UserProfile } from "@/types/pulse";
 
 const SESSION_KEY = "pulse-session";
@@ -113,9 +114,11 @@ async function rpcLoad(token: string): Promise<ApiResult | null> {
 function asSnapshot(result: ApiResult, token: string): AccountSnapshot {
   if (!result.currentUser) throw new Error("El servidor no devolvió el perfil.");
   const userTx = (result.transactions ?? []).filter((tx) => tx.userId === result.currentUser!.id);
+  const safeUser = { ...result.currentUser };
+  delete safeUser.accessCode;
   return {
     token,
-    currentUser: result.currentUser,
+    currentUser: safeUser,
     users: result.users ?? [],
     participations: result.participations ?? [],
     transactions: userTx,
@@ -171,7 +174,10 @@ const FLOW_COPY: Record<string, string> = {
   PHONE_NOT_VERIFIED: "La verificación expiró. Pide un código nuevo.",
   INVALID_FULL_NAME: "Escribe tu nombre completo.",
   OTP_DISABLED: "El login por WhatsApp está desactivado temporalmente.",
-  DIRECT_ENTER_DISABLED: "Usa el código de WhatsApp para entrar.",
+  DIRECT_ENTER_DISABLED: "Crea tu cuenta con nombre, alias, teléfono y PIN.",
+  INVALID_PIN: "El PIN debe tener 6 números y no ser una secuencia obvia.",
+  PIN_INVALID: "El número o PIN no son correctos.",
+  ACCOUNT_NOT_FOUND: "No encontramos una cuenta con este número.",
 };
 
 async function readJson(response: Response) {
@@ -232,6 +238,29 @@ export async function checkAlias(alias: string) {
   return postAuth("/api/pulse", { action: "check-alias", alias });
 }
 
+export async function registerWithPin(phone: string, fullName: string, alias: string, pin: string) {
+  const result = await postAuth("/api/pulse", { action: "register-account", phone, fullName, alias, pin });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
+export async function loginWithPin(phone: string, pin: string) {
+  const result = await postAuth("/api/pulse", { action: "login-account", phone, pin });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
+export async function logoutAccount(token: string) {
+  if (!token) return;
+  try {
+    await postAuth("/api/pulse", { action: "logout-account", token });
+  } catch {
+    /* local session is already cleared */
+  }
+}
+
 export async function directEnterAccount(phone: string, fullName: string, alias: string) {
   const result = await postAuth("/api/pulse", { action: "direct-enter", phone, fullName, alias });
   const token = result.token ?? "";
@@ -279,9 +308,17 @@ export async function loadAccount() {
   if (!token) return null;
   try {
     const result = await dispatch({ action: "load", token });
+    const decision = decideSession({
+      hasToken: true,
+      ok: Boolean(result.ok),
+      hasUser: Boolean(result.currentUser),
+    });
+    if (decision.clearToken) writeSessionToken("");
+    if (decision.status !== "ready") return null;
     return asSnapshot(result, token);
   } catch {
-    writeSessionToken("");
+    const decision = decideSession({ hasToken: true, networkError: true });
+    if (decision.clearToken) writeSessionToken("");
     return null;
   }
 }

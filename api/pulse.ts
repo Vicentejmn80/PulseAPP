@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleOtpAction } from "../lib/registration/otpAuth.mjs";
+import { handlePinAction } from "../lib/registration/pinAuth.mjs";
 
 function readBody(req: VercelRequest) {
   const body = req.body;
@@ -26,6 +27,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = readBody(req);
   const action = String(body.action ?? "");
+
+  if (action === "register-account" || action === "login-account" || action === "logout-account") {
+    try {
+      const result = await handlePinAction(action, body);
+      res.status(result.ok ? 200 : 400).json(result);
+    } catch (error) {
+      fail(res, error);
+    }
+    return;
+  }
 
   if (
     action === "auth-config" ||

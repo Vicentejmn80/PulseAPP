@@ -4,6 +4,7 @@ import { QrBlock } from "@/components/demo/QrBlock";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { SimulationStage, type SimulationVenue } from "@/components/simulation/SimulationStage";
 import { canStartSimulator, venueQrPath } from "@/lib/demoMatch";
+import { predictionBackTarget } from "@/lib/toboNav";
 import type { ScenarioSummary } from "@/lib/simulation/types";
 import {
   answerSimulationMoment,
@@ -193,7 +194,7 @@ export function DemoExperience({
     return (
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-          <BackButton onClick={() => navigate("/")} />
+          <BackButton onClick={() => navigate(predictionBackTarget())} />
           <div>
             <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">
               Experiencia demo
@@ -226,7 +227,7 @@ export function DemoExperience({
     return (
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-          <BackButton onClick={() => navigate("/")} />
+          <BackButton onClick={() => navigate(predictionBackTarget())} />
           <div>
             <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">
               Experiencia demo
@@ -280,7 +281,7 @@ export function DemoExperience({
               )}
               <button
                 type="button"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(predictionBackTarget())}
                 className="h-12 flex-1 rounded-2xl bg-[#FFF1EA] text-[14px] font-extrabold text-[#241710]"
               >
                 Volver a inicio
@@ -303,7 +304,7 @@ export function DemoExperience({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/")} />
+        <BackButton onClick={() => navigate(predictionBackTarget())} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">
             Experiencia demo

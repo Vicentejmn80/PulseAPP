@@ -155,15 +155,6 @@ export function ProfilePage() {
           </p>
         )}
 
-        {/* CLAVE */}
-        <div className="mt-5 px-5">
-          <h3 className="text-[14px] font-extrabold">Otro telefono</h3>
-        </div>
-        <div className="mt-2 mx-4 rounded-[22px] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-          <p className="text-[13px] font-semibold text-[#8D7366]">Entra con tu celular y esta clave. Los puntos son los mismos.</p>
-          <p className="mt-2 text-[28px] font-extrabold tracking-[0.18em]">{currentUser.accessCode}</p>
-        </div>
-
         {/* ACTIVIDAD */}
         <div className="mt-5 px-5">
           <h3 className="text-[14px] font-extrabold">Actividad reciente</h3>

@@ -1,4 +1,5 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
 
 export function ToboLayout() {
@@ -17,7 +18,8 @@ export function ToboLayout() {
       >
         <button
           type="button"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(toboExitTarget())}
+          aria-label="Salir de Juégate el Tobo"
           className="flex items-center gap-1.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em]"
           style={{ color: "var(--t-accent)" }}
         >

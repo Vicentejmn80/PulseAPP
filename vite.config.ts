@@ -32,6 +32,12 @@ function pulseApi(): Plugin {
           const raw = await readBody(req);
           const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
           const action = String(body.action ?? "");
+          if (action === "register-account" || action === "login-account" || action === "logout-account") {
+            const { handlePinAction } = await server.ssrLoadModule("/src/server/pinAuth.ts");
+            const result = await handlePinAction(action, body);
+            json(response, result.ok ? 200 : 400, result);
+            return;
+          }
           if (
             action === "auth-config" ||
             action === "direct-enter" ||

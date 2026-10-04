@@ -20,5 +20,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "api", "lib/registration/otpAuth.d.mts"]
+  "include": ["src", "api", "lib/registration/otpAuth.d.mts", "lib/registration/pinAuth.d.mts"]
 }

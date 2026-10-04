@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { checkAlias, fetchAuthConfig, FlowError } from "@/services/accountApi";
+import { useEffect, useState, type FormEvent } from "react";
+import { checkAlias, FlowError } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
-type Step = "phone" | "otp" | "profile";
-type AuthMode = "loading" | "bypass" | "whatsapp";
+type Mode = "choose" | "register" | "login";
 
 const COUNTRIES = [
   { iso: "VE", dial: "+58", flag: "🇻🇪", label: "Venezuela" },
@@ -12,8 +11,6 @@ const COUNTRIES = [
   { iso: "MX", dial: "+52", flag: "🇲🇽", label: "México" },
   { iso: "ES", dial: "+34", flag: "🇪🇸", label: "España" },
 ];
-
-const ZONES = ["Caracas", "Valencia", "Maracaibo", "Barquisimeto", "Puerto La Cruz", "Lechería", "Maracay", "Otra"];
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "");
@@ -30,58 +27,23 @@ function composePhone(dial: string, local: string) {
   return `${dial}${digits}`;
 }
 
-function maskPhone(phone: string) {
-  if (phone.length < 6) return phone;
-  return `${phone.slice(0, 4)} •••• ${phone.slice(-4)}`;
-}
-
-const fieldClass =
-  "mt-1 h-14 w-full rounded-2xl border-2 bg-white px-4 text-[16px] font-bold outline-none";
-
-function aliasFormatOk(alias: string) {
-  const key = alias.trim().toLowerCase();
-  return /^[a-z0-9_]{3,20}$/.test(key);
-}
+const fieldClass = "mt-1 h-14 w-full rounded-2xl border-2 bg-white px-4 text-[16px] font-bold outline-none";
 
 export function EnterPage({ hint = "" }: { hint?: string }) {
-  const { requestOtp, confirmOtp, finishSignup, directEnter, authError, setAuthError } = usePulse();
-  const [authMode, setAuthMode] = useState<AuthMode>("loading");
-  const [step, setStep] = useState<Step>("phone");
+  const { createAccount, loginWithPin, authError, setAuthError } = usePulse();
+  const [mode, setMode] = useState<Mode>("choose");
   const [country, setCountry] = useState(COUNTRIES[0]);
   const [localPhone, setLocalPhone] = useState("");
   const [fullName, setFullName] = useState("");
-  const [e164, setE164] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [alias, setAlias] = useState("");
-  const [city, setCity] = useState("Caracas");
-  const [ticket, setTicket] = useState("");
+  const [pin, setPin] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
   const [pending, setPending] = useState(false);
-  const [sentNote, setSentNote] = useState("");
-  const [cooldown, setCooldown] = useState(0);
   const [aliasState, setAliasState] = useState<"idle" | "checking" | "free" | "taken" | "invalid">("idle");
-  const inputs = useRef<Array<HTMLInputElement | null>>([]);
+  const [switchHint, setSwitchHint] = useState<"login" | "register" | "">("");
 
   useEffect(() => {
-    let alive = true;
-    fetchAuthConfig().then((config) => {
-      if (!alive) return;
-      setAuthMode(config.whatsappOtp ? "whatsapp" : "bypass");
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (cooldown <= 0) return undefined;
-    const id = window.setTimeout(() => setCooldown((n) => n - 1), 1000);
-    return () => window.clearTimeout(id);
-  }, [cooldown]);
-
-  const aliasCheckActive = authMode === "bypass" || step === "profile";
-
-  useEffect(() => {
-    if (!aliasCheckActive) return undefined;
+    if (mode !== "register") return undefined;
     const value = alias.trim();
     if (value.length < 3) {
       setAliasState(value ? "invalid" : "idle");
@@ -103,256 +65,51 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
       alive = false;
       window.clearTimeout(id);
     };
-  }, [alias, aliasCheckActive, step]);
+  }, [alias, mode]);
 
-  async function sendCode(phone = composePhone(country.dial, localPhone)) {
+  function open(next: Mode) {
+    setMode(next);
+    setAuthError("");
+    setSwitchHint("");
+    setPin("");
+    setPinConfirm("");
+  }
+
+  async function onRegister(event: FormEvent) {
+    event.preventDefault();
+    if (pin !== pinConfirm) {
+      setAuthError("Los PIN no coinciden.");
+      return;
+    }
     setPending(true);
     setAuthError("");
-    setSentNote("");
+    setSwitchHint("");
     try {
-      await requestOtp(phone);
-      setE164(phone);
-      setStep("otp");
-      setOtp(["", "", "", "", "", ""]);
-      setCooldown(30);
-      setSentNote("Código enviado por WhatsApp.");
-      window.setTimeout(() => inputs.current[0]?.focus(), 40);
+      await createAccount(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), pin);
     } catch (error) {
-      if (error instanceof FlowError && error.retryAfter) setCooldown(error.retryAfter);
+      if (error instanceof FlowError && error.code === "PHONE_ALREADY_REGISTERED") setSwitchHint("login");
+      if (error instanceof FlowError && error.code === "ALIAS_ALREADY_TAKEN") setSwitchHint("");
     } finally {
       setPending(false);
     }
   }
 
-  async function onPhone(event: FormEvent) {
-    event.preventDefault();
-    await sendCode();
-  }
-
-  async function onDirectEnter(event: FormEvent) {
-    event.preventDefault();
-    const phone = composePhone(country.dial, localPhone);
-    setPending(true);
-    setAuthError("");
-    try {
-      await directEnter(phone, fullName.trim(), alias.trim());
-    } catch {
-      /* authError lives in context */
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function submitOtp(code: string) {
-    if (code.length !== 6 || pending) return;
-    setPending(true);
-    setAuthError("");
-    try {
-      const result = await confirmOtp(e164, code);
-      if (result.isNew && result.ticket) {
-        setTicket(result.ticket);
-        setStep("profile");
-        return;
-      }
-    } catch {
-      setOtp(["", "", "", "", "", ""]);
-      inputs.current[0]?.focus();
-    } finally {
-      setPending(false);
-    }
-  }
-
-  function onOtpChange(index: number, value: string) {
-    const digit = onlyDigits(value).slice(-1);
-    const next = [...otp];
-    next[index] = digit;
-    setOtp(next);
-    if (digit && index < 5) inputs.current[index + 1]?.focus();
-    const joined = next.join("");
-    if (joined.length === 6) void submitOtp(joined);
-  }
-
-  function onOtpKey(index: number, key: string) {
-    if (key === "Backspace" && !otp[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
-  }
-
-  function onOtpPaste(value: string) {
-    const digits = onlyDigits(value).slice(0, 6).split("");
-    if (!digits.length) return;
-    const next = ["", "", "", "", "", ""];
-    digits.forEach((d, i) => {
-      next[i] = d;
-    });
-    setOtp(next);
-    if (digits.length === 6) void submitOtp(digits.join(""));
-    else inputs.current[digits.length]?.focus();
-  }
-
-  async function onProfile(event: FormEvent) {
+  async function onLogin(event: FormEvent) {
     event.preventDefault();
     setPending(true);
     setAuthError("");
+    setSwitchHint("");
     try {
-      await finishSignup(ticket, alias, city);
-    } catch {
-      /* authError lives in context */
+      await loginWithPin(composePhone(country.dial, localPhone), pin);
+    } catch (error) {
+      if (error instanceof FlowError && error.code === "ACCOUNT_NOT_FOUND") setSwitchHint("register");
     } finally {
       setPending(false);
     }
   }
 
   const phoneReady = onlyDigits(localPhone).length >= 7;
-  const bypassAliasOk = aliasFormatOk(alias);
-  const bypassReady = phoneReady && fullName.trim().length >= 2 && bypassAliasOk;
-
-  if (authMode === "loading") {
-    return (
-      <div
-        className="flex h-full flex-col items-center justify-center px-5"
-        style={{ backgroundColor: "var(--p-bg)", color: "var(--p-muted)" }}
-      >
-        <p className="text-[15px] font-bold">Preparando acceso…</p>
-      </div>
-    );
-  }
-
-  if (authMode === "bypass") {
-    return (
-      <div
-        className="flex h-full flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]"
-        style={{ backgroundColor: "var(--p-bg)", color: "var(--p-text)" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-2xl text-[18px] font-extrabold text-white"
-            style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 8px 16px rgba(24,160,133,0.28)" }}
-          >
-            P
-          </div>
-          <p className="text-[18px] font-extrabold tracking-tight">Pulse</p>
-        </div>
-
-        <h1 className="mt-8 text-[32px] font-extrabold leading-tight tracking-tight">Entra a Pulse</h1>
-        {hint && (
-          <p className="mt-3 text-[14px] font-extrabold" style={{ color: "var(--p-coral)" }}>
-            {hint}
-          </p>
-        )}
-        <p className="mt-2 text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>
-          Registro rápido para la demo. Sin código de WhatsApp por ahora.
-        </p>
-
-        <form onSubmit={onDirectEnter} className="mt-6 flex flex-1 flex-col gap-3">
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            País
-            <select
-              value={country.iso}
-              onChange={(event) => {
-                const next = COUNTRIES.find((item) => item.iso === event.target.value) ?? COUNTRIES[0];
-                setCountry(next);
-              }}
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
-            >
-              {COUNTRIES.map((item) => (
-                <option key={item.iso} value={item.iso}>
-                  {item.flag} {item.label} {item.dial}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Celular
-            <div className="mt-1 flex gap-2">
-              <span
-                className="flex h-14 items-center rounded-2xl border-2 bg-white px-3 text-[15px] font-extrabold"
-                style={{ borderColor: "#D7EDE7", color: "var(--p-accent)" }}
-              >
-                {country.dial}
-              </span>
-              <input
-                value={localPhone}
-                onChange={(event) => setLocalPhone(event.target.value)}
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder={country.iso === "VE" ? "412 000 0000" : "Número"}
-                className={`${fieldClass} mt-0 flex-1`}
-                style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
-              />
-            </div>
-          </label>
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Nombre completo
-            <input
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              autoComplete="name"
-              maxLength={80}
-              placeholder="Vicente Martínez"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
-            />
-          </label>
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Alias / apodo
-            <input
-              value={alias}
-              onChange={(event) => setAlias(event.target.value.replace(/\s/g, ""))}
-              autoComplete="nickname"
-              maxLength={20}
-              placeholder="vicente2"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
-            />
-          </label>
-          {aliasState === "checking" && (
-            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>
-              Revisando alias...
-            </p>
-          )}
-          {aliasState === "free" && (
-            <p className="text-[13px] font-extrabold" style={{ color: "var(--p-accent)" }}>
-              ✓ Alias disponible
-            </p>
-          )}
-          {aliasState === "taken" && (
-            <p className="text-[13px] font-extrabold text-[#E23B2F]">
-              ✕ Este alias ya está ocupado (si ya tienes cuenta, igual puedes entrar con tu celular)
-            </p>
-          )}
-          {aliasState === "invalid" && (
-            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>
-              De 3 a 20 letras, números o _.
-            </p>
-          )}
-          {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
-          <div className="mt-auto">
-            <button
-              type="submit"
-              disabled={pending || !bypassReady}
-              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
-              style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
-            >
-              {pending ? "Entrando…" : "Entrar a Pulse"}
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
-  const titles: Record<Step, string> = {
-    phone: "Entra con WhatsApp",
-    otp: "Revisa tu WhatsApp",
-    profile: "Cómo te ven en Pulse",
-  };
-  const copies: Record<Step, string> = {
-    phone: "Te enviamos un código de 6 dígitos. Sin contraseñas.",
-    otp: `Escribe el código que llegó a ${maskPhone(e164)}.`,
-    profile: "Solo la primera vez. Así apareces en los rankings.",
-  };
+  const pinReady = /^\d{6}$/.test(pin);
 
   return (
     <div
@@ -369,161 +126,59 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
         <p className="text-[18px] font-extrabold tracking-tight">Pulse</p>
       </div>
 
-      <div className="mt-6 flex gap-1.5">
-        {(["phone", "otp", "profile"] as Step[]).map((item) => (
-          <span
-            key={item}
-            className="h-1.5 flex-1 rounded-full"
-            style={{
-              backgroundColor:
-                step === item || (step === "otp" && item === "phone") || step === "profile"
-                  ? "var(--p-accent)"
-                  : "#CDE8E1",
-            }}
-          />
-        ))}
-      </div>
-
-      <h1 className="mt-6 text-[32px] font-extrabold leading-tight tracking-tight">{titles[step]}</h1>
-      {hint && (
-        <p className="mt-3 text-[14px] font-extrabold" style={{ color: "var(--p-coral)" }}>
-          {hint}
-        </p>
-      )}
-      <p className="mt-2 text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>
-        {copies[step]}
-      </p>
-
-      {step === "phone" && (
-        <form onSubmit={onPhone} className="mt-6 flex flex-1 flex-col gap-3">
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            País
-            <select
-              value={country.iso}
-              onChange={(event) => {
-                const next = COUNTRIES.find((item) => item.iso === event.target.value) ?? COUNTRIES[0];
-                setCountry(next);
-              }}
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
-            >
-              {COUNTRIES.map((item) => (
-                <option key={item.iso} value={item.iso}>
-                  {item.flag} {item.label} {item.dial}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Celular
-            <div className="mt-1 flex gap-2">
-              <span
-                className="flex h-14 items-center rounded-2xl border-2 bg-white px-3 text-[15px] font-extrabold"
-                style={{ borderColor: "#D7EDE7", color: "var(--p-accent)" }}
-              >
-                {country.dial}
-              </span>
-              <input
-                value={localPhone}
-                onChange={(event) => setLocalPhone(event.target.value)}
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder={country.iso === "VE" ? "412 000 0000" : "Número"}
-                className={`${fieldClass} mt-0 flex-1`}
-                style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
-              />
-            </div>
-          </label>
-          {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
-          <div className="mt-auto">
-            <button
-              type="submit"
-              disabled={pending || onlyDigits(localPhone).length < 7}
-              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
-              style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
-            >
-              {pending ? "Enviando código..." : "Enviar código por WhatsApp"}
-            </button>
-            <p className="mt-4 text-center text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>
-              La primera vez, envía el mensaje de unión del sandbox de Twilio al +1 737 250 8034 y después pide el código.
-            </p>
-          </div>
-        </form>
-      )}
-
-      {step === "otp" && (
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submitOtp(otp.join(""));
-          }}
-          className="mt-6 flex flex-1 flex-col"
-        >
-          <div className="flex justify-between gap-2">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                ref={(node) => {
-                  inputs.current[index] = node;
-                }}
-                value={digit}
-                inputMode="numeric"
-                autoComplete={index === 0 ? "one-time-code" : "off"}
-                maxLength={1}
-                onChange={(event) => onOtpChange(index, event.target.value)}
-                onKeyDown={(event) => onOtpKey(index, event.key)}
-                onPaste={(event) => {
-                  event.preventDefault();
-                  onOtpPaste(event.clipboardData.getData("text"));
-                }}
-                className="h-16 w-full rounded-2xl border-2 bg-white text-center text-[24px] font-extrabold outline-none"
-                style={{ borderColor: digit ? "var(--p-accent)" : "#D7EDE7", color: "var(--p-text)" }}
-              />
-            ))}
-          </div>
-          {sentNote && !authError && (
-            <p className="mt-4 text-center text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
-              ✓ {sentNote}
+      {mode === "choose" && (
+        <div className="mt-10 flex flex-1 flex-col">
+          <h1 className="text-[32px] font-extrabold leading-tight tracking-tight">¿Qué quieres hacer?</h1>
+          {hint && (
+            <p className="mt-3 text-[14px] font-extrabold" style={{ color: "var(--p-coral)" }}>
+              {hint}
             </p>
           )}
-          {authError && <p className="mt-4 text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
-          <div className="mt-auto">
+          <p className="mt-2 text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>
+            Una cuenta por teléfono. Entras con un PIN de 6 números.
+          </p>
+          <div className="mt-8 flex flex-col gap-3">
             <button
-              type="submit"
-              disabled={pending || otp.join("").length !== 6}
-              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
+              type="button"
+              onClick={() => open("register")}
+              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white"
               style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
             >
-              {pending ? "Validando…" : "Confirmar código"}
+              Crear cuenta
             </button>
             <button
               type="button"
-              disabled={pending || cooldown > 0}
-              onClick={() => void sendCode(e164)}
-              className="mt-4 w-full text-center text-[14px] font-extrabold disabled:opacity-40"
-              style={{ color: "var(--p-accent)" }}
+              onClick={() => open("login")}
+              className="flex h-14 w-full items-center justify-center rounded-2xl border-2 bg-white text-[17px] font-extrabold"
+              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
             >
-              {cooldown > 0 ? `Reenviar en ${cooldown}s` : "Reenviar código"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStep("phone");
-                setAuthError("");
-              }}
-              className="mt-3 w-full text-center text-[13px] font-extrabold"
-              style={{ color: "var(--p-muted)" }}
-            >
-              Cambiar número
+              Iniciar sesión
             </button>
           </div>
-        </form>
+        </div>
       )}
 
-      {step === "profile" && (
-        <form onSubmit={onProfile} className="mt-6 flex flex-1 flex-col gap-3">
+      {mode === "register" && (
+        <form onSubmit={onRegister} className="mt-6 flex flex-1 flex-col gap-3">
+          <button type="button" onClick={() => open("choose")} className="self-start text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            ← Volver
+          </button>
+          <h1 className="text-[28px] font-extrabold leading-tight">Soy nuevo en Pulse</h1>
+          <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
           <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Apodo / username
+            Nombre completo
+            <input
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              autoComplete="name"
+              maxLength={80}
+              placeholder="Vicente Martínez"
+              className={fieldClass}
+              style={{ borderColor: "#D7EDE7" }}
+            />
+          </label>
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            Alias
             <input
               value={alias}
               onChange={(event) => setAlias(event.target.value.replace(/\s/g, ""))}
@@ -531,63 +186,153 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
               maxLength={20}
               placeholder="vicente2"
               className={fieldClass}
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+              style={{ borderColor: "#D7EDE7" }}
             />
           </label>
-          {aliasState === "checking" && (
-            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>Revisando alias...</p>
-          )}
-          {aliasState === "free" && (
-            <p className="text-[13px] font-extrabold" style={{ color: "var(--p-accent)" }}>✓ Alias disponible</p>
-          )}
-          {aliasState === "taken" && (
-            <p className="text-[13px] font-extrabold text-[#E23B2F]">✕ Este alias ya está ocupado</p>
-          )}
-          {aliasState === "invalid" && (
-            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>De 3 a 20 letras, números o _.</p>
-          )}
-          <div>
-            <p className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-              Ciudad / zona
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {ZONES.map((zone) => (
-                <button
-                  key={zone}
-                  type="button"
-                  onClick={() => setCity(zone === "Otra" ? "" : zone)}
-                  className="rounded-full px-3 py-2 text-[12px] font-extrabold"
-                  style={
-                    city === zone || (zone === "Otra" && !ZONES.slice(0, -1).includes(city))
-                      ? { backgroundColor: "var(--p-accent)", color: "white" }
-                      : { backgroundColor: "white", color: "var(--p-muted)" }
-                  }
-                >
-                  {zone}
-                </button>
-              ))}
-            </div>
+          <AliasHint state={aliasState} />
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            PIN
             <input
-              value={city}
-              onChange={(event) => setCity(event.target.value)}
-              placeholder="Tu ciudad o zona"
+              value={pin}
+              onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="new-password"
+              maxLength={6}
+              placeholder="••••••"
+              type="password"
               className={fieldClass}
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+              style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
             />
-          </div>
+          </label>
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            Confirmar PIN
+            <input
+              value={pinConfirm}
+              onChange={(event) => setPinConfirm(onlyDigits(event.target.value).slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="new-password"
+              maxLength={6}
+              placeholder="••••••"
+              type="password"
+              className={fieldClass}
+              style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
+            />
+          </label>
           {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
+          {switchHint === "login" && (
+            <button type="button" onClick={() => open("login")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
+              Iniciar sesión
+            </button>
+          )}
           <div className="mt-auto">
             <button
               type="submit"
-              disabled={pending || aliasState !== "free" || city.trim().length < 2}
+              disabled={pending || !phoneReady || fullName.trim().length < 2 || aliasState === "invalid" || aliasState === "taken" || aliasState === "checking" || alias.trim().length < 3 || !pinReady || pin !== pinConfirm}
               className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
-              style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
+              style={{ backgroundColor: "var(--p-accent)" }}
             >
-              {pending ? "Creando perfil…" : "Entrar a Pulse"}
+              {pending ? "Creando cuenta…" : "Crear cuenta"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {mode === "login" && (
+        <form onSubmit={onLogin} className="mt-6 flex flex-1 flex-col gap-3">
+          <button type="button" onClick={() => open("choose")} className="self-start text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            ← Volver
+          </button>
+          <h1 className="text-[28px] font-extrabold leading-tight">Ya tengo una cuenta</h1>
+          <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            PIN
+            <input
+              value={pin}
+              onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="current-password"
+              maxLength={6}
+              placeholder="••••••"
+              type="password"
+              className={fieldClass}
+              style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
+            />
+          </label>
+          {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
+          {switchHint === "register" && (
+            <button type="button" onClick={() => open("register")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
+              Crear cuenta
+            </button>
+          )}
+          <div className="mt-auto">
+            <button
+              type="submit"
+              disabled={pending || !phoneReady || !pinReady}
+              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
+              style={{ backgroundColor: "var(--p-accent)" }}
+            >
+              {pending ? "Entrando…" : "Entrar"}
             </button>
           </div>
         </form>
       )}
     </div>
   );
+}
+
+function PhoneFields({
+  country,
+  setCountry,
+  localPhone,
+  setLocalPhone,
+}: {
+  country: (typeof COUNTRIES)[number];
+  setCountry: (value: (typeof COUNTRIES)[number]) => void;
+  localPhone: string;
+  setLocalPhone: (value: string) => void;
+}) {
+  return (
+    <>
+      <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+        País
+        <select
+          value={country.iso}
+          onChange={(event) => setCountry(COUNTRIES.find((item) => item.iso === event.target.value) ?? COUNTRIES[0])}
+          className={fieldClass}
+          style={{ borderColor: "#D7EDE7" }}
+        >
+          {COUNTRIES.map((item) => (
+            <option key={item.iso} value={item.iso}>
+              {item.flag} {item.label} {item.dial}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+        Número de teléfono
+        <div className="mt-1 flex gap-2">
+          <span className="flex h-14 items-center rounded-2xl border-2 bg-white px-3 text-[15px] font-extrabold" style={{ borderColor: "#D7EDE7", color: "var(--p-accent)" }}>
+            {country.dial}
+          </span>
+          <input
+            value={localPhone}
+            onChange={(event) => setLocalPhone(event.target.value)}
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder={country.iso === "VE" ? "412 000 0000" : "Número"}
+            className={`${fieldClass} mt-0 flex-1`}
+            style={{ borderColor: "#D7EDE7" }}
+          />
+        </div>
+      </label>
+    </>
+  );
+}
+
+function AliasHint({ state }: { state: "idle" | "checking" | "free" | "taken" | "invalid" }) {
+  if (state === "checking") return <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>Revisando alias...</p>;
+  if (state === "free") return <p className="text-[13px] font-extrabold" style={{ color: "var(--p-accent)" }}>✓ Alias disponible</p>;
+  if (state === "taken") return <p className="text-[13px] font-extrabold text-[#E23B2F]">Este alias ya está ocupado.</p>;
+  if (state === "invalid") return <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>De 3 a 20 letras, números o _.</p>;
+  return null;
 }

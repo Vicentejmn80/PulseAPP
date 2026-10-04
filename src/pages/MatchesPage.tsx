@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { predictionBackTarget } from "@/lib/toboNav";
 import { DuelBox, LiveCenter, ShareLine } from "@/components/live/LiveCenter";
 import { MatchExtras } from "@/components/tobo/PilotExtras";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
@@ -204,8 +205,12 @@ export function MatchPredictPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate("/tobo/partidos")} />
+      <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
+        <BackButton onClick={() => navigate(predictionBackTarget())} label="Volver a Juégate el Tobo" />
+        <div>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">← Juégate el Tobo</p>
+          <p className="text-[14px] font-extrabold">Pronóstico</p>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         {missing && <p className="rounded-[28px] bg-white px-6 py-8 text-center text-[16px] font-extrabold">Ese partido no está publicado.</p>}

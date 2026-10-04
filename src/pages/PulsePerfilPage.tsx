@@ -80,7 +80,7 @@ export function PulsePerfilPage() {
             {currentUser.phone || "WhatsApp"}
           </p>
           <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
-            Entras con un código de 6 dígitos que llega por WhatsApp.
+            Entras con tu celular y tu PIN. El PIN no se muestra aquí.
           </p>
         </div>
 
