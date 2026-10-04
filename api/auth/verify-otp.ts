@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { verifyOtp } from "../../src/server/otpAuth";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -8,6 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
+    const { verifyOtp } = await import("../../src/server/otpAuth");
     const result = await verifyOtp(body as Record<string, unknown>);
     res.status(result.ok ? 200 : 400).json(result);
   } catch (error) {

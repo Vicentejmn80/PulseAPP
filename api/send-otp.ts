@@ -7,8 +7,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body ?? {});
-    const { completeOtpProfile } = await import("../../src/server/otpAuth");
-    const result = await completeOtpProfile(body as Record<string, unknown>);
+    const { sendOtp } = await import("../src/server/otpAuth");
+    const result = await sendOtp(body as Record<string, unknown>);
     res.status(result.ok ? 200 : 400).json(result);
   } catch (error) {
     res.status(500).json({

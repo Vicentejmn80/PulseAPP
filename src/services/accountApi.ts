@@ -142,6 +142,18 @@ async function dispatch(body: Record<string, unknown>) {
   return post(body);
 }
 
+async function readJson(response: Response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as ApiResult & { isNew?: boolean; ticket?: string; phone?: string };
+  } catch {
+    if (response.status >= 500) {
+      throw new Error("El servidor de login falló. En unos segundos vuelve a intentar.");
+    }
+    throw new Error("El servidor respondió de forma inesperada. Intenta en unos segundos.");
+  }
+}
+
 async function postAuth(path: string, body: Record<string, unknown>): Promise<ApiResult & { isNew?: boolean; ticket?: string; phone?: string }> {
   let response: Response;
   try {
@@ -154,22 +166,17 @@ async function postAuth(path: string, body: Record<string, unknown>): Promise<Ap
     throw new Error("No hay conexión con el servidor. Revisa tu internet e intenta otra vez.");
   }
 
-  let result: ApiResult & { isNew?: boolean; ticket?: string; phone?: string };
-  try {
-    result = (await response.json()) as ApiResult & { isNew?: boolean; ticket?: string; phone?: string };
-  } catch {
-    throw new Error("El servidor respondió de forma inesperada. Intenta en unos segundos.");
-  }
+  const result = await readJson(response);
   if (!result.ok) throw new Error(result.error || "No se pudo completar.");
   return result;
 }
 
 export async function requestOtp(phone: string) {
-  return postAuth("/api/auth/send-otp", { phone });
+  return postAuth("/api/pulse", { action: "send-otp", phone });
 }
 
 export async function confirmOtp(phone: string, code: string) {
-  const result = await postAuth("/api/auth/verify-otp", { phone, code });
+  const result = await postAuth("/api/pulse", { action: "verify-otp", phone, code });
   if (result.isNew) {
     return { isNew: true as const, ticket: String(result.ticket ?? ""), phone: String(result.phone ?? phone) };
   }
@@ -179,7 +186,7 @@ export async function confirmOtp(phone: string, code: string) {
 }
 
 export async function finishSignup(ticket: string, alias: string, city: string) {
-  const result = await postAuth("/api/auth/complete-profile", { ticket, alias, city });
+  const result = await postAuth("/api/pulse", { action: "complete-profile", ticket, alias, city });
   const token = result.token ?? "";
   writeSessionToken(token);
   return asSnapshot(result, token);

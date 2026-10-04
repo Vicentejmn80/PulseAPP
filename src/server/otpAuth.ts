@@ -4,10 +4,11 @@ const SUPABASE_URL =
   process.env.SUPABASE_URL ||
   process.env.VITE_SUPABASE_URL ||
   "https://ovgwqeoslaitsmhdkxbl.supabase.co";
+
 const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
-  "";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92Z3dxZW9zbGFpdHNtaGRreGJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMDA3NDcsImV4cCI6MjEwNTc3Njc0N30.T6e7hMV-BkuI_RJtRm2qMax5n7DmbTJpNYLVGpO-Vd8";
 
 export interface OtpJson {
   ok: boolean;
@@ -26,27 +27,24 @@ export interface OtpJson {
 }
 
 function supabase() {
-  if (!SUPABASE_ANON_KEY) throw new Error("Falta la clave de Supabase en el servidor.");
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
 
 function otpSecret() {
-  return (process.env.PULSE_OTP_SECRET || "").trim();
+  return (process.env.PULSE_OTP_SECRET || "ffb1e5c6545e0b0394eee83520a90e3afbfba63821ecf9e6").trim();
 }
 
-function twilioSid() {
-  return (process.env.TWILIO_ACCOUNT_SID || "").trim();
+function basicAuth(sid: string, token: string) {
+  const raw = `${sid}:${token}`;
+  if (typeof Buffer !== "undefined") return Buffer.from(raw).toString("base64");
+  return btoa(raw);
 }
 
-function twilioToken() {
-  return (process.env.TWILIO_AUTH_TOKEN || "").trim();
-}
-
-function twilioFrom() {
-  const raw = (process.env.TWILIO_WHATSAPP_NUMBER || "+17372508034").trim();
-  return raw.startsWith("whatsapp:") ? raw : `whatsapp:${raw}`;
+function asWhatsAppFrom(raw: string) {
+  const value = raw.trim();
+  return value.startsWith("whatsapp:") ? value : `whatsapp:${value}`;
 }
 
 export function normalizePhoneClient(raw: string) {
@@ -70,40 +68,66 @@ async function rpc<T extends OtpJson>(fn: string, args: Record<string, unknown>)
   return (data ?? { ok: false, error: "Sin respuesta del servidor." }) as T;
 }
 
+async function twilioCredentials() {
+  const envSid = (process.env.TWILIO_ACCOUNT_SID || "").trim();
+  const envToken = (process.env.TWILIO_AUTH_TOKEN || "").trim();
+  const envFrom = (process.env.TWILIO_WHATSAPP_NUMBER || "").trim();
+  const envContent = (process.env.TWILIO_CONTENT_SID || "").trim();
+  if (envSid && envToken) {
+    return {
+      accountSid: envSid,
+      authToken: envToken,
+      whatsappNumber: envFrom || "+17372508034",
+      contentSid: envContent,
+    };
+  }
+
+  const secret = otpSecret();
+  if (!secret) return null;
+  const remote = await rpc<OtpJson & {
+    accountSid?: string;
+    authToken?: string;
+    whatsappNumber?: string;
+    contentSid?: string;
+  }>("pulse_otp_provider", { p_secret: secret });
+  if (!remote.ok || !remote.accountSid || !remote.authToken) return null;
+  return {
+    accountSid: String(remote.accountSid),
+    authToken: String(remote.authToken),
+    whatsappNumber: String(remote.whatsappNumber || "+17372508034"),
+    contentSid: String(remote.contentSid || ""),
+  };
+}
+
 async function sendWhatsAppCode(phone: string, code: string) {
-  const sid = twilioSid();
-  const token = twilioToken();
-  if (!sid || !token) {
-    throw new Error("Twilio no está configurado en el servidor.");
+  const creds = await twilioCredentials();
+  if (!creds) {
+    throw new Error("Twilio no está configurado. Revisa las variables del servidor.");
   }
 
   const params = new URLSearchParams();
   params.set("To", `whatsapp:${phone}`);
-  params.set("From", twilioFrom());
-
-  const contentSid = (process.env.TWILIO_CONTENT_SID || "").trim();
-  if (contentSid) {
-    params.set("ContentSid", contentSid);
+  params.set("From", asWhatsAppFrom(creds.whatsappNumber));
+  if (creds.contentSid) {
+    params.set("ContentSid", creds.contentSid);
     params.set("ContentVariables", JSON.stringify({ "1": code }));
   } else {
-    params.set(
-      "Body",
-      `Tu código Pulse es ${code}. Válido por 10 minutos. No lo compartas.`,
-    );
+    params.set("Body", `Tu código Pulse es ${code}. Válido por 10 minutos. No lo compartas.`);
   }
 
-  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
-      "Content-Type": "application/x-www-form-urlencoded",
+  const response = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${creds.accountSid}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basicAuth(creds.accountSid, creds.authToken)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
     },
-    body: params,
-  });
+  );
 
   const payload = (await response.json().catch(() => ({}))) as {
-    sid?: string;
-    status?: string;
     error_code?: number;
     error_message?: string;
     message?: string;
@@ -112,20 +136,18 @@ async function sendWhatsAppCode(phone: string, code: string) {
 
   if (!response.ok) {
     const twilioCode = payload.code ?? payload.error_code;
-    if (twilioCode === 63016 || twilioCode === 63007) {
+    if (twilioCode === 63016 || twilioCode === 63007 || twilioCode === 21211) {
       throw new Error(
-        "WhatsApp no pudo entregar el código. Abre WhatsApp, escribe join al +1 737 250 8034 (sandbox de Twilio) y vuelve a intentarlo.",
+        "WhatsApp no pudo entregar el código. Abre WhatsApp, escribe el join del sandbox al +1 737 250 8034 y vuelve a pedirlo.",
       );
     }
     throw new Error(payload.error_message || payload.message || "Twilio no pudo enviar el WhatsApp.");
   }
-
-  return payload;
 }
 
 export async function sendOtp(body: Record<string, unknown>): Promise<OtpJson> {
   const secret = otpSecret();
-  if (!secret) return { ok: false, error: "Falta PULSE_OTP_SECRET en el servidor." };
+  if (!secret) return { ok: false, error: "Falta PULSE_OTP_SECRET en el servidor de Vercel." };
 
   const phone = String(body.phone ?? "");
   const code = sixDigitCode();
@@ -159,7 +181,10 @@ export async function completeOtpProfile(body: Record<string, unknown>): Promise
   });
 }
 
-export async function handleOtpAction(action: "send-otp" | "verify-otp" | "complete-profile", body: Record<string, unknown>) {
+export async function handleOtpAction(
+  action: "send-otp" | "verify-otp" | "complete-profile",
+  body: Record<string, unknown>,
+) {
   if (action === "send-otp") return sendOtp(body);
   if (action === "verify-otp") return verifyOtp(body);
   return completeOtpProfile(body);
