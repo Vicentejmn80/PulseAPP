@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Instagram, MapPin, Trophy } from "lucide-react";
+import { Camera, MapPin, Trophy } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
 import { listCycles, listTascas, type Tasca, type ToboCycle } from "@/services/matchesApi";
 
@@ -124,7 +124,7 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
                 className="flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[13px] font-extrabold"
                 style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)", border: "1px solid var(--t-border)" }}
               >
-                <Instagram className="h-4 w-4" /> Instagram
+                <Camera className="h-4 w-4" /> Instagram
               </a>
             ) : (
               <span
