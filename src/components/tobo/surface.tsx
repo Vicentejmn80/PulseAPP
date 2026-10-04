@@ -65,16 +65,19 @@ export function GoldCta({
   children,
   onClick,
   icon: Icon,
+  disabled,
 }: {
   children: ReactNode;
   onClick?: () => void;
   icon?: LucideIcon;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[14px] font-extrabold tracking-wide shadow-[0_8px_18px_rgba(255,201,74,0.22)]"
+      disabled={disabled}
+      className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[14px] font-extrabold tracking-wide shadow-[0_8px_18px_rgba(255,201,74,0.22)] disabled:opacity-40"
       style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
     >
       {Icon ? <Icon className="h-4 w-4" strokeWidth={2.6} /> : null}

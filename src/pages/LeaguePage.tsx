@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Users } from "lucide-react";
 import { RankingList } from "@/components/ranking/RankingList";
-import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
+import { BackButton } from "@/components/ui/Buttons";
+import { CardHead, GoldCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { createLeague, getLeague, getLeagueRanking, joinLeague, listMyLeagues, type League } from "@/services/leaguesApi";
 import type { LeaderboardEntry } from "@/types/pulse";
@@ -146,7 +148,8 @@ export function LeaguePage() {
                 key={league.id}
                 type="button"
                 onClick={() => navigate(`/tobo/ligas/${league.id}`)}
-                className="rounded-[24px] bg-white px-4 py-4 text-left shadow-[0_8px_20px_rgba(80,40,10,0.05)]"
+                className="rounded-[20px] px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
+                style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}
               >
                 <div className="flex items-center justify-between">
                   <p className="text-[16px] font-extrabold">{league.name}</p>
@@ -161,51 +164,53 @@ export function LeaguePage() {
         )}
 
         {tab === "crear" && (
-          <div className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Crear liga</p>
-            <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">Ejemplos: Familia, Oficina, Los panas, Universidad.</p>
+          <ToboCard>
+            <CardHead icon={Users} title="Crear liga" />
+            <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Ejemplos: Familia, Oficina, Los panas, Universidad.</p>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nombre de la liga"
-              className="mt-4 h-12 w-full rounded-2xl bg-[#FFF7F1] px-4 text-[15px] font-extrabold outline-none placeholder:text-[#A08B80]"
+              className="mt-4 h-12 w-full rounded-[14px] px-4 text-[15px] font-extrabold outline-none"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--t-text)" }}
             />
             <div className="mt-4">
-              <PrimaryButton onClick={onCreate} disabled={pending}>
+              <GoldCta icon={Users} onClick={onCreate} disabled={pending}>
                 Crear liga
-              </PrimaryButton>
+              </GoldCta>
             </div>
-          </div>
+          </ToboCard>
         )}
 
         {tab === "unirme" && (
-          <div className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Unirme a una liga</p>
-            <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">Pega el codigo de invitacion que te compartieron.</p>
+          <ToboCard>
+            <CardHead icon={Users} title="Unirme a una liga" />
+            <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Pega el codigo de invitacion que te compartieron.</p>
             <input
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="Codigo de 6 caracteres"
-              className="mt-4 h-12 w-full rounded-2xl bg-[#FFF7F1] px-4 text-[15px] font-extrabold uppercase outline-none placeholder:text-[#A08B80]"
+              className="mt-4 h-12 w-full rounded-[14px] px-4 text-[15px] font-extrabold uppercase outline-none"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--t-text)" }}
             />
             <div className="mt-4">
-              <PrimaryButton onClick={onJoin} disabled={pending}>
+              <GoldCta icon={Users} onClick={onJoin} disabled={pending}>
                 Unirme
-              </PrimaryButton>
+              </GoldCta>
             </div>
-          </div>
+          </ToboCard>
         )}
 
         {tab === "ranking" && (
           <>
             {current && (
-              <div className="mb-3 rounded-[24px] bg-white px-4 py-4">
-                <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Codigo de invitacion</p>
-                <p className="mt-1 text-[28px] font-extrabold uppercase tracking-[0.18em]">{current.code}</p>
-                <p className="text-[13px] font-semibold text-[#8D7366]">Comparte este codigo para invitar amigos.</p>
-              </div>
+              <ToboCard className="mb-3">
+                <CardHead icon={Users} title="Codigo de invitacion" />
+                <p className="text-[28px] font-extrabold uppercase tracking-[0.18em]">{current.code}</p>
+                <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Comparte este codigo para invitar amigos.</p>
+              </ToboCard>
             )}
             <RankingList entries={entries} subtitle="Ranking de la liga" emptyLabel="Todavia no hay jugadores en esta liga" />
           </>
