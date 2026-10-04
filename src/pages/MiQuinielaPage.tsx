@@ -47,7 +47,7 @@ export function MiQuinielaPage() {
         if (alive) setMatches(rows.filter((m) => !m.demo && !m.simulation));
       })
       .catch((reason: unknown) => {
-        if (alive) setError(reason instanceof Error ? reason.message : "No se pudo cargar la quiniela.");
+        if (alive) setError(reason instanceof Error ? reason.message : "No se pudieron cargar los pronósticos.");
       });
     return () => {
       alive = false;
@@ -86,7 +86,7 @@ export function MiQuinielaPage() {
         <BackButton onClick={() => navigate("/tobo")} />
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
-          <h2 className="text-[24px] font-extrabold tracking-tight">Mi Quiniela</h2>
+          <h2 className="text-[24px] font-extrabold tracking-tight">Pronósticos</h2>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { RankingList } from "@/components/ranking/RankingList";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
@@ -11,7 +11,11 @@ type LeagueTab = "mis" | "crear" | "unirme" | "ranking";
 export function LeaguePage() {
   const navigate = useNavigate();
   const { leagueId } = useParams<{ leagueId?: string }>();
-  const [tab, setTab] = useState<LeagueTab>(leagueId ? "ranking" : "mis");
+  const [searchParams] = useSearchParams();
+  const requested = searchParams.get("tab");
+  const [tab, setTab] = useState<LeagueTab>(
+    leagueId ? "ranking" : requested === "crear" || requested === "unirme" ? requested : "mis",
+  );
   const [leagues, setLeagues] = useState<League[]>([]);
   const [current, setCurrent] = useState<League | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -141,7 +145,7 @@ export function LeaguePage() {
               <button
                 key={league.id}
                 type="button"
-                onClick={() => navigate(`/ligas/${league.id}`)}
+                onClick={() => navigate(`/tobo/ligas/${league.id}`)}
                 className="rounded-[24px] bg-white px-4 py-4 text-left shadow-[0_8px_20px_rgba(80,40,10,0.05)]"
               >
                 <div className="flex items-center justify-between">
