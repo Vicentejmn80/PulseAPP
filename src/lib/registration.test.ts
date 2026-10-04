@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { aliasKey, mapTwilioFailure, normalizePhone, validateAlias } from "../../lib/registration/otpAuth.mjs";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  aliasKey,
+  mapTwilioFailure,
+  normalizePhone,
+  validateAlias,
+  whatsappOtpEnabled,
+} from "../../lib/registration/otpAuth.mjs";
 
 describe("teléfono canónico", () => {
   it("normaliza un celular venezolano de 10 dígitos", () => {
@@ -34,6 +40,27 @@ describe("alias", () => {
   it("compara sin importar mayúsculas", () => {
     expect(aliasKey("Vicente2")).toBe(aliasKey("vicente2"));
     expect(aliasKey("VICENTE2")).toBe("vicente2");
+  });
+});
+
+describe("ENABLE_WHATSAPP_OTP", () => {
+  const previous = process.env.ENABLE_WHATSAPP_OTP;
+
+  afterEach(() => {
+    if (previous === undefined) delete process.env.ENABLE_WHATSAPP_OTP;
+    else process.env.ENABLE_WHATSAPP_OTP = previous;
+  });
+
+  it("usa bypass cuando la variable está vacía", () => {
+    delete process.env.ENABLE_WHATSAPP_OTP;
+    expect(whatsappOtpEnabled()).toBe(false);
+  });
+
+  it("activa OTP con true o 1", () => {
+    process.env.ENABLE_WHATSAPP_OTP = "true";
+    expect(whatsappOtpEnabled()).toBe(true);
+    process.env.ENABLE_WHATSAPP_OTP = "1";
+    expect(whatsappOtpEnabled()).toBe(true);
   });
 });
 

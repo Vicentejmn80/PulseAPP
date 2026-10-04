@@ -6,6 +6,7 @@ import {
   addGameOnServer,
   completeOnServer,
   confirmOtp as confirmOtpRequest,
+  directEnterAccount,
   finishSignup as finishSignupRequest,
   loadAccount,
   loginAccount,
@@ -61,6 +62,7 @@ interface PulseContextValue {
   requestOtp: (phone: string) => Promise<void>;
   confirmOtp: (phone: string, code: string) => Promise<{ isNew: boolean; ticket?: string }>;
   finishSignup: (ticket: string, alias: string, city: string) => Promise<void>;
+  directEnter: (phone: string, fullName: string, alias: string) => Promise<void>;
   logout: () => void;
   completeGame: (input: CompleteGameInput) => Promise<number>;
   submitPrediction: (game: Game, optionId: string) => Promise<number>;
@@ -221,6 +223,7 @@ export function PulseProvider({ children }: { children: ReactNode }) {
         }
       },
       finishSignup: (ticket: string, alias: string, city: string) => enter(finishSignupRequest(ticket, alias, city)),
+      directEnter: (phone: string, fullName: string, alias: string) => enter(directEnterAccount(phone, fullName, alias)),
       logout: () => {
         writeSessionToken("");
         setAccount(null);

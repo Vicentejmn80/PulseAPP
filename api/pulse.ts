@@ -27,7 +27,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const body = readBody(req);
   const action = String(body.action ?? "");
 
-  if (action === "send-otp" || action === "verify-otp" || action === "check-alias" || action === "complete-profile") {
+  if (
+    action === "auth-config" ||
+    action === "direct-enter" ||
+    action === "send-otp" ||
+    action === "verify-otp" ||
+    action === "check-alias" ||
+    action === "complete-profile"
+  ) {
     try {
       console.info(JSON.stringify({ event: "registration_started", action }));
       const result = await handleOtpAction(action, body);

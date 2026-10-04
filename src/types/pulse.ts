@@ -355,6 +355,7 @@ export interface UserProfile {
   phone?: string;
   accessCode?: string;
   city?: string;
+  fullName?: string;
 }
 
 export interface MissionProgress {

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { checkAlias, FlowError } from "@/services/accountApi";
+import { checkAlias, fetchAuthConfig, FlowError } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
 type Step = "phone" | "otp" | "profile";
+type AuthMode = "loading" | "bypass" | "whatsapp";
 
 const COUNTRIES = [
   { iso: "VE", dial: "+58", flag: "🇻🇪", label: "Venezuela" },
@@ -37,11 +38,18 @@ function maskPhone(phone: string) {
 const fieldClass =
   "mt-1 h-14 w-full rounded-2xl border-2 bg-white px-4 text-[16px] font-bold outline-none";
 
+function aliasFormatOk(alias: string) {
+  const key = alias.trim().toLowerCase();
+  return /^[a-z0-9_]{3,20}$/.test(key);
+}
+
 export function EnterPage({ hint = "" }: { hint?: string }) {
-  const { requestOtp, confirmOtp, finishSignup, authError, setAuthError } = usePulse();
+  const { requestOtp, confirmOtp, finishSignup, directEnter, authError, setAuthError } = usePulse();
+  const [authMode, setAuthMode] = useState<AuthMode>("loading");
   const [step, setStep] = useState<Step>("phone");
   const [country, setCountry] = useState(COUNTRIES[0]);
   const [localPhone, setLocalPhone] = useState("");
+  const [fullName, setFullName] = useState("");
   const [e164, setE164] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [alias, setAlias] = useState("");
@@ -54,13 +62,26 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
+    let alive = true;
+    fetchAuthConfig().then((config) => {
+      if (!alive) return;
+      setAuthMode(config.whatsappOtp ? "whatsapp" : "bypass");
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (cooldown <= 0) return undefined;
     const id = window.setTimeout(() => setCooldown((n) => n - 1), 1000);
     return () => window.clearTimeout(id);
   }, [cooldown]);
 
+  const aliasCheckActive = authMode === "bypass" || step === "profile";
+
   useEffect(() => {
-    if (step !== "profile") return undefined;
+    if (!aliasCheckActive) return undefined;
     const value = alias.trim();
     if (value.length < 3) {
       setAliasState(value ? "invalid" : "idle");
@@ -82,7 +103,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
       alive = false;
       window.clearTimeout(id);
     };
-  }, [alias, step]);
+  }, [alias, aliasCheckActive, step]);
 
   async function sendCode(phone = composePhone(country.dial, localPhone)) {
     setPending(true);
@@ -106,6 +127,20 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   async function onPhone(event: FormEvent) {
     event.preventDefault();
     await sendCode();
+  }
+
+  async function onDirectEnter(event: FormEvent) {
+    event.preventDefault();
+    const phone = composePhone(country.dial, localPhone);
+    setPending(true);
+    setAuthError("");
+    try {
+      await directEnter(phone, fullName.trim(), alias.trim());
+    } catch {
+      /* authError lives in context */
+    } finally {
+      setPending(false);
+    }
   }
 
   async function submitOtp(code: string) {
@@ -166,6 +201,146 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     } finally {
       setPending(false);
     }
+  }
+
+  const phoneReady = onlyDigits(localPhone).length >= 7;
+  const bypassAliasOk = aliasFormatOk(alias);
+  const bypassReady = phoneReady && fullName.trim().length >= 2 && bypassAliasOk;
+
+  if (authMode === "loading") {
+    return (
+      <div
+        className="flex h-full flex-col items-center justify-center px-5"
+        style={{ backgroundColor: "var(--p-bg)", color: "var(--p-muted)" }}
+      >
+        <p className="text-[15px] font-bold">Preparando acceso…</p>
+      </div>
+    );
+  }
+
+  if (authMode === "bypass") {
+    return (
+      <div
+        className="flex h-full flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]"
+        style={{ backgroundColor: "var(--p-bg)", color: "var(--p-text)" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-2xl text-[18px] font-extrabold text-white"
+            style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 8px 16px rgba(24,160,133,0.28)" }}
+          >
+            P
+          </div>
+          <p className="text-[18px] font-extrabold tracking-tight">Pulse</p>
+        </div>
+
+        <h1 className="mt-8 text-[32px] font-extrabold leading-tight tracking-tight">Entra a Pulse</h1>
+        {hint && (
+          <p className="mt-3 text-[14px] font-extrabold" style={{ color: "var(--p-coral)" }}>
+            {hint}
+          </p>
+        )}
+        <p className="mt-2 text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>
+          Registro rápido para la demo. Sin código de WhatsApp por ahora.
+        </p>
+
+        <form onSubmit={onDirectEnter} className="mt-6 flex flex-1 flex-col gap-3">
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            País
+            <select
+              value={country.iso}
+              onChange={(event) => {
+                const next = COUNTRIES.find((item) => item.iso === event.target.value) ?? COUNTRIES[0];
+                setCountry(next);
+              }}
+              className={fieldClass}
+              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+            >
+              {COUNTRIES.map((item) => (
+                <option key={item.iso} value={item.iso}>
+                  {item.flag} {item.label} {item.dial}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            Celular
+            <div className="mt-1 flex gap-2">
+              <span
+                className="flex h-14 items-center rounded-2xl border-2 bg-white px-3 text-[15px] font-extrabold"
+                style={{ borderColor: "#D7EDE7", color: "var(--p-accent)" }}
+              >
+                {country.dial}
+              </span>
+              <input
+                value={localPhone}
+                onChange={(event) => setLocalPhone(event.target.value)}
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={country.iso === "VE" ? "412 000 0000" : "Número"}
+                className={`${fieldClass} mt-0 flex-1`}
+                style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+              />
+            </div>
+          </label>
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            Nombre completo
+            <input
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              autoComplete="name"
+              maxLength={80}
+              placeholder="Vicente Martínez"
+              className={fieldClass}
+              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+            />
+          </label>
+          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            Alias / apodo
+            <input
+              value={alias}
+              onChange={(event) => setAlias(event.target.value.replace(/\s/g, ""))}
+              autoComplete="nickname"
+              maxLength={20}
+              placeholder="vicente2"
+              className={fieldClass}
+              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+            />
+          </label>
+          {aliasState === "checking" && (
+            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>
+              Revisando alias...
+            </p>
+          )}
+          {aliasState === "free" && (
+            <p className="text-[13px] font-extrabold" style={{ color: "var(--p-accent)" }}>
+              ✓ Alias disponible
+            </p>
+          )}
+          {aliasState === "taken" && (
+            <p className="text-[13px] font-extrabold text-[#E23B2F]">
+              ✕ Este alias ya está ocupado (si ya tienes cuenta, igual puedes entrar con tu celular)
+            </p>
+          )}
+          {aliasState === "invalid" && (
+            <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>
+              De 3 a 20 letras, números o _.
+            </p>
+          )}
+          {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
+          <div className="mt-auto">
+            <button
+              type="submit"
+              disabled={pending || !bypassReady}
+              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
+              style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
+            >
+              {pending ? "Entrando…" : "Entrar a Pulse"}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
   }
 
   const titles: Record<Step, string> = {

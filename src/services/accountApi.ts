@@ -169,6 +169,9 @@ const FLOW_COPY: Record<string, string> = {
   INVALID_ALIAS: "Usa de 3 a 20 letras, números o _. Sin espacios.",
   PHONE_ALREADY_REGISTERED: "Ese número ya tiene perfil. Entra de nuevo.",
   PHONE_NOT_VERIFIED: "La verificación expiró. Pide un código nuevo.",
+  INVALID_FULL_NAME: "Escribe tu nombre completo.",
+  OTP_DISABLED: "El login por WhatsApp está desactivado temporalmente.",
+  DIRECT_ENTER_DISABLED: "Usa el código de WhatsApp para entrar.",
 };
 
 async function readJson(response: Response) {
@@ -191,7 +194,7 @@ async function readJson(response: Response) {
   }
 }
 
-async function postAuth(path: string, body: Record<string, unknown>): Promise<ApiResult & { isNew?: boolean; ticket?: string; phone?: string; code?: string; available?: boolean; retryAfter?: number }> {
+async function postAuth(path: string, body: Record<string, unknown>): Promise<ApiResult & { isNew?: boolean; ticket?: string; phone?: string; code?: string; available?: boolean; retryAfter?: number; whatsappOtp?: boolean }> {
   let response: Response;
   try {
     response = await fetch(`${apiBase()}${path}`, {
@@ -211,8 +214,29 @@ async function postAuth(path: string, body: Record<string, unknown>): Promise<Ap
   return result;
 }
 
+function envWhatsappOtpEnabled() {
+  const raw = String(import.meta.env.VITE_ENABLE_WHATSAPP_OTP ?? "").trim().toLowerCase();
+  return raw === "true" || raw === "1" || raw === "yes";
+}
+
+export async function fetchAuthConfig() {
+  try {
+    const result = await postAuth("/api/pulse", { action: "auth-config" });
+    return { whatsappOtp: Boolean(result.whatsappOtp) };
+  } catch {
+    return { whatsappOtp: envWhatsappOtpEnabled() };
+  }
+}
+
 export async function checkAlias(alias: string) {
   return postAuth("/api/pulse", { action: "check-alias", alias });
+}
+
+export async function directEnterAccount(phone: string, fullName: string, alias: string) {
+  const result = await postAuth("/api/pulse", { action: "direct-enter", phone, fullName, alias });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
 }
 
 export async function requestOtp(phone: string) {
