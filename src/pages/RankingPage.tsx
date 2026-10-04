@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CalendarDays, Trophy, Users } from "lucide-react";
 import { RankingList } from "@/components/ranking/RankingList";
+import { CardHead, GhostCta, StatCell, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { getLeagueRanking, listMyLeagues, type League } from "@/services/leaguesApi";
@@ -82,59 +84,77 @@ export function RankingPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
+      <div className="px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>Juégate el Tobo</p>
         <h2 className="text-[24px] font-extrabold tracking-tight">Ranking</h2>
-        <p className="text-[13px] font-semibold text-[#8D7366]">
-          {me ? `Vas #${me.position} con ${formato(me.points)} pts.` : "Compite con tus amigos y sube de posicion."}
-        </p>
-        {round && <p className="text-[12px] font-bold text-[#A08B80]">{round.startsOn} al {round.endsOn}</p>}
-
-        <div className="mt-3 grid grid-cols-4 gap-1">
-          {(["global", "liga", "semana", "temporada"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`h-11 rounded-2xl text-[12px] font-extrabold ${tab === t ? "bg-[#FF4F1A] text-white" : "bg-white text-[#8D7366]"}`}
-            >
-              {t === "global" ? "Global" : t === "liga" ? "Mi Liga" : t === "semana" ? "Semana" : "Temporada"}
-            </button>
-          ))}
-        </div>
-
-        {tab === "liga" && (
-          <div className="mt-2 flex items-center gap-2">
-            <select
-              value={selectedLeague}
-              onChange={(e) => setSelectedLeague(e.target.value)}
-              className="h-11 flex-1 rounded-2xl bg-white px-3 text-[13px] font-extrabold text-[#241710] outline-none"
-            >
-              {leagues.map((league) => (
-                <option key={league.id} value={league.id}>
-                  {league.name}
-                </option>
-              ))}
-              {leagues.length === 0 && <option value="">No tienes ligas</option>}
-            </select>
-            <button
-              type="button"
-              onClick={() => navigate("/tobo/ligas")}
-              className="h-11 rounded-2xl bg-[#FFF1EA] px-3 text-[12px] font-extrabold text-[#FF4F1A]"
-            >
-              Gestionar
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
-        <RankingList
-          entries={entries}
-          subtitle={tab === "liga" ? "Tu liga privada" : tab === "temporada" ? "Puntos acumulados" : "Puntos de la ronda"}
-          emptyLabel={tab === "liga" && leagues.length === 0 ? "Crea o unete a una liga" : "Todavia no hay jugadores"}
-        />
+        <div className="flex flex-col gap-4">
+          <ToboCard>
+            <CardHead icon={Trophy} title="Tu puesto" />
+            <div className="grid grid-cols-2 gap-2">
+              <StatCell value={me ? `#${me.position}` : "—"} label="posición" />
+              <StatCell value={formato(me?.points ?? 0)} label="puntos" />
+            </div>
+            <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
+              {me ? "Así vas en esta tabla." : "Compite y sube de posición."}
+            </p>
+            {round && (
+              <p className="mt-1 flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+                <CalendarDays className="h-3.5 w-3.5" />
+                {round.startsOn} al {round.endsOn}
+              </p>
+            )}
+          </ToboCard>
+
+          <div className="grid grid-cols-4 gap-1.5">
+            {(["global", "liga", "semana", "temporada"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className="min-h-11 rounded-[14px] px-1 py-2 text-[11px] font-extrabold leading-tight"
+                style={
+                  tab === t
+                    ? { backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }
+                    : { backgroundColor: "var(--t-card)", color: "var(--t-muted)", border: "1px solid var(--t-border)" }
+                }
+              >
+                {t === "global" ? "Global" : t === "liga" ? "Mi Liga" : t === "semana" ? "Semana" : "Temporada"}
+              </button>
+            ))}
+          </div>
+
+          {tab === "liga" && (
+            <ToboCard>
+              <CardHead icon={Users} title="Tu liga" />
+              <select
+                value={selectedLeague}
+                onChange={(e) => setSelectedLeague(e.target.value)}
+                className="h-12 w-full rounded-[14px] px-3 text-[13px] font-extrabold outline-none"
+                style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "var(--t-text)", border: "1px solid var(--t-border)" }}
+              >
+                {leagues.map((league) => (
+                  <option key={league.id} value={league.id}>
+                    {league.name}
+                  </option>
+                ))}
+                {leagues.length === 0 && <option value="">No tienes ligas</option>}
+              </select>
+              <div className="mt-3">
+                <GhostCta onClick={() => navigate("/tobo/ligas")}>Gestionar</GhostCta>
+              </div>
+            </ToboCard>
+          )}
+
+          {error && <p className="rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ backgroundColor: "var(--t-card)" }}>{error}</p>}
+          <RankingList
+            entries={entries}
+            subtitle={tab === "liga" ? "Tu liga privada" : tab === "temporada" ? "Puntos acumulados" : "Puntos de la ronda"}
+            emptyLabel={tab === "liga" && leagues.length === 0 ? "Crea o unete a una liga" : "Todavia no hay jugadores"}
+          />
+        </div>
       </div>
       <TabBar />
     </div>

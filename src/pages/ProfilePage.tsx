@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BarChart3 } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
+import { CardHead, StatLine, ToboCard } from "@/components/tobo/surface";
 import { formato, gameTypeLabel } from "@/lib/format";
 import { adminVenueList } from "@/services/demoApi";
 import { listRanking, myPrizes, type ToboPrize } from "@/services/matchesApi";
@@ -81,22 +83,26 @@ export function ProfilePage() {
           <p className="mt-1 text-[13px] font-bold text-[#A08B80]">puntos acumulados</p>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3 px-4">
-          <div className="rounded-[22px] bg-white p-3.5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-            <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#FF4F1A]">Ranking global</p>
-            <p className="mt-1 text-[28px] font-extrabold leading-none">#{position ?? "—"}</p>
-            <p className="mt-1 text-[12px] font-bold text-[#8D7366]">{formato(rankPoints ?? totalPoints)} pts</p>
-          </div>
-          <div className="rounded-[22px] bg-white p-3.5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-            <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#FF4F1A]">Mi actividad</p>
-            <p className="mt-1 text-[14px] font-extrabold leading-snug">
-              {stats?.predictionsMade ?? 0} pronosticos
-            </p>
-            <p className="text-[14px] font-extrabold leading-snug">
-              {stats?.triviaCorrect ?? 0}/{stats?.triviaAnswered ?? 0} trivias
-            </p>
-            <p className="text-[14px] font-extrabold leading-snug">{leagues.length} ligas</p>
-          </div>
+        <div className="mt-3 px-4">
+          <ToboCard>
+            <CardHead icon={BarChart3} title="Estadísticas de la temporada" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl px-3 py-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+                <p className="text-[28px] font-extrabold tabular-nums leading-none">#{position ?? "—"}</p>
+                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>ranking global</p>
+              </div>
+              <div className="rounded-2xl px-3 py-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+                <p className="text-[28px] font-extrabold tabular-nums leading-none">{formato(rankPoints ?? totalPoints)}</p>
+                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>puntos</p>
+              </div>
+            </div>
+            <div className="mt-1">
+              <StatLine label="Pronósticos realizados" value={stats?.predictionsMade ?? 0} />
+              <StatLine label="Trivias acertadas" value={`${stats?.triviaCorrect ?? 0}/${stats?.triviaAnswered ?? 0}`} />
+              <StatLine label="Ligas" value={leagues.length} />
+              <StatLine label="Premios" value={stats?.prizesWon ?? prizes.length} />
+            </div>
+          </ToboCard>
         </div>
 
         {/* MIS LIGAS */}
