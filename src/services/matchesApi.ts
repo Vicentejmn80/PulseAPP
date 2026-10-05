@@ -272,6 +272,24 @@ export async function listAdminPrizes(adminKey: string) {
   return Array.isArray(data) ? data : [];
 }
 
+export interface DemoWinner {
+  alias: string;
+  rank: number;
+  code: string;
+}
+
+export async function simulateRoundClose(adminKey: string) {
+  return expectOk(await callRpc<RpcResult & { already?: boolean; awarded?: number; winners?: DemoWinner[] }>("pulse_admin_simulate_round_close", {
+    p_admin_key: adminKey,
+  }));
+}
+
+export async function undoRoundClose(adminKey: string) {
+  return expectOk(await callRpc<RpcResult & { removed?: number }>("pulse_admin_undo_round_close", {
+    p_admin_key: adminKey,
+  }));
+}
+
 export async function redeemPrize(input: { adminKey: string; code: string; venueId?: string }) {
   return expectOk(await callRpc<RpcResult & { already?: boolean }>("pulse_admin_redeem", {
     p_admin_key: input.adminKey,
