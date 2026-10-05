@@ -89,12 +89,14 @@ export function App() {
   if (status === "guest") {
     return (
       <Shell>
-        <div className="relative flex h-[100dvh] flex-col">
-          <Routes>
-            <Route path="/q/:token"     element={<GuestQr />} />
-            <Route path="/venue/:slug"  element={<GuestVenue />} />
-            <Route path="*"             element={<EnterPage />} />
-          </Routes>
+        <div className="relative flex h-[100dvh] min-h-0 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Routes>
+              <Route path="/q/:token"     element={<GuestQr />} />
+              <Route path="/venue/:slug"  element={<GuestVenue />} />
+              <Route path="*"             element={<EnterPage />} />
+            </Routes>
+          </div>
           <Notice message={notice} />
         </div>
       </Shell>

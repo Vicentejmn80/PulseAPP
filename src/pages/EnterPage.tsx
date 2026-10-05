@@ -110,10 +110,20 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
 
   const phoneReady = onlyDigits(localPhone).length >= 7;
   const pinReady = /^\d{6}$/.test(pin);
+  const pinConfirmReady = /^\d{6}$/.test(pinConfirm);
+  const pinsMatch = pin === pinConfirm;
+  const registerReady =
+    phoneReady &&
+    fullName.trim().length >= 2 &&
+    aliasState === "free" &&
+    pinReady &&
+    pinConfirmReady &&
+    pinsMatch;
+  const loginReady = phoneReady && pinReady;
 
   return (
     <div
-      className="flex h-full flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]"
+      className="flex min-h-0 flex-1 flex-col px-5 pt-[max(1.5rem,env(safe-area-inset-top))]"
       style={{ backgroundColor: "var(--p-bg)", color: "var(--p-text)" }}
     >
       <div className="flex items-center gap-2.5">
@@ -159,121 +169,110 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
       )}
 
       {mode === "register" && (
-        <form onSubmit={onRegister} className="mt-6 flex flex-1 flex-col gap-3">
-          <button type="button" onClick={() => open("choose")} className="self-start text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            ← Volver
-          </button>
-          <h1 className="text-[28px] font-extrabold leading-tight">Soy nuevo en Pulse</h1>
-          <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Nombre completo
-            <input
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              autoComplete="name"
-              maxLength={80}
-              placeholder="Vicente Martínez"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7" }}
-            />
-          </label>
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Alias
-            <input
-              value={alias}
-              onChange={(event) => setAlias(event.target.value.replace(/\s/g, ""))}
-              autoComplete="nickname"
-              maxLength={20}
-              placeholder="vicente2"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7" }}
-            />
-          </label>
-          <AliasHint state={aliasState} />
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            PIN
-            <input
-              value={pin}
-              onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
-              inputMode="numeric"
-              autoComplete="new-password"
-              maxLength={6}
-              placeholder="••••••"
-              type="password"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
-            />
-          </label>
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            Confirmar PIN
-            <input
-              value={pinConfirm}
-              onChange={(event) => setPinConfirm(onlyDigits(event.target.value).slice(0, 6))}
-              inputMode="numeric"
-              autoComplete="new-password"
-              maxLength={6}
-              placeholder="••••••"
-              type="password"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
-            />
-          </label>
-          {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
-          {switchHint === "login" && (
-            <button type="button" onClick={() => open("login")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
-              Iniciar sesión
+        <form onSubmit={onRegister} className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4">
+            <button type="button" onClick={() => open("choose")} className="text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              ← Volver
             </button>
-          )}
-          <div className="mt-auto">
-            <button
-              type="submit"
-              disabled={pending || !phoneReady || fullName.trim().length < 2 || aliasState === "invalid" || aliasState === "taken" || aliasState === "checking" || alias.trim().length < 3 || !pinReady || pin !== pinConfirm}
-              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
-              style={{ backgroundColor: "var(--p-accent)" }}
-            >
-              {pending ? "Creando cuenta…" : "Crear cuenta"}
-            </button>
+            <h1 className="text-[28px] font-extrabold leading-tight">Soy nuevo en Pulse</h1>
+            <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
+            <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              Nombre completo
+              <input
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                autoComplete="name"
+                maxLength={80}
+                placeholder="Vicente Martínez"
+                className={fieldClass}
+                style={{ borderColor: "#D7EDE7" }}
+              />
+            </label>
+            <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              Alias
+              <input
+                value={alias}
+                onChange={(event) => setAlias(event.target.value.replace(/\s/g, ""))}
+                autoComplete="nickname"
+                maxLength={20}
+                placeholder="vicente2"
+                className={fieldClass}
+                style={{ borderColor: "#D7EDE7" }}
+              />
+            </label>
+            <AliasHint state={aliasState} />
+            <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              PIN
+              <input
+                value={pin}
+                onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="new-password"
+                maxLength={6}
+                placeholder="••••••"
+                type="password"
+                className={fieldClass}
+                style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
+              />
+            </label>
+            <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              Confirmar PIN
+              <input
+                value={pinConfirm}
+                onChange={(event) => setPinConfirm(onlyDigits(event.target.value).slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="new-password"
+                maxLength={6}
+                placeholder="••••••"
+                type="password"
+                className={fieldClass}
+                style={{ borderColor: pinConfirmReady && !pinsMatch ? "#E23B2F" : "#D7EDE7", letterSpacing: "0.3em" }}
+              />
+            </label>
+            {pinConfirmReady && !pinsMatch && (
+              <p className="text-[13px] font-bold text-[#E23B2F]">Los PIN no coinciden.</p>
+            )}
+            {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
+            {switchHint === "login" && (
+              <button type="button" onClick={() => open("login")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
+                Iniciar sesión
+              </button>
+            )}
           </div>
+          <FormSubmitBar pending={pending} pendingLabel="Creando cuenta…" label="Crear cuenta" disabled={!registerReady} />
         </form>
       )}
 
       {mode === "login" && (
-        <form onSubmit={onLogin} className="mt-6 flex flex-1 flex-col gap-3">
-          <button type="button" onClick={() => open("choose")} className="self-start text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            ← Volver
-          </button>
-          <h1 className="text-[28px] font-extrabold leading-tight">Ya tengo una cuenta</h1>
-          <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
-          <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-            PIN
-            <input
-              value={pin}
-              onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
-              inputMode="numeric"
-              autoComplete="current-password"
-              maxLength={6}
-              placeholder="••••••"
-              type="password"
-              className={fieldClass}
-              style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
-            />
-          </label>
-          {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
-          {switchHint === "register" && (
-            <button type="button" onClick={() => open("register")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
-              Crear cuenta
+        <form onSubmit={onLogin} className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4">
+            <button type="button" onClick={() => open("choose")} className="text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              ← Volver
             </button>
-          )}
-          <div className="mt-auto">
-            <button
-              type="submit"
-              disabled={pending || !phoneReady || !pinReady}
-              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
-              style={{ backgroundColor: "var(--p-accent)" }}
-            >
-              {pending ? "Entrando…" : "Entrar"}
-            </button>
+            <h1 className="text-[28px] font-extrabold leading-tight">Ya tengo una cuenta</h1>
+            <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
+            <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              PIN
+              <input
+                value={pin}
+                onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="current-password"
+                maxLength={6}
+                placeholder="••••••"
+                type="password"
+                className={fieldClass}
+                style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
+              />
+            </label>
+            {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
+            {switchHint === "register" && (
+              <button type="button" onClick={() => open("register")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
+                Crear cuenta
+              </button>
+            )}
           </div>
+          <FormSubmitBar pending={pending} pendingLabel="Entrando…" label="Entrar" disabled={!loginReady} />
         </form>
       )}
     </div>
@@ -326,6 +325,34 @@ function PhoneFields({
         </div>
       </label>
     </>
+  );
+}
+
+function FormSubmitBar({
+  label,
+  pendingLabel,
+  pending,
+  disabled,
+}: {
+  label: string;
+  pendingLabel: string;
+  pending: boolean;
+  disabled: boolean;
+}) {
+  return (
+    <div
+      className="sticky bottom-0 -mx-5 shrink-0 border-t px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
+      style={{ borderColor: "#D7EDE7", backgroundColor: "var(--p-bg)", boxShadow: "0 -12px 24px rgba(36,23,16,0.06)" }}
+    >
+      <button
+        type="submit"
+        disabled={pending || disabled}
+        className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
+        style={{ backgroundColor: "var(--p-accent)", boxShadow: pending || disabled ? undefined : "0 12px 24px rgba(24,160,133,0.28)" }}
+      >
+        {pending ? pendingLabel : label}
+      </button>
+    </div>
   );
 }
 
