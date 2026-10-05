@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { answerLive, homeBoard, matchBoard, saveBingo, type BingoBoard, type HomeBoard, type LiveQuestion } from "@/services/mechanicsApi";
+import { answerLive, homeBoard, matchBoard, type HomeBoard, type LiveQuestion } from "@/services/mechanicsApi";
 
 function useEvery(load: () => void) {
   useEffect(() => {
@@ -123,85 +123,17 @@ export function HomeExtras() {
 
 export function MatchExtras({ matchId }: { matchId: string }) {
   const [live, setLive] = useState<LiveQuestion[]>([]);
-  const [bingo, setBingo] = useState<BingoBoard | null>(null);
-  const [picks, setPicks] = useState<string[]>([]);
-  const [error, setError] = useState("");
-  const [pending, setPending] = useState(false);
   const load = useCallback(() => {
     matchBoard(matchId).then((board) => {
       setLive(board.live ?? []);
-      setBingo(board.bingo);
-      setPicks(board.bingo?.picks ?? []);
     }).catch(() => undefined);
   }, [matchId]);
   useEvery(load);
 
-  function toggle(id: string) {
-    setPicks((current) => {
-      if (current.includes(id)) return current.filter((item) => item !== id);
-      if (current.length >= 5) return current;
-      return [...current, id];
-    });
-  }
-
-  async function onSave() {
-    setPending(true);
-    setError("");
-    try {
-      await saveBingo(matchId, picks);
-      load();
-    } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "No se pudo guardar el bingo.");
-    } finally {
-      setPending(false);
-    }
-  }
-
+  if (live.length === 0) return null;
   return (
     <div className="mt-3 flex flex-col gap-3">
       {live.map((question) => <LiveCard key={question.id} question={question} onAnswered={load} />)}
-      {bingo && (
-        <section className="rounded-[24px] bg-white px-4 py-4">
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Bingo</p>
-          <h3 className="mt-1 text-[18px] font-extrabold">Cinco jugadas del juego</h3>
-          <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
-            {bingo.locked ? "Este bingo ya quedó cerrado." : "Puedes cambiarlo hasta que empiece el juego."}
-          </p>
-          {bingo.status === "open" && !bingo.locked && (
-            <>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {(bingo.catalog ?? []).map((event) => {
-                  const on = picks.includes(event.id);
-                  return (
-                    <button key={event.id} type="button" onClick={() => toggle(event.id)} className={`min-h-12 rounded-2xl px-2 py-2 text-[13px] font-extrabold leading-tight ${on ? "bg-[#FF4F1A] text-white" : "bg-[#FFF1EA]"}`}>
-                      {event.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <button type="button" disabled={pending || picks.length !== 5} onClick={() => void onSave()} className="mt-3 h-12 w-full rounded-2xl bg-[#241710] text-[14px] font-extrabold text-white disabled:opacity-40">
-                Guardar bingo · {picks.length}/5
-              </button>
-            </>
-          )}
-          {bingo.picks && bingo.picks.length > 0 && (bingo.locked || bingo.status !== "open") && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {bingo.picks.map((id) => {
-                const event = bingo.catalog.find((item) => item.id === id);
-                const hit = (bingo.occurred ?? []).includes(id);
-                return (
-                  <div key={id} className={`rounded-2xl px-3 py-3 text-[13px] font-extrabold ${hit ? "bg-[#FF4F1A] text-white" : "bg-[#FFF7F1] text-[#241710]"}`}>
-                    {event?.label ?? id}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {bingo.points != null && bingo.points > 0 && <p className="mt-3 text-[15px] font-extrabold text-[#FF4F1A]">+{bingo.points} pts</p>}
-          {bingo.status === "void" && <p className="mt-3 text-[13px] font-bold text-[#8D7366]">El juego se canceló. Este bingo no da puntos.</p>}
-          {error && <p className="mt-2 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
-        </section>
-      )}
     </div>
   );
 }

@@ -25,6 +25,7 @@ import { callRpc } from "@/services/accountApi";
 import { listCycles, listMatches, listRanking, listTascas, myPrizes, scoreLine, type BaseballMatch, type Tasca, type ToboCycle, type ToboPrize } from "@/services/matchesApi";
 import { voucherStatus } from "@/lib/prizeWallet";
 import { PrizeReveal } from "@/components/tobo/PrizeReveal";
+import { FounderBanner } from "@/components/tobo/FounderBanner";
 import { todayTrivia, type TriviaLevel, type TriviaQuestion } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
@@ -362,6 +363,8 @@ export function HomePage() {
             </div>
           )}
         </ToboCard>
+
+        <FounderBanner />
 
         <ToboCard>
           <CardHead icon={Zap} title="Trivia de hoy" action={{ label: "Ver todos →", onClick: () => navigate("/tobo/trivias") }} />

@@ -5,6 +5,7 @@ import { AdminMechanics } from "@/components/tobo/AdminMechanics";
 import { featureLive, setInningKind, unfeatureLive } from "@/services/liveApi";
 import { cancelMatch, closeRound, createMatch, listAdminPrizes, listMatches, listTascas, postponeMatch, redeemPrize, saveTasca, setMatchResult, type AdminPrizeCode, type BaseballMatch, type Tasca } from "@/services/matchesApi";
 import { voucherLabel, voucherStatus } from "@/lib/prizeWallet";
+import { ChallengeBankAdmin } from "@/components/tobo/ChallengeBankAdmin";
 import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import { usePulse } from "@/state/PulseContext";
 
@@ -154,7 +155,9 @@ export function AdminMatchesPage() {
           <div className="mt-3">
             <PrimaryButton type="submit" disabled={pending}>Crear partido</PrimaryButton>
           </div>
+          <p className="mt-2 text-[12px] font-semibold text-[#8D7366]">Al crearlo se le asignan los retos. No hay que elegir preguntas.</p>
         </form>
+        <ChallengeBankAdmin adminKey={adminKey} />
 
         <div className="mt-4 flex gap-4">
           <button type="button" onClick={() => navigate("/admin/tascas")} className="text-[13px] font-extrabold text-[#FF4F1A]">

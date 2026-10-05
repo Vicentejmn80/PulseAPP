@@ -15,7 +15,14 @@ export type AnalyticsEvent =
   | "prize_viewed"
   | "prize_won"
   | "prize_redeemed"
-  | "qr_scanned";
+  | "qr_scanned"
+  | "challenge_viewed"
+  | "challenge_selected"
+  | "challenge_deselected"
+  | "challenge_submitted"
+  | "challenge_correct"
+  | "challenge_incorrect"
+  | "challenge_bonus_awarded";
 
 export function trackEvent(event: AnalyticsEvent, properties?: Record<string, unknown>) {
   const token = readSessionToken();

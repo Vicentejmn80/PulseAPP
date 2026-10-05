@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { answerLive } from "@/services/mechanicsApi";
-import { challengeAlias, matchCenter, type BingoPick, type CrowdShare, type LiveEvent, type MatchCenter } from "@/services/liveApi";
+import { challengeAlias, matchCenter, type CrowdShare, type LiveEvent, type MatchCenter } from "@/services/liveApi";
 import { Countdown } from "@/components/tobo/PilotExtras";
 
 const LABELS: Record<string, string> = {
@@ -26,23 +26,6 @@ function ordinal(inning: number) {
 
 export function halfLabel(half: string, inning: number) {
   return `${half === "baja" ? "Baja" : "Alta"} ${ordinal(inning)}`;
-}
-
-function beep() {
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 880;
-    gain.gain.value = 0.04;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.12);
-    osc.onended = () => void ctx.close();
-  } catch {
-    // El sonido es opcional.
-  }
 }
 
 export function ShareLine({ share, empty }: { share: CrowdShare | null; empty: string }) {
@@ -123,33 +106,12 @@ function EventRow({ event, fresh }: { event: LiveEvent; fresh: boolean }) {
   );
 }
 
-function BingoCells({ picks, freshIds }: { picks: BingoPick[]; freshIds: string[] }) {
-  if (picks.length === 0) return null;
-  return (
-    <section className="rounded-[24px] bg-white px-4 py-4">
-      <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Tu bingo</p>
-      <div className="mt-3 grid grid-cols-1 gap-2">
-        {picks.map((pick) => {
-          const on = Boolean(pick.resolvedAt);
-          return (
-            <div key={pick.id} className={`rounded-2xl px-3 py-3 text-[14px] font-extrabold ${on ? "bg-[#FF4F1A] text-white" : "bg-[#FFF7F1]"} ${freshIds.includes(pick.id) ? "bingo-pop" : ""}`}>
-              {pick.label}{on ? " · salió" : ""}
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 export function LiveCenter({ matchId }: { matchId: string }) {
   const [center, setCenter] = useState<MatchCenter | null>(null);
   const [error, setError] = useState("");
   const seen = useRef(new Set<string>());
-  const seenHits = useRef(new Set<string>());
   const primed = useRef(false);
   const [freshEvent, setFreshEvent] = useState("");
-  const [freshHits, setFreshHits] = useState<string[]>([]);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -162,16 +124,7 @@ export function LiveCenter({ matchId }: { matchId: string }) {
         const newest = next.events?.[0];
         if (newest && primed.current && !seen.current.has(newest.id)) setFreshEvent(newest.id);
         next.events?.forEach((event) => seen.current.add(event.id));
-        const just: string[] = [];
-        next.bingo?.picks?.forEach((pick) => {
-          if (pick.resolvedAt && primed.current && !seenHits.current.has(pick.id)) just.push(pick.id);
-          if (pick.resolvedAt) seenHits.current.add(pick.id);
-        });
         primed.current = true;
-        if (just.length) {
-          setFreshHits(just);
-          beep();
-        }
         setCenter(next);
         setError("");
       } catch (reason: unknown) {
@@ -190,7 +143,7 @@ export function LiveCenter({ matchId }: { matchId: string }) {
     return <p className="rounded-[28px] bg-white px-5 py-8 text-center text-[15px] font-extrabold">{error || "Cargando el juego…"}</p>;
   }
 
-  const { match, prediction, closeness, events, bingo, live } = center;
+  const { match, prediction, closeness, events, live } = center;
   const width = closeness ? Math.max(8, Math.round((closeness.closenessPoints / 40) * 100)) : 0;
   const momentum = Math.max(8, Math.min(94, match.momentum || 50));
 
@@ -235,9 +188,6 @@ export function LiveCenter({ matchId }: { matchId: string }) {
       {live.filter((question) => question.status === "open" || question.myOption).map((question) => (
         <LivePrompt key={question.id} question={question} onDone={() => setTick((value) => value + 1)} />
       ))}
-
-      <BingoCells picks={bingo?.picks ?? []} freshIds={freshHits} />
-      {bingo?.points > 0 && <p className="px-1 text-[14px] font-extrabold text-[#FF4F1A]">Bingo +{bingo.points} pts</p>}
 
       <div className="flex flex-col gap-2">
         {(events ?? []).map((event) => <EventRow key={event.id} event={event} fresh={event.id === freshEvent} />)}

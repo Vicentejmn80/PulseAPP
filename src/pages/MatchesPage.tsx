@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { predictionBackTarget } from "@/lib/toboNav";
 import { DuelBox, LiveCenter, ShareLine } from "@/components/live/LiveCenter";
@@ -7,7 +7,9 @@ import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
 import { matchCenter, type MatchCenter } from "@/services/liveApi";
 import { DemoExperience } from "@/components/demo/DemoExperience";
-import { getMatch, listMatches, matchPhase, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
+import { MatchChallenges, type ChallengeHandle } from "@/components/tobo/MatchChallenges";
+import { trackEvent } from "@/services/analytics";
+import { getMatch, listMatches, matchPhase, saveChallengeAnswers, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
 
 function when(value: string) {
   const date = new Date(value);
@@ -129,6 +131,7 @@ export function MatchPredictPage() {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [missing, setMissing] = useState(false);
+  const challengesRef = useRef<ChallengeHandle>(null);
 
   useEffect(() => {
     let alive = true;
@@ -189,6 +192,11 @@ export function MatchPredictPage() {
     setError("");
     try {
       await savePrediction({ matchId: match.id, winner, homeScore, awayScore });
+      const answers = challengesRef.current?.answers();
+      if (answers) {
+        await saveChallengeAnswers(match.id, answers);
+        trackEvent("challenge_submitted", { matchId: match.id, count: answers.length });
+      }
       const fresh = await getMatch(match.id);
       if (fresh) setMatch(fresh);
     } catch (reason: unknown) {
@@ -216,7 +224,10 @@ export function MatchPredictPage() {
         {missing && <p className="rounded-[28px] bg-white px-6 py-8 text-center text-[16px] font-extrabold">Ese partido no está publicado.</p>}
         {match && phase === "live" && match.featured && <LiveCenter matchId={match.id} />}
         {match && phase === "finished" && (
-          <FinishedCard match={match} />
+          <>
+            <FinishedCard match={match} />
+            <MatchChallenges matchId={match.id} editable={false} />
+          </>
         )}
         {match && phase === "locked" && (
           <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
@@ -230,6 +241,7 @@ export function MatchPredictPage() {
               <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">No alcanzaste a guardar una predicción.</p>
             )}
             <p className="mt-3 text-[14px] font-semibold text-[#8D7366]">El juego ya comenzó.</p>
+            <MatchChallenges matchId={match.id} editable={false} />
           </section>
         )}
         {match && phase === "cancelled" && (
@@ -286,6 +298,7 @@ export function MatchPredictPage() {
                 className="mt-1 h-14 w-full rounded-2xl bg-[#FFF7F1] text-center text-[22px] font-extrabold text-[#241710] outline-none"
               />
             </label>
+            <MatchChallenges ref={challengesRef} matchId={match.id} editable />
             {error && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
             <div className="mt-4">
               <PrimaryButton type="submit" disabled={pending}>

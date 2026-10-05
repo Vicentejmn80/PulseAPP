@@ -309,3 +309,65 @@ export function matchPhase(match: BaseballMatch): "open" | "live" | "locked" | "
 export function scoreLine(match: Pick<BaseballMatch, "homeTeam" | "awayTeam">, homeScore: number, awayScore: number) {
   return `${match.awayTeam} ${awayScore} — ${homeScore} ${match.homeTeam}`;
 }
+
+export interface GameChallenge {
+  id: string;
+  position: number;
+  points: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  answerType: "boolean" | "multiple";
+  options: { id: string; label: string }[];
+  myOption: string | null;
+  evaluated: boolean;
+  correct: boolean | null;
+  pointsAwarded: number | null;
+  correctOption: string | null;
+}
+
+export async function listMatchChallenges(matchId: string) {
+  const result = await callRpc<RpcResult & { finished?: boolean; challenges?: GameChallenge[] }>("pulse_match_challenges", {
+    p_token: readSessionToken(),
+    p_match: matchId,
+  });
+  const board = await expectOk(result);
+  return { finished: Boolean(board.finished), challenges: board.challenges ?? [] };
+}
+
+export async function saveChallengeAnswers(matchId: string, answers: { challengeId: string; optionId: string }[]) {
+  return expectOk(await callRpc<RpcResult>("pulse_save_challenge_answers", {
+    p_token: readSessionToken(),
+    p_match: matchId,
+    p_answers: answers.map((answer) => ({ challengeId: answer.challengeId, optionId: answer.optionId })),
+  }));
+}
+
+export interface ChallengeTemplateRow {
+  code: string;
+  title: string;
+  category: string;
+  difficulty: string;
+  points: number;
+  active: boolean;
+  usage: number;
+  answers: number;
+  correct: number;
+  accuracy: number | null;
+  selectionRate: number | null;
+}
+
+export async function listChallengeTemplates(adminKey: string) {
+  const data = await callRpc<ChallengeTemplateRow[]>("pulse_admin_challenge_templates", { p_admin_key: adminKey });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function setChallengeTemplate(input: { adminKey: string; code: string; active: boolean; title: string }) {
+  return expectOk(await callRpc<RpcResult>("pulse_admin_set_challenge_template", {
+    p_admin_key: input.adminKey,
+    p_code: input.code,
+    p_active: input.active,
+    p_title: input.title,
+  }));
+}
