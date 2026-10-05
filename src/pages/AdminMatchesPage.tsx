@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { AdminMechanics } from "@/components/tobo/AdminMechanics";
 import { featureLive, setInningKind, unfeatureLive } from "@/services/liveApi";
-import { cancelMatch, closeRound, createMatch, listMatches, postponeMatch, redeemPrize, saveTasca, setMatchResult, type BaseballMatch } from "@/services/matchesApi";
+import { cancelMatch, closeRound, createMatch, listAdminPrizes, listMatches, listTascas, postponeMatch, redeemPrize, saveTasca, setMatchResult, type AdminPrizeCode, type BaseballMatch, type Tasca } from "@/services/matchesApi";
+import { voucherLabel, voucherStatus } from "@/lib/prizeWallet";
 import { rememberAdminKey, storedAdminKey } from "@/lib/adminKey";
 import { usePulse } from "@/state/PulseContext";
 
@@ -228,6 +229,31 @@ function PilotTools({
   const [tasca, setTasca] = useState("");
   const [zone, setZone] = useState("");
   const [code, setCode] = useState("");
+  const [venueId, setVenueId] = useState("");
+  const [venues, setVenues] = useState<Tasca[]>([]);
+  const [codes, setCodes] = useState<AdminPrizeCode[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    listTascas().then((rows) => {
+      if (alive) setVenues(rows);
+    }).catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const key = adminKey.trim();
+    if (!key) return;
+    let alive = true;
+    listAdminPrizes(key).then((rows) => {
+      if (alive) setCodes(rows);
+    }).catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [adminKey]);
 
   async function run(action: () => Promise<void>) {
     try {
@@ -260,12 +286,37 @@ function PilotTools({
         Publicar tasca fundadora
       </button>
       <input value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} placeholder="Código de canje" className="mt-3 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold outline-none" />
+      <select value={venueId} onChange={(event) => setVenueId(event.target.value)} className="mt-2 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[14px] font-bold outline-none">
+        <option value="">Tasca donde se canjeó (opcional)</option>
+        {venues.map((venue) => (
+          <option key={venue.id} value={venue.id}>{venue.name}</option>
+        ))}
+      </select>
+      <p className="mt-2 text-[12px] font-semibold text-[#8D7366]">El código se puede canjear en cualquier tasca. Elegir una solo guarda el dato.</p>
       <button type="button" disabled={disabled} onClick={() => void run(async () => {
-        const result = await redeemPrize({ adminKey: adminKey.trim(), code });
+        const result = await redeemPrize({ adminKey: adminKey.trim(), code, venueId });
+        setCodes(await listAdminPrizes(adminKey.trim()));
         onDone(result.already ? "Ese tobo ya estaba canjeado." : "Canje registrado.");
       })} className="mt-2 h-11 w-full rounded-2xl bg-[#241710] text-[13px] font-extrabold text-white disabled:opacity-40">
         Registrar canje
       </button>
+      {codes.length > 0 && (
+        <div className="mt-3 flex flex-col gap-2">
+          {codes.map((prize) => {
+            const status = voucherStatus(prize.status, prize.expiresAt);
+            return (
+              <div key={prize.id} className="rounded-2xl bg-[#FFF7F1] px-3 py-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[16px] font-extrabold tracking-[0.08em]">{prize.code}</p>
+                  <span className="text-[11px] font-extrabold uppercase text-[#FF4F1A]">{voucherLabel(status, prize.daysLeft)}</span>
+                </div>
+                <p className="mt-1 text-[12px] font-semibold text-[#8D7366]">{prize.alias} · {prize.cycleName} · puesto #{prize.rank}</p>
+                {prize.venueName && <p className="text-[12px] font-semibold text-[#8D7366]">Canjeado en {prize.venueName}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

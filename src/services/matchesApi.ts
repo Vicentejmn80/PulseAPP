@@ -255,10 +255,28 @@ export async function createCycle(input: { adminKey: string; id: string; name: s
   }));
 }
 
-export async function redeemPrize(input: { adminKey: string; code: string }) {
+export interface AdminPrizeCode {
+  id: string;
+  code: string;
+  status: string;
+  rank: number;
+  cycleName: string;
+  alias: string;
+  expiresAt: string;
+  venueName?: string | null;
+  daysLeft: number;
+}
+
+export async function listAdminPrizes(adminKey: string) {
+  const data = await callRpc<AdminPrizeCode[]>("pulse_admin_prizes", { p_admin_key: adminKey });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function redeemPrize(input: { adminKey: string; code: string; venueId?: string }) {
   return expectOk(await callRpc<RpcResult & { already?: boolean }>("pulse_admin_redeem", {
     p_admin_key: input.adminKey,
     p_code: input.code,
+    p_venue_id: input.venueId || null,
   }));
 }
 
