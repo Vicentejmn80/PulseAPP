@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, MapPin, Trophy } from "lucide-react";
+import { Camera, MapPin } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
 import { listCycles, listTascas, type Tasca, type ToboCycle } from "@/services/matchesApi";
+import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 
 function externalHref(kind: "instagram" | "whatsapp" | "maps", value: string, lat?: number | null, lng?: number | null) {
   if (kind === "maps") {
@@ -196,53 +197,19 @@ export function TascasPage() {
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-6">
         {error && (
           <p className="mb-3 rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ backgroundColor: "var(--t-card)" }}>
             {error}
           </p>
         )}
 
-        {/* Stats banner */}
-        <div
-          className="mb-4 rounded-[20px] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
-          style={{ background: "linear-gradient(135deg, var(--t-accent-dim) 0%, var(--t-accent) 100%)", color: "var(--t-accent-text)" }}
-        >
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] opacity-80">
-            Premios de esta semana
-          </p>
-          <p className="mt-0.5 text-[13px] font-semibold opacity-70">
-            {active ? `${active.name} · ${active.startsOn} al ${active.endsOn}` : "Temporada LVBP 2026-27"}
-          </p>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              { n: activeTascas.length, label: "tascas" },
-              { n: withPrize.length,    label: "premios" },
-              { n: 3,                   label: "ganadores" },
-            ].map((item) => (
-              <div key={item.label} className="rounded-2xl p-3 text-center" style={{ backgroundColor: "rgba(0,0,0,0.18)" }}>
-                <p className="text-[24px] font-extrabold">{item.n}</p>
-                <p className="text-[11px] font-bold opacity-80">{item.label}</p>
-              </div>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate("/tobo/premios")}
-            className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[15px] font-extrabold"
-            style={{ backgroundColor: "rgba(11,26,60,0.28)", color: "var(--t-accent-text)" }}
-          >
-            <Trophy className="h-4 w-4" />
-            Ver mis premios
-          </button>
-        </div>
-
         {/* Section label */}
         <p
           className="mb-3 px-1 text-[12px] font-extrabold uppercase tracking-[0.14em]"
           style={{ color: "var(--t-muted)" }}
         >
-          Tascas participantes
+          Tascas activas
         </p>
 
         {tascas.length === 0 && !error && (
@@ -263,6 +230,34 @@ export function TascasPage() {
               />
             </div>
           ))}
+        </div>
+
+        {/* Prize banner (moved to the end to keep the focus on the venues) */}
+        <div
+          className="mt-6 rounded-[20px] p-5 shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
+          style={{ background: "linear-gradient(135deg, var(--t-accent-dim) 0%, var(--t-accent) 100%)", color: "var(--t-accent-text)" }}
+        >
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] opacity-90">
+            🏆 Premio de la ronda
+          </p>
+          <p className="mt-0.5 text-[13px] font-semibold opacity-80">
+            {active ? `${active.name} · ${active.startsOn} al ${active.endsOn}` : "Temporada LVBP 2026-27"}
+          </p>
+          <p className="mt-3 text-[13px] font-extrabold opacity-95">
+            {TOBO_ROUND_PRIZE_SUBTITLE}
+          </p>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { n: activeTascas.length, label: "tascas" },
+              { n: withPrize.length, label: "premios" },
+              { n: 3, label: "ganadores 🥇" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl p-3 text-center" style={{ backgroundColor: "rgba(0,0,0,0.18)" }}>
+                <p className="text-[24px] font-extrabold">{item.n}</p>
+                <p className="text-[11px] font-bold opacity-85">{item.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

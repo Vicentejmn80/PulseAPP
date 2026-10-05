@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
 import { listMatches, matchPhase, scoreLine, type BaseballMatch } from "@/services/matchesApi";
+import { isFinalizedPrediction, isSuspendedMatch, isUpcomingPrediction, predictionBadge } from "@/lib/predictions/state";
 
 function whenDate(value: string) {
   const date = new Date(value);
@@ -23,21 +24,10 @@ function whenTime(value: string) {
 
 type Tab = "semana" | "proximos" | "finalizados";
 
-function statusInfo(match: BaseballMatch) {
-  const phase = matchPhase(match);
-  if (phase === "cancelled" || match.status === "cancelled") return { label: "Cancelado", tone: "muted" as const };
-  if (match.status === "postponed") return { label: "Pospuesto", tone: "muted" as const };
-  if (phase === "finished") return { label: "Finalizado", tone: "done" as const };
-  if (phase === "live") return { label: "En vivo", tone: "live" as const };
-  if (phase === "locked") return { label: "Pronostico cerrado", tone: "locked" as const };
-  if (match.prediction) return { label: "Pronosticado", tone: "done" as const };
-  return { label: "Disponible", tone: "open" as const };
-}
-
 export function MiQuinielaPage() {
   const navigate = useNavigate();
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
-  const [tab, setTab] = useState<Tab>("semana");
+  const [tab, setTab] = useState<Tab>("proximos");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -54,20 +44,37 @@ export function MiQuinielaPage() {
     };
   }, []);
 
+  const hasWeek = useMemo(() => {
+    const now = new Date();
+    const weekLater = new Date();
+    weekLater.setDate(now.getDate() + 7);
+    return matches.some((m) => {
+      if (isSuspendedMatch(m)) return false;
+      const d = new Date(m.startsAt);
+      return d >= now && d <= weekLater;
+    });
+  }, [matches]);
+
+  const tabs = useMemo(() => {
+    const base: Tab[] = ["proximos", "finalizados"];
+    return hasWeek ? (["semana", ...base] as Tab[]) : base;
+  }, [hasWeek]);
+
   const filtered = useMemo(() => {
     const now = new Date();
     if (tab === "semana") {
       const weekLater = new Date();
       weekLater.setDate(now.getDate() + 7);
       return matches.filter((m) => {
+        if (isSuspendedMatch(m)) return false;
         const d = new Date(m.startsAt);
         return d >= now && d <= weekLater;
       });
     }
     if (tab === "proximos") {
-      return matches.filter((m) => matchPhase(m) !== "finished" && matchPhase(m) !== "cancelled");
+      return matches.filter(isUpcomingPrediction);
     }
-    return matches.filter((m) => matchPhase(m) === "finished" || matchPhase(m) === "cancelled");
+    return matches.filter(isFinalizedPrediction);
   }, [matches, tab]);
 
   const grouped = useMemo(() => {
@@ -91,8 +98,8 @@ export function MiQuinielaPage() {
       </div>
 
       <div className="px-4 pb-2">
-        <div className="grid grid-cols-3 gap-1">
-          {(["semana", "proximos", "finalizados"] as const).map((t) => (
+        <div className={`grid gap-1 ${tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+          {tabs.map((t) => (
             <button
               key={t}
               type="button"
@@ -101,7 +108,7 @@ export function MiQuinielaPage() {
                 tab === t ? "bg-[#FF4F1A] text-white" : "bg-white text-[#8D7366]"
               }`}
             >
-              {t === "semana" ? "Esta semana" : t === "proximos" ? "Proximos" : "Finalizados"}
+              {t === "semana" ? "Esta semana" : t === "proximos" ? "Próximos" : "Finalizados"}
             </button>
           ))}
         </div>
@@ -112,8 +119,14 @@ export function MiQuinielaPage() {
 
         {grouped.length === 0 && !error && (
           <div className="rounded-[28px] bg-white px-6 py-8 text-center">
-            <p className="text-[16px] font-extrabold">No hay partidos en esta seccion</p>
-            <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Cambia de pestana o vuelve mas tarde.</p>
+            <p className="text-[16px] font-extrabold">
+              {tab === "proximos"
+                ? "📅 No hay pronósticos próximos"
+                : tab === "finalizados"
+                  ? "Aún no hay juegos finalizados"
+                  : "Esta semana no hay juegos"}
+            </p>
+            <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Vuelve más tarde o revisa otra sección.</p>
           </div>
         )}
 
@@ -122,15 +135,13 @@ export function MiQuinielaPage() {
             <p className="mb-2 px-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">{date}</p>
             <div className="flex flex-col gap-2">
               {dayMatches.map((match) => {
-                const info = statusInfo(match);
+                const info = predictionBadge(match);
                 const toneClass =
-                  info.tone === "live"
-                    ? "bg-[#E8360C] text-white"
-                    : info.tone === "done"
-                      ? "bg-[#FFF1EA] text-[#FF4F1A]"
-                      : info.tone === "locked"
-                        ? "bg-[#F3E4D8] text-[#8D7366]"
-                        : "bg-[#FFF1EA] text-[#FF4F1A]";
+                  info.tone === "open"
+                    ? "bg-[#E8FFF6] text-[#0E8A63]"
+                    : info.tone === "locked"
+                      ? "bg-[#F3E4D8] text-[#8D7366]"
+                      : "bg-[#F3E4D8] text-[#8D7366]";
                 return (
                   <button
                     key={match.id}
@@ -164,11 +175,10 @@ export function MiQuinielaPage() {
                       </p>
                     )}
 
-                    {matchPhase(match) === "open" && !match.prediction && (
-                      <p className="mt-2 text-[13px] font-extrabold text-[#FF4F1A]">Haz tu pronostico</p>
-                    )}
-                    {matchPhase(match) === "open" && match.prediction && (
-                      <p className="mt-2 text-[13px] font-extrabold text-[#FF4F1A]">Editar pronostico</p>
+                    {matchPhase(match) === "open" && !isSuspendedMatch(match) && (
+                      <p className="mt-2 text-[13px] font-extrabold text-[#FF4F1A]">
+                        {match.prediction ? "Editar pronóstico ✍️" : "Haz tu pronóstico 🎯"}
+                      </p>
                     )}
                   </button>
                 );

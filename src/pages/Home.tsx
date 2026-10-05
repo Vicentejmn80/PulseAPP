@@ -20,7 +20,9 @@ import { IconCoin } from "@/components/ui/icons";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToNextPosition } from "@/lib/leaderboard";
-import { caracasDateKey, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
+import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
+import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
 import { listCycles, listMatches, listRanking, listTascas, myPrizes, scoreLine, type BaseballMatch, type Tasca, type ToboCycle, type ToboPrize } from "@/services/matchesApi";
 import { voucherStatus } from "@/lib/prizeWallet";
@@ -47,6 +49,19 @@ function clockLabel(value: string) {
     minute: "2-digit",
     timeZone: "America/Caracas",
   });
+}
+
+function dayLabel(startsAt: string, now: number) {
+  const d = new Date(startsAt);
+  if (Number.isNaN(d.getTime())) return "PRÓXIMO";
+  const todayKey = caracasDateKey(now);
+  const matchKey = caracasDateKey(d);
+  if (matchKey === todayKey) return "HOY";
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (matchKey === caracasDateKey(tomorrow)) return "MAÑANA";
+  const text = d.toLocaleDateString("es-VE", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Caracas" });
+  return text.toUpperCase();
 }
 
 function rangeLabel(start: string, end: string) {
@@ -100,7 +115,7 @@ function MatchCard({ match, now, onOpen }: { match: BaseballMatch; now: number; 
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>
         <Clock className="h-3.5 w-3.5" />
-        HOY · {clockLabel(match.startsAt)}
+        {dayLabel(match.startsAt, now)} · {clockLabel(match.startsAt)}
       </p>
       {(tone === "predict" || tone === "saved") && (
         <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>{closesIn(match.startsAt, now)}</p>
@@ -244,7 +259,11 @@ export function HomePage() {
   const today = real
     .filter((match) => caracasDateKey(match.startsAt) === todayKey)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-  const available = today.filter(isActionableToday).length;
+  const upcoming = real
+    .filter(isUpcomingPrediction)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const nextMatch =
+    upcoming.find((m) => new Date(m.startsAt).getTime() >= now - 30 * 60 * 1000) ?? upcoming[0] ?? null;
   const predictedToday = today.filter((match) => match.prediction).length;
   const mine = ranking.find((entry) => entry.isCurrentUser);
   const gap = mine ? pointsToNextPosition(ranking, mine.user.id) : null;
@@ -325,6 +344,9 @@ export function HomePage() {
         <ToboCard>
           <CardHead icon={CalendarDays} title="Ronda actual" />
           <h2 className="text-[26px] font-extrabold leading-none">{cycle?.name ?? "Temporada"}</h2>
+          <p className="mt-2 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
+            🏆 {TOBO_ROUND_PRIZE_SUBTITLE}
+          </p>
           {cycle && (
             <p className="mt-2 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
               <CalendarDays className="h-3.5 w-3.5" />
@@ -347,20 +369,22 @@ export function HomePage() {
         <ToboCard>
           <CardHead
             icon={CircleDot}
-            title="Juega hoy"
-            action={{ label: "Ver todos →", onClick: () => navigate("/tobo/mi-quiniela") }}
+            title="Próximo juego"
+            action={{ label: "Ver próximos →", onClick: () => navigate("/tobo/mi-quiniela") }}
           />
           <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-            {!ready ? "Cargando juegos…" : available === 1 ? "1 juego disponible" : `${available} juegos disponibles`}
+            {!ready
+              ? "Cargando pronósticos…"
+              : nextMatch
+                ? "El próximo pronóstico disponible"
+                : "No hay pronósticos próximos todavía."}
           </p>
-          {!ready ? null : today.length === 0 ? (
-            <p className="text-[15px] font-extrabold">Hoy no hay juegos en el calendario.</p>
-          ) : (
+          {!ready ? null : nextMatch ? (
             <div className="flex flex-col gap-3">
-              {today.map((match) => (
-                <MatchCard key={match.id} match={match} now={now} onOpen={() => navigate(`/tobo/partidos/${match.id}`)} />
-              ))}
+              <MatchCard match={nextMatch} now={now} onOpen={() => navigate(`/tobo/partidos/${nextMatch.id}`)} />
             </div>
+          ) : (
+            <p className="text-[15px] font-extrabold">📅 No hay juegos programados a futuro.</p>
           )}
         </ToboCard>
 

@@ -198,7 +198,42 @@ export async function listCycles() {
 
 export async function listTascas() {
   const data = await callRpc<Tasca[]>("pulse_venues_list", {});
-  return Array.isArray(data) ? data : [];
+  const tascas = Array.isArray(data) ? data : [];
+
+  /**
+   * Tasca demo para ventas (NO producción real)
+   * - Se controla por env: `VITE_ENABLE_DEMO_TASCA` (true/false).
+   * - Si está activa, se fuerza a aparecer primero.
+   * - Si está desactivada, se excluye de listas para evitar mostrar un negocio sin acuerdo explícito.
+   */
+  const enabled = (() => {
+    const raw = String(import.meta.env.VITE_ENABLE_DEMO_TASCA ?? "").trim().toLowerCase();
+    if (raw === "true" || raw === "1" || raw === "yes") return true;
+    if (raw === "false" || raw === "0" || raw === "no") return false;
+    return !import.meta.env.PROD;
+  })();
+
+  const demoSlug = String(import.meta.env.VITE_DEMO_TASCA_SLUG ?? "agropecuaria-beethoven").trim().toLowerCase();
+  const isDemo = (tasca: Tasca) => {
+    const slug = String(tasca.slug ?? "").trim().toLowerCase();
+    const name = String(tasca.name ?? "").trim().toLowerCase();
+    return Boolean(demoSlug) && (slug === demoSlug || name.includes("agropecuaria beethoven"));
+  };
+
+  const visible = enabled ? tascas : tascas.filter((t) => !isDemo(t));
+  return [...visible].sort((a, b) => {
+    const da = isDemo(a) ? 1 : 0;
+    const db = isDemo(b) ? 1 : 0;
+    if (da !== db) return db - da; // demo first
+    // stable secondary ordering: founders, then active, then name
+    const fa = a.isFounder ? 1 : 0;
+    const fb = b.isFounder ? 1 : 0;
+    if (fa !== fb) return fb - fa;
+    const aa = a.active === false ? 0 : 1;
+    const ab = b.active === false ? 0 : 1;
+    if (aa !== ab) return ab - aa;
+    return String(a.name ?? "").localeCompare(String(b.name ?? ""), "es");
+  });
 }
 
 export async function myPrizes() {
