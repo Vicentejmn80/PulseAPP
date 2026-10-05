@@ -21,16 +21,9 @@ import { formato } from "@/lib/format";
 import { pointsToNextPosition } from "@/lib/leaderboard";
 import { caracasDateKey, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
 import { callRpc } from "@/services/accountApi";
-import {
-  listCycles,
-  listMatches,
-  listRanking,
-  listTascas,
-  scoreLine,
-  type BaseballMatch,
-  type Tasca,
-  type ToboCycle,
-} from "@/services/matchesApi";
+import { listCycles, listMatches, listRanking, listTascas, myPrizes, scoreLine, type BaseballMatch, type Tasca, type ToboCycle, type ToboPrize } from "@/services/matchesApi";
+import { voucherStatus } from "@/lib/prizeWallet";
+import { PrizeReveal } from "@/components/tobo/PrizeReveal";
 import { todayTrivia, type TriviaLevel, type TriviaQuestion } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
@@ -182,6 +175,8 @@ export function HomePage() {
   });
   const [tascas, setTascas] = useState<Tasca[]>([]);
   const [qrPoints, setQrPoints] = useState<number | null>(null);
+  const [reveal, setReveal] = useState<ToboPrize | null>(null);
+  const [revealChecked, setRevealChecked] = useState(false);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -203,8 +198,9 @@ export function HomePage() {
         todayTrivia("advanced"),
         listTascas(),
         callRpc<number>("pulse_cfg_int", { p_key: "QR_POINTS" }).catch(() => null),
+        myPrizes().catch(() => ({ eligible: false, prizes: [] as ToboPrize[] })),
       ])
-        .then(async ([, matchRows, cycles, basic, mid, hard, venues, points]) => {
+        .then(async ([, matchRows, cycles, basic, mid, hard, venues, points, prizeStatus]) => {
           if (!alive) return;
           const active = pickActiveCycle(cycles);
           const board = active ? await listRanking(active.id) : [];
@@ -219,11 +215,17 @@ export function HomePage() {
           });
           setTascas(venues);
           setQrPoints(typeof points === "number" ? points : Number(points) || null);
+          const unseen = (prizeStatus.prizes ?? []).find(
+            (prize) => !prize.seenAt && voucherStatus(prize.status, prize.expiresAt) === "assigned",
+          );
+          setReveal((current) => current ?? unseen ?? null);
+          setRevealChecked(true);
           setReady(true);
         })
         .catch((reason: unknown) => {
           if (!alive) return;
           setError(reason instanceof Error ? reason.message : "No se pudo cargar la jornada.");
+          setRevealChecked(true);
           setReady(true);
         });
     }
@@ -272,6 +274,18 @@ export function HomePage() {
 
   return (
     <div className="flex h-full flex-col">
+      {!revealChecked ? (
+        <div className="flex flex-1 items-center justify-center text-[18px] font-extrabold">Juégate el Tobo</div>
+      ) : reveal ? (
+        <PrizeReveal
+          prize={reveal}
+          onOpen={() => {
+            setReveal(null);
+            navigate("/tobo/premios");
+          }}
+        />
+      ) : (
+        <>
       <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-3">
         <div className="min-w-0">
           <h1 className="truncate text-[20px] font-extrabold leading-none tracking-tight">Juégate el Tobo</h1>
@@ -469,6 +483,8 @@ export function HomePage() {
         </ToboCard>
       </div>
       <TabBar />
+        </>
+      )}
     </div>
   );
 }

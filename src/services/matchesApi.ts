@@ -181,6 +181,9 @@ export interface ToboPrize {
   code: string;
   status: string;
   expiresAt: string;
+  seenAt?: string | null;
+  daysLeft?: number;
+  prizeName?: string;
 }
 
 export async function listRanking(cycle = "lifetime") {
@@ -200,6 +203,13 @@ export async function listTascas() {
 
 export async function myPrizes() {
   return callRpc<{ eligible: boolean; prizes: ToboPrize[] }>("pulse_my_prizes", { p_token: readSessionToken() });
+}
+
+export async function markPrizeSeen(prizeId: string) {
+  return callRpc<{ ok?: boolean }>("pulse_prize_mark_seen", {
+    p_token: readSessionToken(),
+    p_prize_id: prizeId,
+  });
 }
 
 export async function postponeMatch(input: { adminKey: string; matchId: string; startsAt: string }) {
