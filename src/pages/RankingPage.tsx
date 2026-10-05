@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Trophy, Users } from "lucide-react";
-import { RankingList } from "@/components/ranking/RankingList";
-import { CardHead, GhostCta, StatCell, ToboCard } from "@/components/tobo/surface";
+import { CalendarDays, Users } from "lucide-react";
+import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { getLeagueRanking, listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, listRanking, type ToboCycle } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
-import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 
 type Tab = "global" | "liga" | "semana" | "temporada";
 
@@ -82,7 +80,14 @@ export function RankingPage() {
 
   const me = entries.find((entry) => entry.isCurrentUser);
   const round = tab === "semana" ? cycles.find((item) => item.id === "ronda_1") : null;
-  const top10 = tab === "liga" ? entries : entries.slice(0, 10);
+  const third = entries.find((entry) => entry.position === 3);
+  const inPodium = Boolean(me && me.position <= 3);
+  const gapToPodium = me && !inPodium && third ? Math.max(1, third.points - me.points + 1) : null;
+  const podiumProgress = !me
+    ? 0
+    : inPodium || !third || third.points <= 0
+      ? 100
+      : Math.max(8, Math.min(100, Math.round((me.points / (third.points + 1)) * 100)));
 
   return (
     <div className="flex h-full flex-col">
@@ -90,7 +95,7 @@ export function RankingPage() {
         <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>Juégate el Tobo</p>
         <h2 className="text-[24px] font-extrabold tracking-tight">Ranking</h2>
         <p className="mt-1 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
-          🏆 {TOBO_ROUND_PRIZE_SUBTITLE}
+          🥇🥈🥉 Los primeros 3 lugares ganan un premio cada semana.
         </p>
       </div>
 
@@ -139,28 +144,34 @@ export function RankingPage() {
           {error && <p className="rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ backgroundColor: "var(--t-card)" }}>{error}</p>}
 
           <ToboCard>
-            <CardHead icon={Trophy} title={tab === "liga" ? "Ranking de tu liga" : "Top 10 global"} />
-            <p className="mb-3 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-              {tab === "liga" ? "Tu liga privada" : tab === "temporada" ? "Puntos acumulados" : "Puntos de la ronda"}
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
+              {tab === "liga" ? "Tu liga" : tab === "temporada" ? "Temporada" : "Esta ronda"}
             </p>
-            <RankingList
-              entries={top10}
-              subtitle={tab === "liga" ? "Tu liga privada" : tab === "temporada" ? "Puntos acumulados" : "Puntos de la ronda"}
-              emptyLabel={tab === "liga" && leagues.length === 0 ? "Crea o únete a una liga" : "Todavía no hay jugadores"}
-            />
-          </ToboCard>
-
-          <ToboCard>
-            <CardHead icon={Trophy} title="Tu posición" />
-            <div className="grid grid-cols-2 gap-2">
-              <StatCell value={me ? `#${me.position}` : "—"} label="posición" />
-              <StatCell value={formato(me?.points ?? 0)} label="puntos" />
+            <p className="mt-3 text-[64px] font-extrabold leading-none tabular-nums" style={{ color: "var(--t-accent)" }}>
+              {me ? `#${me.position}` : "—"}
+            </p>
+            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>tu puesto</p>
+            <p className="mt-5 text-[40px] font-extrabold leading-none tabular-nums">{formato(me?.points ?? 0)}</p>
+            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>puntos</p>
+            <div className="mt-5">
+              <div className="h-2.5 overflow-hidden rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${podiumProgress}%`, backgroundColor: "var(--t-accent)" }}
+                />
+              </div>
+              <p className="mt-2 text-[13px] font-extrabold">
+                {!me
+                  ? "Pronostica y entras a la carrera. 🎯"
+                  : inPodium
+                    ? "Estás en el podio. Sigue sumando. 🥇"
+                    : gapToPodium
+                      ? `Te faltan ${formato(gapToPodium)} pts para el top 3.`
+                      : "El podio se arma con los primeros puntos de la ronda."}
+              </p>
             </div>
-            <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-              {me ? `Tu puesto exacto: #${me.position}. ¡Sigue sumando! 🚀` : "Compite y aparece en el ranking. 🎯"}
-            </p>
             {round && (
-              <p className="mt-1 flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+              <p className="mt-2 flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
                 <CalendarDays className="h-3.5 w-3.5" />
                 {round.startsOn} al {round.endsOn}
               </p>

@@ -11,8 +11,8 @@ import {
   Pencil,
   Play,
   Trophy,
+  Sparkles,
   Users,
-  Wallet,
   Zap,
 } from "lucide-react";
 import { CardHead, GhostCta, GoldCta, IconChip, StatCell, ToboCard } from "@/components/tobo/surface";
@@ -24,9 +24,7 @@ import { caracasDateKey, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
-import { listCycles, listMatches, listRanking, listTascas, myPrizes, scoreLine, type BaseballMatch, type Tasca, type ToboCycle, type ToboPrize } from "@/services/matchesApi";
-import { voucherStatus } from "@/lib/prizeWallet";
-import { PrizeReveal } from "@/components/tobo/PrizeReveal";
+import { listCycles, listMatches, listRanking, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
 import { todayTrivia, type TriviaLevel, type TriviaQuestion } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
@@ -192,8 +190,6 @@ export function HomePage() {
   });
   const [tascas, setTascas] = useState<Tasca[]>([]);
   const [qrPoints, setQrPoints] = useState<number | null>(null);
-  const [reveal, setReveal] = useState<ToboPrize | null>(null);
-  const [revealChecked, setRevealChecked] = useState(false);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -215,9 +211,8 @@ export function HomePage() {
         todayTrivia("advanced"),
         listTascas(),
         callRpc<number>("pulse_cfg_int", { p_key: "QR_POINTS" }).catch(() => null),
-        myPrizes().catch(() => ({ eligible: false, prizes: [] as ToboPrize[] })),
       ])
-        .then(async ([, matchRows, cycles, basic, mid, hard, venues, points, prizeStatus]) => {
+        .then(async ([, matchRows, cycles, basic, mid, hard, venues, points]) => {
           if (!alive) return;
           const active = pickActiveCycle(cycles);
           const board = active ? await listRanking(active.id) : [];
@@ -232,17 +227,11 @@ export function HomePage() {
           });
           setTascas(venues);
           setQrPoints(typeof points === "number" ? points : Number(points) || null);
-          const unseen = (prizeStatus.prizes ?? []).find(
-            (prize) => !prize.seenAt && voucherStatus(prize.status, prize.expiresAt) === "assigned",
-          );
-          setReveal((current) => current ?? unseen ?? null);
-          setRevealChecked(true);
           setReady(true);
         })
         .catch((reason: unknown) => {
           if (!alive) return;
           setError(reason instanceof Error ? reason.message : "No se pudo cargar la jornada.");
-          setRevealChecked(true);
           setReady(true);
         });
     }
@@ -286,7 +275,11 @@ export function HomePage() {
   const dayComplete = ready && today.length + triviaMax > 0 && !predictionsPending && !triviaPending;
 
   const spotlight = tascas.find((tasca) => tasca.isFounder) ?? tascas[0] ?? null;
-  const prizeRows = tascas.filter((tasca) => tasca.roundPrize && tasca.roundPrize !== "Por confirmar").slice(0, 3);
+  const prizeLabels = [...new Set(
+    tascas
+      .map((tasca) => tasca.roundPrize)
+      .filter((prize) => prize && prize !== "Por confirmar"),
+  )].slice(0, 3);
 
   function openTrivia(level: TriviaLevel) {
     localStorage.setItem("tobo-trivia-level", level);
@@ -295,18 +288,6 @@ export function HomePage() {
 
   return (
     <div className="flex h-full flex-col">
-      {!revealChecked ? (
-        <div className="flex flex-1 items-center justify-center text-[18px] font-extrabold">Juégate el Tobo</div>
-      ) : reveal ? (
-        <PrizeReveal
-          prize={reveal}
-          onOpen={() => {
-            setReveal(null);
-            navigate("/tobo/premios");
-          }}
-        />
-      ) : (
-        <>
       <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-3">
         <div className="min-w-0">
           <h1 className="truncate text-[20px] font-extrabold leading-none tracking-tight">Juégate el Tobo</h1>
@@ -323,15 +304,6 @@ export function HomePage() {
           </span>
           <span className="text-[13px] font-extrabold tabular-nums">{formato(totalPoints)}</span>
         </button>
-        <button
-          type="button"
-          onClick={() => navigate("/tobo/premios")}
-          aria-label="Mis premios"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-          style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)", color: "var(--t-accent)" }}
-        >
-          <Wallet className="h-4 w-4" />
-        </button>
       </header>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-5">
@@ -340,6 +312,28 @@ export function HomePage() {
             {error}
           </p>
         )}
+
+        <section
+          className="flyer-in relative overflow-hidden rounded-[22px] px-4 py-4"
+          style={{
+            background: "linear-gradient(145deg, #1A2E5A 0%, #0B1A3C 55%, #13284F 100%)",
+            border: "1px solid rgba(255,201,74,0.35)",
+            boxShadow: "0 12px 28px rgba(0,0,0,0.28)",
+          }}
+        >
+          <span
+            className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(255,201,74,0.35), transparent 70%)" }}
+          />
+          <p className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
+            <Sparkles className="h-3.5 w-3.5" />
+            Bienvenido a Pulse
+          </p>
+          <h2 className="mt-2 text-[22px] font-extrabold leading-tight">Pronostica. Suma. Gana.</h2>
+          <p className="mt-1 max-w-[34ch] text-[13px] font-semibold leading-snug" style={{ color: "var(--t-muted)" }}>
+            Elige el resultado de cada juego, acumula puntos y compite por un premio cada semana.
+          </p>
+        </section>
 
         <ToboCard>
           <CardHead icon={CalendarDays} title="Ronda actual" />
@@ -490,24 +484,21 @@ export function HomePage() {
         </ToboCard>
 
         <ToboCard>
-          <CardHead icon={Trophy} title="Premios de esta ronda" action={{ label: "Ver todos →", onClick: () => navigate("/tobo/premios") }} />
+          <CardHead icon={Trophy} title="Premios de esta ronda" />
           <p className="mb-3 text-[15px] font-extrabold">
-            {prizeRows.length > 0 ? `${prizeRows.length} premios en juego` : "Hay premios que todavía puedes ganar."}
+            {prizeLabels.length > 0 ? `${prizeLabels.length} premios en juego` : "Hay premios que todavía puedes ganar."}
           </p>
           <div className="flex flex-col gap-3">
-            {prizeRows.map((tasca, index) => (
-              <div key={tasca.id} className="flex items-center gap-3">
+            {prizeLabels.map((prize, index) => (
+              <div key={prize} className="flex items-center gap-3">
                 <PrizeMark place={index + 1} />
-                <div className="min-w-0">
-                  <p className="text-[14px] font-extrabold leading-tight">{tasca.roundPrize}</p>
-                  <p className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>{tasca.name}</p>
-                </div>
+                <p className="min-w-0 text-[14px] font-extrabold leading-tight">{prize}</p>
               </div>
             ))}
           </div>
-          <div className="mt-3">
-            <GoldCta icon={Trophy} onClick={() => navigate("/tobo/premios")}>Ver premios</GoldCta>
-          </div>
+          <p className="mt-3 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+            Canjeable en cualquier tasca afiliada a Pulse.
+          </p>
         </ToboCard>
 
         <ToboCard>
@@ -520,8 +511,6 @@ export function HomePage() {
         </ToboCard>
       </div>
       <TabBar />
-        </>
-      )}
     </div>
   );
 }

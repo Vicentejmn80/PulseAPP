@@ -88,6 +88,19 @@ body {
 /* ─────────────────────────────────────────
    Category transition (Phase 4)
    ───────────────────────────────────────── */
+@keyframes flyer-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.flyer-in {
+  animation: flyer-in 0.55s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flyer-in { animation: none; }
+}
+
 @keyframes tobo-intro {
   0%   { opacity: 0; }
   14%  { opacity: 1; }

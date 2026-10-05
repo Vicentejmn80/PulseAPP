@@ -5,7 +5,7 @@ import { TabBar } from "@/components/ui/TabBar";
 import { CardHead, StatLine, ToboCard } from "@/components/tobo/surface";
 import { formato, gameTypeLabel } from "@/lib/format";
 import { adminVenueList } from "@/services/demoApi";
-import { listRanking, myPrizes, type ToboPrize } from "@/services/matchesApi";
+import { listRanking } from "@/services/matchesApi";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { myStats, type UserStats } from "@/services/analytics";
 import { usePulse } from "@/state/PulseContext";
@@ -23,20 +23,18 @@ export function ProfilePage() {
   const { currentUser, totalPoints, transactions, logout, reload } = usePulse();
   const [position, setPosition] = useState<number | null>(null);
   const [rankPoints, setRankPoints] = useState<number | null>(null);
-  const [prizes, setPrizes] = useState<ToboPrize[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([reload(), listRanking("lifetime"), myPrizes(), listMyLeagues(), myStats()])
-      .then(([, rows, prizeStatus, leagueRows, userStats]) => {
+    Promise.all([reload(), listRanking("lifetime"), listMyLeagues(), myStats()])
+      .then(([, rows, leagueRows, userStats]) => {
         if (!alive) return;
         const mine = rows.find((entry) => entry.isCurrentUser);
         setPosition(mine?.position ?? null);
         setRankPoints(mine?.points ?? null);
-        setPrizes(prizeStatus.prizes ?? []);
         setLeagues(leagueRows);
         setStats(userStats);
       })
@@ -100,7 +98,7 @@ export function ProfilePage() {
               <StatLine label="Pronósticos realizados" value={stats?.predictionsMade ?? 0} />
               <StatLine label="Trivias acertadas" value={`${stats?.triviaCorrect ?? 0}/${stats?.triviaAnswered ?? 0}`} />
               <StatLine label="Ligas" value={leagues.length} />
-              <StatLine label="Premios" value={stats?.prizesWon ?? prizes.length} />
+              <StatLine label="Premios" value={stats?.prizesWon ?? 0} />
             </div>
           </ToboCard>
         </div>
@@ -132,34 +130,6 @@ export function ProfilePage() {
             </button>
           ))}
         </div>
-
-        {/* MIS PREMIOS */}
-        <div className="mt-5 px-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[14px] font-extrabold">Mis premios</h3>
-            <button type="button" onClick={() => navigate("/tobo/premios")} className="text-[12px] font-extrabold text-[#FF4F1A]">
-              Abrir billetera
-            </button>
-          </div>
-        </div>
-        {prizes.length > 0 && (
-          <div className="mt-2 px-4">
-            {prizes.slice(0, 2).map((prize) => (
-              <div key={prize.id} className="rounded-[22px] bg-white px-4 py-4">
-                <p className="text-[12px] font-extrabold uppercase tracking-wide text-[#FF4F1A]">{prize.cycleName} · puesto {prize.rank}</p>
-                <p className="mt-2 text-[28px] font-extrabold tracking-[0.14em]">{prize.code}</p>
-                <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
-                  {prize.status === "redeemed" ? "Canjeado" : prize.status === "expired" ? "Vencido" : "Código listo para mostrar en la tasca."}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-        {prizes.length === 0 && (
-          <p className="mx-4 mt-2 rounded-2xl bg-white px-4 py-4 text-[13px] font-semibold text-[#8D7366]">
-            Aun no tienes premios. Sube en el ranking para ganar.
-          </p>
-        )}
 
         {/* ACTIVIDAD */}
         <div className="mt-5 px-5">

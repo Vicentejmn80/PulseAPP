@@ -13,7 +13,6 @@ import { HomePage } from "@/pages/Home";
 import { LeaguePage } from "@/pages/LeaguePage";
 import { MatchPredictPage, MatchesPage } from "@/pages/MatchesPage";
 import { MiQuinielaPage } from "@/pages/MiQuinielaPage";
-import { PrizesPage } from "@/pages/PrizesPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { PulseExperienciasPage } from "@/pages/PulseExperienciasPage";
 import { PulseHomePage } from "@/pages/PulseHomePage";
@@ -124,7 +123,7 @@ export function App() {
             <Route path="ligas/:leagueId?"      element={<LeaguePage />} />
             <Route path="trivias"               element={<TriviaPage />} />
             <Route path="tascas"                element={<TascasPage />} />
-            <Route path="premios"               element={<PrizesPage />} />
+            <Route path="premios"               element={<Navigate to="/tobo" replace />} />
             <Route path="venue/:slug"           element={<VenuePage />} />
             <Route path="profile"               element={<ProfilePage />} />
             <Route path="q/:token"              element={<QrPage />} />
