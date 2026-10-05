@@ -12,6 +12,7 @@ import {
   Play,
   Trophy,
   Users,
+  Wallet,
   Zap,
 } from "lucide-react";
 import { CardHead, GhostCta, GoldCta, IconChip, StatCell, ToboCard } from "@/components/tobo/surface";
@@ -301,6 +302,15 @@ export function HomePage() {
             <IconCoin className="h-4 w-4" />
           </span>
           <span className="text-[13px] font-extrabold tabular-nums">{formato(totalPoints)}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/tobo/premios")}
+          aria-label="Mis premios"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)", color: "var(--t-accent)" }}
+        >
+          <Wallet className="h-4 w-4" />
         </button>
       </header>
 

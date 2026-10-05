@@ -138,7 +138,7 @@ export function ProfilePage() {
           <div className="flex items-center justify-between">
             <h3 className="text-[14px] font-extrabold">Mis premios</h3>
             <button type="button" onClick={() => navigate("/tobo/premios")} className="text-[12px] font-extrabold text-[#FF4F1A]">
-              Ver todos
+              Abrir billetera
             </button>
           </div>
         </div>
@@ -149,7 +149,7 @@ export function ProfilePage() {
                 <p className="text-[12px] font-extrabold uppercase tracking-wide text-[#FF4F1A]">{prize.cycleName} · puesto {prize.rank}</p>
                 <p className="mt-2 text-[28px] font-extrabold tracking-[0.14em]">{prize.code}</p>
                 <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
-                  {prize.status === "redeemed" ? "Tobo canjeado" : "Codigo de canje. Vence en 14 dias."}
+                  {prize.status === "redeemed" ? "Canjeado" : prize.status === "expired" ? "Vencido" : "Código listo para mostrar en la tasca."}
                 </p>
               </div>
             ))}
