@@ -24,10 +24,11 @@ import { caracasDateKey, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
-import { listCycles, listMatches, listRanking, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
+import { listCycles, listMatches, loadCycleBoard, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
 import { todayTrivia, type TriviaLevel, type TriviaQuestion } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
+import { listMyLeagues } from "@/services/leaguesApi";
 import type { LeaderboardEntry } from "@/types/pulse";
 import type { LucideIcon } from "lucide-react";
 
@@ -179,10 +180,12 @@ function TeamSide({ name, align = "start" }: { name: string; align?: "start" | "
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { totalPoints, reload } = usePulse();
+  const { reload } = usePulse();
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [cycle, setCycle] = useState<ToboCycle | null>(null);
   const [ranking, setRanking] = useState<LeaderboardEntry[]>([]);
+  const [roundPoints, setRoundPoints] = useState(0);
+  const [inPrivateLeague, setInPrivateLeague] = useState(false);
   const [trivia, setTrivia] = useState<Record<TriviaLevel, TriviaQuestion[]>>({
     beginner: [],
     intermediate: [],
@@ -210,16 +213,19 @@ export function HomePage() {
         todayTrivia("intermediate"),
         todayTrivia("advanced"),
         listTascas(),
+        listMyLeagues(),
         callRpc<number>("pulse_cfg_int", { p_key: "QR_POINTS" }).catch(() => null),
       ])
-        .then(async ([, matchRows, cycles, basic, mid, hard, venues, points]) => {
+        .then(async ([, matchRows, cycles, basic, mid, hard, venues, leagues, points]) => {
           if (!alive) return;
           const active = pickActiveCycle(cycles);
-          const board = active ? await listRanking(active.id) : [];
+          const board = active ? await loadCycleBoard(active.id) : { entries: [], points: 0, mine: null };
           if (!alive) return;
           setMatches(matchRows);
           setCycle(active);
-          setRanking(board);
+          setRanking(board.entries);
+          setRoundPoints(board.points);
+          setInPrivateLeague(leagues.length > 0);
           setTrivia({
             beginner: basic.questions,
             intermediate: mid.questions,
@@ -258,7 +264,9 @@ export function HomePage() {
   const mine = ranking.find((entry) => entry.isCurrentUser);
   const gap = mine ? pointsToNextPosition(ranking, mine.user.id) : null;
   const climb = !mine
-    ? "Pronostica y entras al ranking."
+    ? inPrivateLeague
+      ? "Participas en una liga privada y no apareces en el ranking abierto."
+      : "Pronostica y entras al ranking."
     : mine.position <= 1
       ? "Vas primero en la ronda."
       : gap
@@ -303,7 +311,7 @@ export function HomePage() {
           <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}>
             <IconCoin className="h-4 w-4" />
           </span>
-          <span className="text-[13px] font-extrabold tabular-nums">{formato(totalPoints)}</span>
+          <span className="text-[13px] font-extrabold tabular-nums" aria-label="Puntos de la ronda actual">{formato(roundPoints)}</span>
         </button>
       </header>
 
@@ -355,7 +363,7 @@ export function HomePage() {
             </p>
           )}
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <StatCell value={<>{formato(mine?.points ?? 0)}<span className="ml-1 text-[11px]">PT</span></>} label="puntos" />
+            <StatCell value={<>{formato(roundPoints)}<span className="ml-1 text-[11px]">PT</span></>} label="puntos de ronda" />
             <StatCell value={mine ? `#${mine.position}` : "—"} label="puesto" />
             <StatCell value={gap ?? "—"} label={mine && mine.position > 1 ? "al anterior" : "distancia"} />
           </div>

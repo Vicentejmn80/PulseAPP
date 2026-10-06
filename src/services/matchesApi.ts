@@ -186,9 +186,43 @@ export interface ToboPrize {
   prizeName?: string;
 }
 
-export async function listRanking(cycle = "lifetime") {
-  const data = await callRpc<LeaderboardEntry[]>("pulse_ranking", { p_token: readSessionToken(), p_cycle: cycle });
+export async function listRanking(cycle = "lifetime", leagueId?: string) {
+  const data = await callRpc<LeaderboardEntry[]>("pulse_ranking", {
+    p_token: readSessionToken(),
+    p_cycle: cycle,
+    p_league_id: leagueId ?? null,
+  });
   return Array.isArray(data) ? data : [];
+}
+
+export async function myCyclePoints(cycle: string) {
+  const result = await callRpc<{ ok?: boolean; error?: string; points?: number }>("pulse_my_cycle_points", {
+    p_token: readSessionToken(),
+    p_cycle: cycle,
+  });
+  if (!result?.ok) throw new Error(result?.error || "No se pudieron cargar tus puntos.");
+  return Number(result.points ?? 0);
+}
+
+export async function loadCycleBoard(cycle: string, leagueId?: string) {
+  const result = await callRpc<{
+    ok?: boolean;
+    error?: string;
+    entries?: LeaderboardEntry[];
+    points?: number;
+  }>("pulse_cycle_board", {
+    p_token: readSessionToken(),
+    p_cycle: cycle,
+    p_league_id: leagueId ?? null,
+  });
+  if (!result?.ok) throw new Error(result?.error || "No se pudo cargar el ranking de la ronda.");
+  const entries = Array.isArray(result.entries) ? result.entries : [];
+  const points = Number(result.points ?? 0);
+  const mine = entries.find((entry) => entry.isCurrentUser);
+  if (mine && mine.points !== points) {
+    throw new Error("El puntaje personal no coincide con el ranking de esta ronda. Actualiza e inténtalo de nuevo.");
+  }
+  return { entries, points, mine: mine ?? null };
 }
 
 export async function listCycles() {
@@ -199,41 +233,19 @@ export async function listCycles() {
 export async function listTascas() {
   const data = await callRpc<Tasca[]>("pulse_venues_list", {});
   const tascas = Array.isArray(data) ? data : [];
+  return visibleMvpTascas(tascas);
+}
 
-  /**
-   * Tasca demo para ventas (NO producción real)
-   * - Se controla por env: `VITE_ENABLE_DEMO_TASCA` (true/false).
-   * - Si está activa, se fuerza a aparecer primero.
-   * - Si está desactivada, se excluye de listas para evitar mostrar un negocio sin acuerdo explícito.
-   */
-  const enabled = (() => {
-    const raw = String(import.meta.env.VITE_ENABLE_DEMO_TASCA ?? "").trim().toLowerCase();
-    if (raw === "true" || raw === "1" || raw === "yes") return true;
-    if (raw === "false" || raw === "0" || raw === "no") return false;
-    return !import.meta.env.PROD;
-  })();
-
-  const demoSlug = String(import.meta.env.VITE_DEMO_TASCA_SLUG ?? "agropecuaria-beethoven").trim().toLowerCase();
-  const isDemo = (tasca: Tasca) => {
-    const slug = String(tasca.slug ?? "").trim().toLowerCase();
-    const name = String(tasca.name ?? "").trim().toLowerCase();
-    return Boolean(demoSlug) && (slug === demoSlug || name.includes("agropecuaria beethoven"));
-  };
-
-  const visible = enabled ? tascas : tascas.filter((t) => !isDemo(t));
-  return [...visible].sort((a, b) => {
-    const da = isDemo(a) ? 1 : 0;
-    const db = isDemo(b) ? 1 : 0;
-    if (da !== db) return db - da; // demo first
-    // stable secondary ordering: founders, then active, then name
-    const fa = a.isFounder ? 1 : 0;
-    const fb = b.isFounder ? 1 : 0;
-    if (fa !== fb) return fb - fa;
-    const aa = a.active === false ? 0 : 1;
-    const ab = b.active === false ? 0 : 1;
-    if (aa !== ab) return ab - aa;
-    return String(a.name ?? "").localeCompare(String(b.name ?? ""), "es");
+export function visibleMvpTascas<T extends Pick<Tasca, "id" | "name" | "slug" | "active"> & Partial<Tasca>>(rows: T[]) {
+  const normalized = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const candidates = rows.filter((row) => {
+    if (row.active === false || row.id !== "venue-beethoven") return false;
+    return normalized(row.name).trim() === "la europea beethoven";
   });
+  const completeness = (row: T) => [row.address, row.description, row.roundPrize, row.prizeDetail, row.logoUrl, row.imageUrl]
+    .filter((value) => Boolean(value && String(value).trim())).length;
+  const chosen = [...candidates].sort((a, b) => completeness(b) - completeness(a) || a.id.localeCompare(b.id))[0];
+  return chosen ? [chosen] : [];
 }
 
 export async function myPrizes() {

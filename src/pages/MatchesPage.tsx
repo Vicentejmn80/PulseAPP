@@ -196,8 +196,19 @@ export function MatchPredictPage() {
     setPending(true);
     setError("");
     try {
+      const answers = challengesRef.current?.answers();
+      if (answers === null || answers === undefined) {
+        setError("Los retos todavía están cargando. Intenta guardar de nuevo en un momento.");
+        return;
+      }
       await savePrediction({ matchId: match.id, winner, homeScore, awayScore });
-      setEditing(false);
+      let challengeSaveError = "";
+      try {
+        await saveChallengeAnswers(match.id, answers);
+        trackEvent("challenge_submitted", { matchId: match.id, count: answers.length });
+      } catch (reason: unknown) {
+        challengeSaveError = reason instanceof Error ? reason.message : "No se pudieron guardar tus retos.";
+      }
       setMatch((current) => current ? {
         ...current,
         prediction: {
@@ -213,17 +224,10 @@ export function MatchPredictPage() {
           errorTotal: null,
         },
       } : current);
+      setEditing(false);
       const fresh = await getMatch(match.id).catch(() => null);
       if (fresh) setMatch(fresh);
-      const answers = challengesRef.current?.answers();
-      if (answers) {
-        try {
-          await saveChallengeAnswers(match.id, answers);
-          trackEvent("challenge_submitted", { matchId: match.id, count: answers.length });
-        } catch {
-          setError("Tu pronóstico quedó guardado, pero no se pudieron guardar los retos.");
-        }
-      }
+      if (challengeSaveError) setError(`Tu pronóstico quedó guardado, pero los retos no se guardaron: ${challengeSaveError}`);
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo guardar.");
     } finally {
@@ -251,7 +255,7 @@ export function MatchPredictPage() {
         {match && phase === "finished" && (
           <>
             <FinishedCard match={match} />
-            <MatchChallenges matchId={match.id} editable={false} />
+            <MatchChallenges matchId={match.id} editable={false} predictionSaved />
           </>
         )}
         {match && phase === "locked" && (
@@ -269,7 +273,7 @@ export function MatchPredictPage() {
               <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">No alcanzaste a guardar una predicción.</p>
             )}
             <p className="mt-3 text-[14px] font-extrabold text-[#8D7366]">🔒 Pronóstico bloqueado</p>
-            <MatchChallenges matchId={match.id} editable={false} />
+            <MatchChallenges matchId={match.id} editable={false} predictionSaved={Boolean(saved)} />
           </section>
         )}
         {match && phase === "cancelled" && (
@@ -290,7 +294,7 @@ export function MatchPredictPage() {
             <div className="mt-4">
               <PrimaryButton type="button" onClick={() => setEditing(true)}>Editar</PrimaryButton>
             </div>
-            <MatchChallenges matchId={match.id} editable={false} />
+            <MatchChallenges matchId={match.id} editable predictionSaved />
           </section>
         )}
         {match && phase === "open" && (!saved || editing) && (
@@ -339,7 +343,7 @@ export function MatchPredictPage() {
                 className="mt-1 h-14 w-full rounded-2xl bg-[#FFF7F1] text-center text-[22px] font-extrabold text-[#241710] outline-none"
               />
             </label>
-            <MatchChallenges ref={challengesRef} matchId={match.id} editable />
+            <MatchChallenges ref={challengesRef} matchId={match.id} editable predictionSaved={Boolean(saved)} />
             {error && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
             <div className="mt-4">
               <PrimaryButton type="submit" disabled={pending}>

@@ -5,8 +5,8 @@ import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pickActiveCycle } from "@/lib/toboHome";
-import { getLeagueRanking, listMyLeagues, type League } from "@/services/leaguesApi";
-import { listCycles, listRanking, type ToboCycle } from "@/services/matchesApi";
+import { listMyLeagues, type League } from "@/services/leaguesApi";
+import { listCycles, loadCycleBoard, type ToboCycle } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
 
@@ -21,6 +21,8 @@ export function RankingPage() {
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string>("");
   const [currentCycleId, setCurrentCycleId] = useState("");
+  const [myPoints, setMyPoints] = useState(0);
+  const [hasPrivateLeague, setHasPrivateLeague] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export function RankingPage() {
         setCycles(cycleRows);
         setCurrentCycleId(pickActiveCycle(cycleRows)?.id ?? "");
         setLeagues(leagueRows);
+        setHasPrivateLeague(leagueRows.length > 0);
         if (leagueRows.length > 0 && !selectedLeague) {
           setSelectedLeague(leagueRows[0].id);
         }
@@ -52,26 +55,13 @@ export function RankingPage() {
       return;
     }
 
-    if (tab === "liga") {
-      if (!selectedLeague) {
-        setEntries([]);
-        return;
-      }
-      getLeagueRanking(selectedLeague, currentCycleId)
-        .then((rows) => {
-          if (alive) setEntries(rows);
-        })
-        .catch((reason: unknown) => {
-          if (alive) setError(reason instanceof Error ? reason.message : "No se pudo cargar la liga.");
-        });
-      return () => {
-        alive = false;
-      };
-    }
-
-    listRanking(cycle)
-      .then((rows) => {
-        if (alive) setEntries(rows);
+    const leagueId = tab === "liga" ? selectedLeague || undefined : undefined;
+    loadCycleBoard(cycle, leagueId)
+      .then(({ entries: rows, points }) => {
+        if (alive) {
+          setEntries(tab === "liga" && !selectedLeague ? [] : rows);
+          setMyPoints(points);
+        }
       })
       .catch((reason: unknown) => {
         if (alive) setError(reason instanceof Error ? reason.message : "No se pudo cargar el ranking.");
@@ -117,7 +107,7 @@ export function RankingPage() {
                     : { backgroundColor: "var(--t-card)", color: "var(--t-muted)", border: "1px solid var(--t-border)" }
                 }
               >
-                {t === "global" ? "Global" : t === "liga" ? "Mi Liga" : t === "semana" ? "Semana" : "Temporada"}
+                {t === "global" ? "Global" : t === "liga" ? "Mi Liga" : t === "semana" ? "Ronda" : "Histórico"}
               </button>
             ))}
           </div>
@@ -154,8 +144,8 @@ export function RankingPage() {
               {me ? `#${me.position}` : "—"}
             </p>
             <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>tu puesto</p>
-            <p className="mt-5 text-[40px] font-extrabold leading-none tabular-nums">{formato(me?.points ?? 0)}</p>
-            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>puntos</p>
+            <p className="mt-5 text-[40px] font-extrabold leading-none tabular-nums">{formato(myPoints)}</p>
+            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>{tab === "temporada" ? "PT históricos de Juégate el Tobo" : "PT de la ronda actual"}</p>
             <div className="mt-5">
               <div className="h-2.5 overflow-hidden rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
                 <div
@@ -165,7 +155,9 @@ export function RankingPage() {
               </div>
               <p className="mt-2 text-[13px] font-extrabold">
                 {!me
-                  ? "Pronostica y entras a la carrera. 🎯"
+                  ? hasPrivateLeague && tab !== "liga"
+                    ? "Participas en una liga privada y no apareces en el ranking abierto."
+                    : "Pronostica y entras a la carrera. 🎯"
                   : inPodium
                     ? "Estás en el podio. Sigue sumando. 🥇"
                     : gapToPodium

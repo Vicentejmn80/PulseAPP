@@ -6,8 +6,8 @@ import { BackButton } from "@/components/ui/Buttons";
 import { CardHead, GoldCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { pickActiveCycle } from "@/lib/toboHome";
-import { createLeague, getLeague, getLeagueRanking, joinLeague, listMyLeagues, type League } from "@/services/leaguesApi";
-import { listCycles } from "@/services/matchesApi";
+import { createLeague, getLeague, joinLeague, listMyLeagues, type League } from "@/services/leaguesApi";
+import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 import type { LeaderboardEntry } from "@/types/pulse";
 
 type LeagueTab = "mis" | "crear" | "unirme" | "ranking";
@@ -53,7 +53,7 @@ export function LeaguePage() {
     Promise.all([getLeague(leagueId), listCycles()])
       .then(async ([league, cycles]) => {
         const cycleId = pickActiveCycle(cycles)?.id ?? "lifetime";
-        const ranking = await getLeagueRanking(leagueId, cycleId);
+        const { entries: ranking } = await loadCycleBoard(cycleId, leagueId);
         if (!alive) return;
         setCurrent(league);
         setEntries(ranking);

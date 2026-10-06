@@ -3,6 +3,8 @@ import { CHALLENGE_BANK } from "./catalog";
 import { challengeAward, correctOptionId, publicChallengeAnswers, ruleHolds, toggleChallengePick } from "./evaluate";
 import { compatibleTemplates, selectChallenges } from "./select";
 import { predictionPoints } from "@/lib/demoMatch";
+import { hydrateChallengeSelections, selectedChallengeRows, updateChallengeSelection } from "@/lib/challengeSelections";
+import type { GameChallenge } from "@/services/matchesApi";
 import type { ChallengeTemplate } from "./types";
 
 describe("banco de retos", () => {
@@ -134,5 +136,48 @@ describe("evaluación y puntos", () => {
     const bonus = challengeAward({ op: "both_gte", n: 3 }, 4, "no", { home: 5, away: 3 }).points;
     expect(bonus).toBe(0);
     expect(predictionPoints(5, 3, 5, 3).total).toBe(80);
+  });
+});
+
+describe("selecciones persistidas de retos del partido", () => {
+  const board: GameChallenge[] = Array.from({ length: 5 }, (_, index) => ({
+    id: `challenge-${index + 1}`,
+    position: index + 1,
+    points: 1,
+    title: `Reto ${index + 1}`,
+    description: "",
+    category: "juego",
+    difficulty: "easy",
+    answerType: "boolean",
+    options: [{ id: "si", label: "Sí" }, { id: "no", label: "No" }],
+    myOption: index < 3 ? "si" : null,
+    evaluated: false,
+    correct: null,
+    pointsAwarded: null,
+    correctOption: null,
+  }));
+
+  it("hidrata tras volver a la pantalla y resume solo los tres retos guardados", () => {
+    const restored = hydrateChallengeSelections(board);
+    expect(Object.keys(restored)).toHaveLength(3);
+    expect(selectedChallengeRows(board, restored).map((row) => row.id)).toEqual([
+      "challenge-1", "challenge-2", "challenge-3",
+    ]);
+  });
+
+  it("edita una selección, vuelve a hidratar el nuevo estado y no permite más de tres", () => {
+    const saved = hydrateChallengeSelections(board);
+    const deselected = updateChallengeSelection(saved, "challenge-1", "si");
+    const replaced = updateChallengeSelection(deselected.selections, "challenge-4", "no");
+    const persistedBoard = board.map((row) => ({
+      ...row,
+      myOption: replaced.selections[row.id] ?? null,
+    }));
+    const afterReload = hydrateChallengeSelections(persistedBoard);
+    expect(afterReload).toEqual({ "challenge-2": "si", "challenge-3": "si", "challenge-4": "no" });
+    expect(selectedChallengeRows(persistedBoard, afterReload)).toHaveLength(3);
+    const blocked = updateChallengeSelection(afterReload, "challenge-5", "si");
+    expect(blocked.notice).toContain("Ya elegiste 3 retos");
+    expect(Object.keys(blocked.selections)).toHaveLength(3);
   });
 });

@@ -5,11 +5,12 @@ import { TabBar } from "@/components/ui/TabBar";
 import { CardHead, StatLine, ToboCard } from "@/components/tobo/surface";
 import { formato, gameTypeLabel } from "@/lib/format";
 import { adminVenueList } from "@/services/demoApi";
-import { listRanking } from "@/services/matchesApi";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { myStats, type UserStats } from "@/services/analytics";
 import { usePulse } from "@/state/PulseContext";
 import type { PointsTransaction } from "@/types/pulse";
+import { pickActiveCycle } from "@/lib/toboHome";
+import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 
 function movementLabel(tx: PointsTransaction) {
   if (tx.sourceType === "prediction" && tx.metadata) {
@@ -20,21 +21,39 @@ function movementLabel(tx: PointsTransaction) {
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { currentUser, totalPoints, transactions, logout, reload } = usePulse();
+  const { currentUser, transactions, logout, reload } = usePulse();
   const [position, setPosition] = useState<number | null>(null);
-  const [rankPoints, setRankPoints] = useState<number | null>(null);
+  const [roundPoints, setRoundPoints] = useState(0);
+  const [seasonPoints, setSeasonPoints] = useState(0);
+  const [roundName, setRoundName] = useState("Ronda actual");
+  const [rankingLabel, setRankingLabel] = useState("ranking abierto");
   const [isAdmin, setIsAdmin] = useState(false);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([reload(), listRanking("lifetime"), listMyLeagues(), myStats()])
-      .then(([, rows, leagueRows, userStats]) => {
+    Promise.all([reload(), listCycles(), listMyLeagues(), myStats()])
+      .then(async ([, cycleRows, leagueRows, userStats]) => {
         if (!alive) return;
-        const mine = rows.find((entry) => entry.isCurrentUser);
-        setPosition(mine?.position ?? null);
-        setRankPoints(mine?.points ?? null);
+        const leagueId = leagueRows[0]?.id;
+        const seasonBoard = await loadCycleBoard("lifetime", leagueId);
+        const cycle = pickActiveCycle(cycleRows);
+        if (!cycle) {
+          setPosition(null);
+          setRoundPoints(0);
+          setSeasonPoints(seasonBoard.points);
+          setLeagues(leagueRows);
+          setStats(userStats);
+          return;
+        }
+        const roundBoard = await loadCycleBoard(cycle.id, leagueId);
+        if (!alive) return;
+        setPosition(roundBoard.mine?.position ?? null);
+        setRoundPoints(roundBoard.points);
+        setSeasonPoints(seasonBoard.points);
+        setRoundName(cycle.name);
+        setRankingLabel(leagueRows.length > 0 ? `ranking de ${leagueRows[0].name}` : "ranking abierto");
         setLeagues(leagueRows);
         setStats(userStats);
       })
@@ -77,21 +96,21 @@ export function ProfilePage() {
 
       <div className="flex-1 overflow-y-auto pb-4">
         <div className="relative z-10 -mt-6 mx-4 rounded-[26px] bg-white px-4 py-4 text-center shadow-[0_12px_28px_rgba(80,40,10,0.08)]">
-          <p className="text-[42px] font-extrabold leading-none tracking-tight tabular-nums">{formato(totalPoints)}</p>
-          <p className="mt-1 text-[13px] font-bold text-[#A08B80]">puntos acumulados</p>
+          <p className="text-[42px] font-extrabold leading-none tracking-tight tabular-nums">{formato(seasonPoints)}</p>
+          <p className="mt-1 text-[13px] font-bold text-[#A08B80]">puntos históricos de Juégate el Tobo</p>
         </div>
 
         <div className="mt-3 px-4">
           <ToboCard>
-            <CardHead icon={BarChart3} title="Estadísticas de la temporada" />
+            <CardHead icon={BarChart3} title={`Resumen · ${roundName}`} />
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-2xl px-3 py-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
                 <p className="text-[28px] font-extrabold tabular-nums leading-none">#{position ?? "—"}</p>
-                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>ranking global</p>
+                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>{rankingLabel}</p>
               </div>
               <div className="rounded-2xl px-3 py-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
-                <p className="text-[28px] font-extrabold tabular-nums leading-none">{formato(rankPoints ?? totalPoints)}</p>
-                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>puntos</p>
+                <p className="text-[28px] font-extrabold tabular-nums leading-none">{formato(roundPoints)}</p>
+                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>PT de esta ronda</p>
               </div>
             </div>
             <div className="mt-1">

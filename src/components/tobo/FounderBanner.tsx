@@ -15,12 +15,12 @@ export function FounderBanner() {
         Fundadoras
       </span>
       <span className="absolute right-3 top-3 rounded-full bg-[#060B1E]/55 px-2.5 py-1 text-[11px] font-extrabold text-[#FFE39B]">
-        9 tascas activas
+        1 tasca participante
       </span>
       <span className="relative flex min-h-[168px] flex-col justify-end gap-2 px-4 pb-4 pt-12">
-        <span className="text-[22px] font-extrabold uppercase leading-none text-white">Las tascas donde se vive el Tobo</span>
+        <span className="text-[22px] font-extrabold uppercase leading-none text-white">Vive el Tobo en La Europea Beethoven</span>
         <span className="max-w-[90%] text-[12px] font-semibold leading-snug text-[#FFE39B]">
-          Cada una tiene su ranking, su premio y su gente. Encuentra la más cerca de ti.
+          Conoce su ficha, el premio de la ronda y la experiencia con QR.
         </span>
         <span className="mt-1 inline-flex w-max rounded-full bg-[#FFC94A] px-4 py-2 text-[12px] font-extrabold text-[#060B1E]">
           Ver más →
