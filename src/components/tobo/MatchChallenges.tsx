@@ -55,8 +55,8 @@ export const MatchChallenges = forwardRef<ChallengeHandle, { matchId: string; ed
   if (!ready || rows.length === 0) return null;
 
   const selectedIds = Object.keys(picks);
-  const bonus = rows.filter((challenge) => picks[challenge.id]).reduce((sum, challenge) => sum + challenge.points, 0);
-  const awarded = rows.reduce((sum, challenge) => sum + (challenge.pointsAwarded ?? 0), 0);
+  const bonus = Math.min(3, selectedIds.length);
+  const awarded = Math.min(3, rows.reduce((sum, challenge) => sum + (challenge.pointsAwarded ?? 0), 0));
 
   function choose(challengeId: string, optionId: string) {
     if (!editable || finished) return;
@@ -90,7 +90,7 @@ export const MatchChallenges = forwardRef<ChallengeHandle, { matchId: string; ed
               <article key={challenge.id} className="rounded-2xl bg-[#FFF7F1] px-3 py-3">
                 <p className={`text-[13px] font-extrabold ${hit ? "text-[#FF4F1A]" : "text-[#8D7366]"}`}>
                   {hit ? <Check className="mr-1 inline h-4 w-4" /> : <X className="mr-1 inline h-4 w-4" />}
-                  {hit ? `+${challenge.pointsAwarded ?? challenge.points} PT` : `+${challenge.points} PT`}
+                  {hit ? "+1 PT" : "+0 PT"}
                 </p>
                 <p className="mt-1 text-[15px] font-extrabold text-[#241710]">{challenge.title}</p>
                 <p className="mt-1 text-[13px] font-bold text-[#8D7366]">
@@ -108,17 +108,17 @@ export const MatchChallenges = forwardRef<ChallengeHandle, { matchId: string; ed
 
   return (
     <section className="mt-5 border-t border-[#F3E4D8] pt-4">
-      <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Retos del partido</p>
+      <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#8D7366]">RETOS DEL PARTIDO · BONUS: HASTA +3 PT</p>
       <h3 className="mt-1 text-[18px] font-extrabold text-[#241710]">Lee el juego. Gana puntos extra.</h3>
       <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">
-        {editable ? "Elige hasta 3. Si no quieres, guarda solo el pronóstico." : "Estos retos ya quedaron cerrados."}
+        {editable ? "+1 PT por cada reto correcto. El pronóstico principal vale hasta +80 PT." : "Bonus secundario: +1 PT por cada reto correcto."}
       </p>
       <div className="mt-3 flex flex-col gap-2">
         {rows.map((challenge) => {
           const mine = picks[challenge.id];
           return (
             <article key={challenge.id} className="rounded-2xl bg-[#FFF7F1] px-3 py-3">
-              <p className="text-[12px] font-extrabold text-[#FF4F1A]">+{challenge.points} PT</p>
+              <p className="text-[12px] font-extrabold text-[#FF4F1A]">+1 PT</p>
               <p className="mt-1 text-[15px] font-extrabold leading-snug text-[#241710]">{challenge.title}</p>
               {editable ? (
                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -148,7 +148,7 @@ export const MatchChallenges = forwardRef<ChallengeHandle, { matchId: string; ed
       {editable && (
         <>
           <p className="mt-3 text-[13px] font-extrabold text-[#241710]">{selectedIds.length}/3 seleccionados</p>
-          <p className="text-[14px] font-extrabold text-[#FF4F1A]">Puedes ganar hasta +{bonus} PT</p>
+          <p className="text-[14px] font-extrabold text-[#FF4F1A]">Bonus seleccionado: hasta +{bonus} PT · máximo +3 PT</p>
           {notice && <p className="mt-2 text-[13px] font-bold text-[#E23B2F]">{notice}</p>}
         </>
       )}

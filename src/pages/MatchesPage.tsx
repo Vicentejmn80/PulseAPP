@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { predictionBackTarget } from "@/lib/toboNav";
+import { cycleForMatchStart } from "@/lib/toboHome";
 import { DuelBox, LiveCenter, ShareLine } from "@/components/live/LiveCenter";
 import { MatchExtras } from "@/components/tobo/PilotExtras";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
@@ -9,7 +10,7 @@ import { matchCenter, type MatchCenter } from "@/services/liveApi";
 import { DemoExperience } from "@/components/demo/DemoExperience";
 import { MatchChallenges, type ChallengeHandle } from "@/components/tobo/MatchChallenges";
 import { trackEvent } from "@/services/analytics";
-import { getMatch, listMatches, matchPhase, saveChallengeAnswers, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
+import { getMatch, listCycles, listMatches, matchPhase, saveChallengeAnswers, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
 
 function when(value: string) {
   const date = new Date(value);
@@ -130,19 +131,23 @@ export function MatchPredictPage() {
   const [away, setAway] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [editing, setEditing] = useState(true);
   const [missing, setMissing] = useState(false);
+  const [cycleName, setCycleName] = useState("");
   const challengesRef = useRef<ChallengeHandle>(null);
 
   useEffect(() => {
     let alive = true;
-    getMatch(matchId)
-      .then((row) => {
+    Promise.all([getMatch(matchId), listCycles().catch(() => [])])
+      .then(([row, cycles]) => {
         if (!alive) return;
         if (!row) {
           setMissing(true);
           return;
         }
         setMatch(row);
+        setCycleName(cycleForMatchStart(row.startsAt, cycles)?.name ?? "");
+        setEditing(!row.prediction);
         if (row.prediction) {
           setWinner(row.prediction.winner);
           setHome(String(row.prediction.homeScore));
@@ -158,14 +163,14 @@ export function MatchPredictPage() {
   }, [matchId]);
 
   useEffect(() => {
-    if (match?.status !== "in_progress") return;
+    if (!match || match.status === "finished" || match.status === "cancelled") return;
     const id = setInterval(() => {
       getMatch(matchId).then((row) => {
         if (row) setMatch(row);
       }).catch(() => undefined);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(id);
-  }, [match?.status, matchId]);
+  }, [match?.id, match?.status, matchId]);
 
   async function onSave(event: FormEvent) {
     event.preventDefault();
@@ -192,13 +197,33 @@ export function MatchPredictPage() {
     setError("");
     try {
       await savePrediction({ matchId: match.id, winner, homeScore, awayScore });
+      setEditing(false);
+      setMatch((current) => current ? {
+        ...current,
+        prediction: {
+          id: current.prediction?.id ?? `saved_${current.id}`,
+          winner,
+          homeScore,
+          awayScore,
+          lockedAt: current.prediction?.lockedAt ?? null,
+          processed: false,
+          winnerPoints: null,
+          closenessPoints: null,
+          total: null,
+          errorTotal: null,
+        },
+      } : current);
+      const fresh = await getMatch(match.id).catch(() => null);
+      if (fresh) setMatch(fresh);
       const answers = challengesRef.current?.answers();
       if (answers) {
-        await saveChallengeAnswers(match.id, answers);
-        trackEvent("challenge_submitted", { matchId: match.id, count: answers.length });
+        try {
+          await saveChallengeAnswers(match.id, answers);
+          trackEvent("challenge_submitted", { matchId: match.id, count: answers.length });
+        } catch {
+          setError("Tu pronóstico quedó guardado, pero no se pudieron guardar los retos.");
+        }
       }
-      const fresh = await getMatch(match.id);
-      if (fresh) setMatch(fresh);
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo guardar.");
     } finally {
@@ -236,11 +261,14 @@ export function MatchPredictPage() {
             <p className="mt-3 text-[20px] font-extrabold">{match.awayTeam}</p>
             <p className="text-[14px] font-bold text-[#A08B80]">vs. {match.homeTeam}</p>
             {saved ? (
-              <p className="mt-2 text-[18px] font-extrabold">{scoreLine(match, saved.homeScore, saved.awayScore)}</p>
+              <>
+                <p className="mt-2 text-[14px] font-extrabold text-[#FF4F1A]">✓ Pronóstico guardado</p>
+                <p className="mt-1 text-[18px] font-extrabold">{scoreLine(match, saved.homeScore, saved.awayScore)}</p>
+              </>
             ) : (
               <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">No alcanzaste a guardar una predicción.</p>
             )}
-            <p className="mt-3 text-[14px] font-semibold text-[#8D7366]">El juego ya comenzó.</p>
+            <p className="mt-3 text-[14px] font-extrabold text-[#8D7366]">🔒 Pronóstico bloqueado</p>
             <MatchChallenges matchId={match.id} editable={false} />
           </section>
         )}
@@ -251,19 +279,32 @@ export function MatchPredictPage() {
             <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">Este juego se canceló. No otorga puntos.</p>
           </section>
         )}
-        {match && phase === "open" && (
-          <form onSubmit={onSave} className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">
-              {saved ? "Pronóstico guardado" : "Tu pronóstico"}
+        {match && phase === "open" && saved && !editing && (
+          <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
+            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">PRONÓSTICO · HASTA +80 PT</p>
+            <p className="mt-3 flex items-center gap-1.5 text-[16px] font-extrabold text-[#23824A]">
+              <span aria-hidden="true">✓</span> Pronóstico guardado
             </p>
+            <p className="mt-1 text-[18px] font-extrabold">{scoreLine(match, saved.homeScore, saved.awayScore)}</p>
+            <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">Puedes editarlo hasta que comience el partido.</p>
+            <div className="mt-4">
+              <PrimaryButton type="button" onClick={() => setEditing(true)}>Editar</PrimaryButton>
+            </div>
+            <MatchChallenges matchId={match.id} editable={false} />
+          </section>
+        )}
+        {match && phase === "open" && (!saved || editing) && (
+          <form onSubmit={onSave} className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
+            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">PRONÓSTICO · HASTA +80 PT</p>
             <h2 className="mt-2 text-[26px] font-extrabold leading-tight tracking-tight">{match.awayTeam}</h2>
             <p className="text-[13px] font-bold text-[#A08B80]">visitante</p>
             <p className="mt-2 text-[14px] font-extrabold text-[#A08B80]">vs.</p>
             <h2 className="text-[26px] font-extrabold leading-tight tracking-tight">{match.homeTeam}</h2>
             <p className="text-[13px] font-bold text-[#A08B80]">local</p>
             <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">{when(match.startsAt)}</p>
+            {cycleName && <p className="mt-1 text-[12px] font-extrabold text-[#FF4F1A]">Puntos para {cycleName} según el inicio programado</p>}
             {saved && <p className="mt-3 text-[16px] font-extrabold">{scoreLine(match, saved.homeScore, saved.awayScore)}</p>}
-            <p className="mt-4 text-[13px] font-semibold text-[#8D7366]">Podrás editar tu pronóstico hasta que comience el juego.</p>
+            <p className="mt-4 text-[13px] font-semibold text-[#8D7366]">40 PT por acertar el ganador y hasta 40 PT por cercanía del marcador.</p>
             <p className="mb-2 mt-5 text-[14px] font-extrabold">¿Quién gana?</p>
             <div className="grid grid-cols-2 gap-2">
               {[match.awayTeam, match.homeTeam].map((team) => (
@@ -302,7 +343,7 @@ export function MatchPredictPage() {
             {error && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
             <div className="mt-4">
               <PrimaryButton type="submit" disabled={pending}>
-                {pending ? "Guardando..." : saved ? "Guardar cambios" : "Confirmar pronóstico"}
+                {pending ? "Guardando..." : saved ? "Guardar cambios" : "Guardar pronóstico"}
               </PrimaryButton>
             </div>
           </form>

@@ -16,6 +16,7 @@ import {
   gradeAnswer,
   officialMatchAfterSimulation,
   publicTascas,
+  predictionPoints,
   qrTokensUnique,
   slugify,
   venueQrPath,
@@ -115,6 +116,20 @@ describe("simulador Juégate el Tobo", () => {
     expect(summary.label).toBe("SIMULACIÓN");
     const match = { homeScore: null, awayScore: null, status: "scheduled" };
     expect(officialMatchAfterSimulation(match)).toEqual(match);
+  });
+
+  it("aplica exactamente la tabla oficial de puntos del pronóstico", () => {
+    const bands = [
+      [0, 40], [1, 36], [2, 36], [3, 32], [4, 32], [5, 28], [6, 28],
+      [7, 24], [8, 24], [9, 20], [10, 20], [11, 16], [12, 16],
+      [13, 12], [14, 12], [15, 8], [16, 8], [17, 4], [18, 4], [19, 0],
+    ] as const;
+    for (const [error, closePoints] of bands) {
+      expect(predictionPoints(20, 0, 20 + error, 0).closenessPoints).toBe(closePoints);
+    }
+    expect(predictionPoints(5, 3, 5, 3)).toMatchObject({ winnerPoints: 40, closenessPoints: 40, total: 80 });
+    expect(predictionPoints(5, 3, 6, 4)).toMatchObject({ winnerPoints: 40, closenessPoints: 36, total: 76, errorTotal: 2 });
+    expect(predictionPoints(5, 3, 4, 6)).toMatchObject({ winnerPoints: 0, closenessPoints: 32, total: 32, errorTotal: 4 });
   });
 
   it("prepara tascas, QR y el acceso del super admin", () => {

@@ -4,17 +4,13 @@ import { CalendarDays, Users } from "lucide-react";
 import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
+import { pickActiveCycle } from "@/lib/toboHome";
 import { getLeagueRanking, listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, listRanking, type ToboCycle } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
 
 type Tab = "global" | "liga" | "semana" | "temporada";
-
-const cycleForTab: Record<string, string> = {
-  semana: "ronda_1",
-  temporada: "lifetime",
-};
 
 export function RankingPage() {
   const navigate = useNavigate();
@@ -24,6 +20,7 @@ export function RankingPage() {
   const [cycles, setCycles] = useState<ToboCycle[]>([]);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string>("");
+  const [currentCycleId, setCurrentCycleId] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -32,6 +29,7 @@ export function RankingPage() {
       .then(([, cycleRows, leagueRows]) => {
         if (!alive) return;
         setCycles(cycleRows);
+        setCurrentCycleId(pickActiveCycle(cycleRows)?.id ?? "");
         setLeagues(leagueRows);
         if (leagueRows.length > 0 && !selectedLeague) {
           setSelectedLeague(leagueRows[0].id);
@@ -47,14 +45,19 @@ export function RankingPage() {
 
   useEffect(() => {
     let alive = true;
-    const cycle = cycleForTab[tab] ?? "lifetime";
+    const cycle = tab === "temporada" ? "lifetime" : currentCycleId;
+
+    if (!cycle) {
+      setEntries([]);
+      return;
+    }
 
     if (tab === "liga") {
       if (!selectedLeague) {
         setEntries([]);
         return;
       }
-      getLeagueRanking(selectedLeague, "lifetime")
+      getLeagueRanking(selectedLeague, currentCycleId)
         .then((rows) => {
           if (alive) setEntries(rows);
         })
@@ -76,10 +79,10 @@ export function RankingPage() {
     return () => {
       alive = false;
     };
-  }, [tab, selectedLeague]);
+  }, [tab, selectedLeague, currentCycleId]);
 
   const me = entries.find((entry) => entry.isCurrentUser);
-  const round = tab === "semana" ? cycles.find((item) => item.id === "ronda_1") : null;
+  const round = tab === "semana" ? cycles.find((item) => item.id === currentCycleId) : null;
   const third = entries.find((entry) => entry.position === 3);
   const inPodium = Boolean(me && me.position <= 3);
   const gapToPodium = me && !inPodium && third ? Math.max(1, third.points - me.points + 1) : null;

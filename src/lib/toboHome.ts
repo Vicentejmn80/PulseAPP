@@ -25,6 +25,13 @@ export function pickActiveCycle(cycles: ToboCycle[], today = caracasDateKey(new 
   return [...dated].sort((a, b) => b.endsOn.localeCompare(a.endsOn))[0] ?? null;
 }
 
+/** Asigna un partido por su hora programada de inicio, nunca por la de finalización. */
+export function cycleForMatchStart(startsAt: string, cycles: ToboCycle[]) {
+  const matchDay = caracasDateKey(startsAt);
+  if (!matchDay) return null;
+  return cycles.find((cycle) => cycle.startsOn <= matchDay && matchDay <= cycle.endsOn) ?? null;
+}
+
 export type HomeMatchTone = "predict" | "saved" | "closed" | "finished" | "live" | "cancelled";
 
 export function homeMatchTone(match: BaseballMatch): HomeMatchTone {

@@ -80,7 +80,7 @@ function closesLabel(end: string) {
     month: "short",
     timeZone: "America/Caracas",
   });
-  return `Cierra el ${text}`;
+  return `Cierra el ${text} · 11:59 p. m.`;
 }
 
 function closesIn(startsAt: string, now: number) {
@@ -253,6 +253,7 @@ export function HomePage() {
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const nextMatch =
     upcoming.find((m) => new Date(m.startsAt).getTime() >= now - 30 * 60 * 1000) ?? upcoming[0] ?? null;
+  const gamesToShow = today.filter((match) => homeMatchTone(match) !== "cancelled");
   const predictedToday = today.filter((match) => match.prediction).length;
   const mine = ranking.find((entry) => entry.isCurrentUser);
   const gap = mine ? pointsToNextPosition(ranking, mine.user.id) : null;
@@ -363,20 +364,26 @@ export function HomePage() {
         <ToboCard>
           <CardHead
             icon={CircleDot}
-            title="Próximo juego"
+            title="Juega hoy"
             action={{ label: "Ver próximos →", onClick: () => navigate("/tobo/mi-quiniela") }}
           />
           <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
             {!ready
               ? "Cargando pronósticos…"
-              : nextMatch
-                ? "El próximo pronóstico disponible"
-                : "No hay pronósticos próximos todavía."}
+              : gamesToShow.length > 0
+                ? "Partidos programados para hoy"
+                : nextMatch
+                  ? "No hay juegos hoy. Este es el próximo partido"
+                  : "No hay pronósticos próximos todavía."}
           </p>
-          {!ready ? null : nextMatch ? (
+          {!ready ? null : gamesToShow.length > 0 ? (
             <div className="flex flex-col gap-3">
-              <MatchCard match={nextMatch} now={now} onOpen={() => navigate(`/tobo/partidos/${nextMatch.id}`)} />
+              {gamesToShow.map((match) => (
+                <MatchCard key={match.id} match={match} now={now} onOpen={() => navigate(`/tobo/partidos/${match.id}`)} />
+              ))}
             </div>
+          ) : nextMatch ? (
+            <MatchCard match={nextMatch} now={now} onOpen={() => navigate(`/tobo/partidos/${nextMatch.id}`)} />
           ) : (
             <p className="text-[15px] font-extrabold">📅 No hay juegos programados a futuro.</p>
           )}
@@ -393,7 +400,6 @@ export function HomePage() {
             {TRIVIA_ROWS.map((row) => {
               const questions = trivia[row.level];
               const answered = questions.filter((question) => question.answered).length;
-              const max = questions.reduce((sum, question) => sum + question.points, 0);
               const done = questions.length > 0 && answered === questions.length;
               const open = questions.length > 0 && !done;
               return (
@@ -403,7 +409,7 @@ export function HomePage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-extrabold">{row.label}</p>
                       <p className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-                        {questions.length === 0 ? "Sin preguntas hoy" : `${questions.length} preguntas · hasta ${formato(max)} pts`}
+                        {questions.length === 0 ? "Sin preguntas hoy" : `${questions.length} preguntas · +5 PT por acierto`}
                       </p>
                     </div>
                     <p className="text-[16px] font-extrabold tabular-nums">
@@ -485,6 +491,7 @@ export function HomePage() {
 
         <ToboCard>
           <CardHead icon={Trophy} title="Premios de esta ronda" />
+          <p className="mb-2 text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>Los 3 primeros lugares ganan premio.</p>
           <p className="mb-3 text-[15px] font-extrabold">
             {prizeLabels.length > 0 ? `${prizeLabels.length} premios en juego` : "Hay premios que todavía puedes ganar."}
           </p>

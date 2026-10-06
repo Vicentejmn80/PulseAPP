@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BaseballMatch, ToboCycle } from "@/services/matchesApi";
-import { caracasDateKey, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleForMatchStart, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
 
 function match(partial: Partial<BaseballMatch>): BaseballMatch {
   return {
@@ -24,8 +24,9 @@ function match(partial: Partial<BaseballMatch>): BaseballMatch {
 }
 
 const cycles: ToboCycle[] = [
-  { id: "ronda_1", name: "Ronda 1", startsOn: "2026-10-12", endsOn: "2026-10-16", status: "open" },
-  { id: "ronda_2", name: "Ronda 2", startsOn: "2026-10-17", endsOn: "2026-10-23", status: "open" },
+  { id: "ronda_1", name: "Ronda 1", startsOn: "2026-10-12", endsOn: "2026-10-22", status: "open" },
+  { id: "ronda_2", name: "Ronda 2", startsOn: "2026-10-23", endsOn: "2026-10-29", status: "open" },
+  { id: "ronda_3", name: "Ronda 3", startsOn: "2026-10-30", endsOn: "2026-11-05", status: "open" },
 ];
 
 describe("tobo home", () => {
@@ -35,6 +36,12 @@ describe("tobo home", () => {
 
   it("si hoy cae antes de la temporada, muestra la próxima ronda", () => {
     expect(pickActiveCycle(cycles, "2026-10-04")?.id).toBe("ronda_1");
+  });
+
+  it("asigna al ciclo por fecha/hora de inicio en Caracas, incluyendo el cierre del 22 de octubre", () => {
+    expect(cycleForMatchStart("2026-10-23T03:00:00.000Z", cycles)?.id).toBe("ronda_1");
+    expect(cycleForMatchStart("2026-10-23T04:00:00.000Z", cycles)?.id).toBe("ronda_2");
+    expect(cycleForMatchStart("2026-11-06T04:00:00.000Z", cycles)).toBeNull();
   });
 
   it("separa pronóstico abierto, guardado, cerrado y final", () => {

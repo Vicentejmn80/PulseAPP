@@ -37,7 +37,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
     label: "Intermedia",
     sublabel: "Medio",
     desc: "Jugadores venezolanos y Grandes Ligas. Un reto real.",
-    pts: "+10 pts por pregunta",
+    pts: "+5 pts por acierto",
     color: "#60A5FA",
   },
   advanced: {
@@ -45,7 +45,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
     label: "Avanzada",
     sublabel: "Difícil",
     desc: "Historia, estadísticas y récords. Solo los que saben.",
-    pts: "+15 pts por pregunta",
+    pts: "+5 pts por acierto",
     color: "#C084FC",
   },
 };

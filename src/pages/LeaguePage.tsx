@@ -5,7 +5,9 @@ import { RankingList } from "@/components/ranking/RankingList";
 import { BackButton } from "@/components/ui/Buttons";
 import { CardHead, GoldCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
+import { pickActiveCycle } from "@/lib/toboHome";
 import { createLeague, getLeague, getLeagueRanking, joinLeague, listMyLeagues, type League } from "@/services/leaguesApi";
+import { listCycles } from "@/services/matchesApi";
 import type { LeaderboardEntry } from "@/types/pulse";
 
 type LeagueTab = "mis" | "crear" | "unirme" | "ranking";
@@ -48,8 +50,10 @@ export function LeaguePage() {
     }
     let alive = true;
     setTab("ranking");
-    Promise.all([getLeague(leagueId), getLeagueRanking(leagueId, "lifetime")])
-      .then(([league, ranking]) => {
+    Promise.all([getLeague(leagueId), listCycles()])
+      .then(async ([league, cycles]) => {
+        const cycleId = pickActiveCycle(cycles)?.id ?? "lifetime";
+        const ranking = await getLeagueRanking(leagueId, cycleId);
         if (!alive) return;
         setCurrent(league);
         setEntries(ranking);
