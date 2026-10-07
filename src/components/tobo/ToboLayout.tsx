@@ -23,13 +23,13 @@ export function ToboLayout() {
           className="flex items-center gap-1.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em]"
           style={{ color: "var(--t-accent)" }}
         >
-          ← Pulse
+          ← Rusher
         </button>
         <span
           className="text-[10px] font-extrabold uppercase tracking-[0.2em]"
           style={{ color: "var(--t-muted)" }}
         >
-          Juégate el Tobo
+          Júgate el Tobo
         </span>
       </div>
 

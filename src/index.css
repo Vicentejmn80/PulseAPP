@@ -11,10 +11,8 @@ body,
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-  background:
-    radial-gradient(1100px 520px at 50% -8%, #ffd8b8 0%, transparent 58%),
-    #f6ebdf;
-  color: #241710;
+  background: #0B0D0F;
+  color: #F5F7F2;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -22,12 +20,12 @@ body {
    Pulse home theme tokens (root-level)
    ───────────────────────────────────────── */
 :root {
-  --p-bg: #EEF9F6;
-  --p-card: #FFFFFF;
-  --p-accent: #18A085;
-  --p-accent-dim: #0D7A65;
-  --p-text: #0D2E28;
-  --p-muted: #4A7067;
+  --p-bg: #0B0D0F;
+  --p-card: #14171A;
+  --p-accent: #C8FF00;
+  --p-accent-dim: #A6D400;
+  --p-text: #F5F7F2;
+  --p-muted: #9BA1A6;
   --p-coral: #FF6B4A;
 }
 
@@ -36,17 +34,17 @@ body {
    Only active inside [data-theme="tobo"]
    ───────────────────────────────────────── */
 [data-theme="tobo"] {
-  --t-bg: #0B1A3C;
-  --t-card: #132A55;
-  --t-border: #1E3A6E;
-  --t-tint: rgba(255, 201, 74, 0.12);
-  --t-dark: #070E1F;
-  --t-accent: #FFC94A;
-  --t-accent-dim: #C49500;
-  --t-accent-text: #0B1A3C;
-  --t-text: #FFFFFF;
-  --t-muted: #8BA3CC;
-  --t-muted-light: #5A7AB0;
+  --t-bg: #0B0D0F;
+  --t-card: #14171A;
+  --t-border: #1B1F22;
+  --t-tint: rgba(200, 255, 0, 0.12);
+  --t-dark: #0B0D0F;
+  --t-accent: #C8FF00;
+  --t-accent-dim: #A6D400;
+  --t-accent-text: #0B0D0F;
+  --t-text: #F5F7F2;
+  --t-muted: #9BA1A6;
+  --t-muted-light: #6E757A;
 }
 
 /* Background overrides */
@@ -81,7 +79,25 @@ body {
 /* Shadow overrides */
 [data-theme="tobo"] .shadow-\[0_8px_20px_rgba\(80\,40\,10\,0\.05\)\]      { box-shadow: 0 8px 20px rgba(0,0,0,0.25) !important; }
 [data-theme="tobo"] .shadow-\[0_12px_28px_rgba\(80\,40\,10\,0\.08\)\]     { box-shadow: 0 12px 28px rgba(0,0,0,0.35) !important; }
-[data-theme="tobo"] .shadow-\[0_16px_32px_rgba\(255\,79\,26\,0\.28\)\]    { box-shadow: 0 16px 32px rgba(255,201,74,0.18) !important; }
+[data-theme="tobo"] .shadow-\[0_16px_32px_rgba\(255\,79\,26\,0\.28\)\]    { box-shadow: 0 16px 32px rgba(200,255,0,0.16) !important; }
+
+@keyframes rusher-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.rusher-in {
+  animation: rusher-in 0.7s ease both;
+}
+
+.rusher-mark-glow {
+  filter: drop-shadow(0 0 28px rgba(200, 255, 0, 0.28));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rusher-in { animation: none; }
+  .rusher-mark-glow { filter: none; }
+}
 [data-theme="tobo"] .shadow-\[0_6px_16px_rgba\(80\,40\,10\,0\.08\)\]      { box-shadow: 0 6px 16px rgba(0,0,0,0.25) !important; }
 [data-theme="tobo"] .shadow-\[0_0_80px_rgba\(70\,32\,10\,0\.08\)\]        { box-shadow: 0 0 80px rgba(0,0,0,0.25) !important; }
 

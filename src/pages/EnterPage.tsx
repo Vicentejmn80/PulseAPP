@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { RusherMark } from "@/components/ui/RusherMark";
 import { checkAlias, FlowError } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
@@ -27,10 +28,11 @@ function composePhone(dial: string, local: string) {
   return `${dial}${digits}`;
 }
 
-const fieldClass = "mt-1 h-14 w-full rounded-2xl border-2 bg-white px-4 text-[16px] font-bold outline-none";
+const fieldClass = "mt-1 h-14 w-full rounded-2xl border bg-[#14171A] px-4 text-[16px] font-bold text-[#F5F7F2] outline-none";
 
 export function EnterPage({ hint = "" }: { hint?: string }) {
   const { createAccount, loginWithPin, authError, setAuthError } = usePulse();
+  const [step, setStep] = useState<"splash" | "welcome" | "auth">("splash");
   const [mode, setMode] = useState<Mode>("choose");
   const [country, setCountry] = useState(COUNTRIES[0]);
   const [localPhone, setLocalPhone] = useState("");
@@ -41,6 +43,12 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   const [pending, setPending] = useState(false);
   const [aliasState, setAliasState] = useState<"idle" | "checking" | "free" | "taken" | "invalid">("idle");
   const [switchHint, setSwitchHint] = useState<"login" | "register" | "">("");
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const id = window.setTimeout(() => setStep("welcome"), reduced ? 200 : 1600);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     if (mode !== "register") return undefined;
@@ -121,19 +129,57 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     pinsMatch;
   const loginReady = phoneReady && pinReady;
 
+  if (step === "splash") {
+    return (
+      <div className="rusher-in flex min-h-0 flex-1 flex-col items-center justify-center px-8 text-center" style={{ backgroundColor: "#0B0D0F", color: "#F5F7F2" }}>
+        <RusherMark size={168} glow />
+        <p className="mt-8 text-[28px] font-extrabold tracking-[0.22em]">RUSHER</p>
+        <p className="mt-3 max-w-[18ch] text-[15px] font-semibold" style={{ color: "var(--p-muted)" }}>
+          Cualquier lugar puede tener un Rush.
+        </p>
+      </div>
+    );
+  }
+
+  if (step === "welcome") {
+    return (
+      <div className="rusher-in flex min-h-0 flex-1 flex-col px-6 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]" style={{ backgroundColor: "#0B0D0F", color: "#F5F7F2" }}>
+        <RusherMark size={56} />
+        <div className="mt-10 flex flex-1 flex-col">
+          <h1 className="text-[40px] font-extrabold leading-[0.95] tracking-tight">Lánzate un Rush.</h1>
+          <p className="mt-4 max-w-[28ch] text-[16px] font-semibold leading-snug" style={{ color: "var(--p-muted)" }}>
+            Descubre experiencias, juega, compite y gana premios en el mundo real.
+          </p>
+          {hint && <p className="mt-4 text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>{hint}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={() => { setMode("register"); setStep("auth"); }}
+          className="flex h-14 w-full items-center justify-center rounded-2xl text-[16px] font-extrabold tracking-wide text-[#0B0D0F]"
+          style={{ backgroundColor: "#C8FF00" }}
+        >
+          COMENZAR →
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode("login"); setStep("auth"); }}
+          className="mt-3 h-12 text-[14px] font-extrabold"
+          style={{ color: "var(--p-muted)" }}
+        >
+          Ya tengo una cuenta
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col px-5 pt-[max(1.5rem,env(safe-area-inset-top))]"
       style={{ backgroundColor: "var(--p-bg)", color: "var(--p-text)" }}
     >
       <div className="flex items-center gap-2.5">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-2xl text-[18px] font-extrabold text-white"
-          style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 8px 16px rgba(24,160,133,0.28)" }}
-        >
-          P
-        </div>
-        <p className="text-[18px] font-extrabold tracking-tight">Pulse</p>
+        <RusherMark size={40} />
+        <p className="text-[18px] font-extrabold tracking-[0.16em]">RUSHER</p>
       </div>
 
       {mode === "choose" && (
@@ -151,7 +197,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
             <button
               type="button"
               onClick={() => open("register")}
-              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white"
+              className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-[#0B0D0F]"
               style={{ backgroundColor: "var(--p-accent)", boxShadow: "0 12px 24px rgba(24,160,133,0.28)" }}
             >
               Crear cuenta
@@ -160,7 +206,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
               type="button"
               onClick={() => open("login")}
               className="flex h-14 w-full items-center justify-center rounded-2xl border-2 bg-white text-[17px] font-extrabold"
-              style={{ borderColor: "#D7EDE7", color: "var(--p-text)" }}
+              style={{ borderColor: "#2A2F33", color: "var(--p-text)" }}
             >
               Iniciar sesión
             </button>
@@ -171,10 +217,11 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
       {mode === "register" && (
         <form onSubmit={onRegister} className="mt-6 flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4">
-            <button type="button" onClick={() => open("choose")} className="text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            <button type="button" onClick={() => setStep("welcome")} className="text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               ← Volver
             </button>
-            <h1 className="text-[28px] font-extrabold leading-tight">Soy nuevo en Pulse</h1>
+            <h1 className="text-[28px] font-extrabold leading-tight">Crea tu cuenta</h1>
+            <p className="text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>Entra y lánzate un Rush.</p>
             <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               Nombre completo
@@ -185,7 +232,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 maxLength={80}
                 placeholder="Vicente Martínez"
                 className={fieldClass}
-                style={{ borderColor: "#D7EDE7" }}
+                style={{ borderColor: "#2A2F33" }}
               />
             </label>
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
@@ -197,7 +244,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 maxLength={20}
                 placeholder="vicente2"
                 className={fieldClass}
-                style={{ borderColor: "#D7EDE7" }}
+                style={{ borderColor: "#2A2F33" }}
               />
             </label>
             <AliasHint state={aliasState} />
@@ -212,7 +259,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 placeholder="••••••"
                 type="password"
                 className={fieldClass}
-                style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
+                style={{ borderColor: "#2A2F33", letterSpacing: "0.3em" }}
               />
             </label>
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
@@ -226,7 +273,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 placeholder="••••••"
                 type="password"
                 className={fieldClass}
-                style={{ borderColor: pinConfirmReady && !pinsMatch ? "#E23B2F" : "#D7EDE7", letterSpacing: "0.3em" }}
+                style={{ borderColor: pinConfirmReady && !pinsMatch ? "#E23B2F" : "#2A2F33", letterSpacing: "0.3em" }}
               />
             </label>
             {pinConfirmReady && !pinsMatch && (
@@ -246,10 +293,11 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
       {mode === "login" && (
         <form onSubmit={onLogin} className="mt-6 flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4">
-            <button type="button" onClick={() => open("choose")} className="text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+            <button type="button" onClick={() => setStep("welcome")} className="text-[13px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               ← Volver
             </button>
-            <h1 className="text-[28px] font-extrabold leading-tight">Ya tengo una cuenta</h1>
+            <h1 className="text-[28px] font-extrabold leading-tight">Bienvenido a Rusher</h1>
+            <p className="text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>Entra y lánzate un Rush.</p>
             <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               PIN
@@ -262,7 +310,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 placeholder="••••••"
                 type="password"
                 className={fieldClass}
-                style={{ borderColor: "#D7EDE7", letterSpacing: "0.3em" }}
+                style={{ borderColor: "#2A2F33", letterSpacing: "0.3em" }}
               />
             </label>
             {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
@@ -298,7 +346,7 @@ function PhoneFields({
           value={country.iso}
           onChange={(event) => setCountry(COUNTRIES.find((item) => item.iso === event.target.value) ?? COUNTRIES[0])}
           className={fieldClass}
-          style={{ borderColor: "#D7EDE7" }}
+          style={{ borderColor: "#2A2F33" }}
         >
           {COUNTRIES.map((item) => (
             <option key={item.iso} value={item.iso}>
@@ -310,7 +358,7 @@ function PhoneFields({
       <label className="text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
         Número de teléfono
         <div className="mt-1 flex gap-2">
-          <span className="flex h-14 items-center rounded-2xl border-2 bg-white px-3 text-[15px] font-extrabold" style={{ borderColor: "#D7EDE7", color: "var(--p-accent)" }}>
+          <span className="flex h-14 items-center rounded-2xl border bg-[#14171A] px-3 text-[15px] font-extrabold" style={{ borderColor: "#2A2F33", color: "var(--p-accent)" }}>
             {country.dial}
           </span>
           <input
@@ -320,7 +368,7 @@ function PhoneFields({
             autoComplete="tel"
             placeholder={country.iso === "VE" ? "412 000 0000" : "Número"}
             className={`${fieldClass} mt-0 flex-1`}
-            style={{ borderColor: "#D7EDE7" }}
+            style={{ borderColor: "#2A2F33" }}
           />
         </div>
       </label>
@@ -342,12 +390,12 @@ function FormSubmitBar({
   return (
     <div
       className="sticky bottom-0 -mx-5 shrink-0 border-t px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
-      style={{ borderColor: "#D7EDE7", backgroundColor: "var(--p-bg)", boxShadow: "0 -12px 24px rgba(36,23,16,0.06)" }}
+      style={{ borderColor: "#2A2F33", backgroundColor: "var(--p-bg)", boxShadow: "0 -12px 24px rgba(36,23,16,0.06)" }}
     >
       <button
         type="submit"
         disabled={pending || disabled}
-        className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-white disabled:opacity-40"
+        className="flex h-14 w-full items-center justify-center rounded-2xl text-[17px] font-extrabold text-[#0B0D0F] disabled:opacity-40"
         style={{ backgroundColor: "var(--p-accent)", boxShadow: pending || disabled ? undefined : "0 12px 24px rgba(24,160,133,0.28)" }}
       >
         {pending ? pendingLabel : label}

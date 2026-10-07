@@ -2,6 +2,7 @@ import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 function readBody(req: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
@@ -98,7 +99,54 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    plugins: [react(), pulseApi()],
+    plugins: [
+      react(),
+      pulseApi(),
+      VitePWA({
+        registerType: "autoUpdate",
+        includeAssets: ["rusher-mark.png"],
+        manifest: {
+          name: "Rusher",
+          short_name: "Rusher",
+          description: "Cualquier lugar puede tener un Rush.",
+          theme_color: "#0B0D0F",
+          background_color: "#0B0D0F",
+          display: "standalone",
+          orientation: "portrait",
+          start_url: "/",
+          scope: "/",
+          lang: "es",
+          icons: [
+            {
+              src: "rusher-mark.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any",
+            },
+            {
+              src: "rusher-mark.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "maskable",
+            },
+            {
+              src: "rusher-mark.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any",
+            },
+          ],
+        },
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          navigateFallback: "/index.html",
+          navigateFallbackDenylist: [/^\/api\//],
+        },
+        devOptions: {
+          enabled: false,
+        },
+      }),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),

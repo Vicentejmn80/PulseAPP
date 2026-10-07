@@ -78,8 +78,8 @@ export function App() {
   if (status === "loading") {
     return (
       <Shell>
-        <div className="flex h-[100dvh] items-center justify-center text-[18px] font-extrabold">
-          Pulse
+        <div className="flex h-[100dvh] flex-col items-center justify-center" style={{ backgroundColor: "#0B0D0F" }}>
+          <img src="/rusher-mark.png" alt="" width={96} height={96} className="rusher-mark-glow" />
         </div>
       </Shell>
     );
@@ -144,7 +144,7 @@ export function App() {
           <Route path="/venue/:slug" element={<VenueRedirect />} />
 
           {/* ── Fallback ── */}
-          <Route path="*" element={<Navigate to="/tobo" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Notice message={notice} />
       </div>

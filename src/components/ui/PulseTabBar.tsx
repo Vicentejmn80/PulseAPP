@@ -15,8 +15,8 @@ export function PulseTabBar() {
 
   return (
     <div
-      className="flex h-[74px] shrink-0 items-start justify-around border-t bg-white px-1 pt-2 pb-[max(0.4rem,env(safe-area-inset-bottom))]"
-      style={{ borderColor: "rgba(24,160,133,0.18)" }}
+      className="flex h-[74px] shrink-0 items-start justify-around border-t px-1 pt-2 pb-[max(0.4rem,env(safe-area-inset-bottom))]"
+      style={{ borderColor: "#1B1F22", backgroundColor: "#14171A" }}
     >
       {items.map((item) => {
         const on =

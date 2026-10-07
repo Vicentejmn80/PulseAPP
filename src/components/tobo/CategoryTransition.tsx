@@ -28,13 +28,13 @@ export function CategoryTransition() {
   return (
     <div
       className="tobo-intro pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: "linear-gradient(135deg, #070E1F 0%, #0B1A3C 55%, #132A55 100%)" }}
+      style={{ background: "#0B0D0F" }}
     >
       <p
         className="text-[10px] font-extrabold uppercase tracking-[0.32em]"
-        style={{ color: "var(--t-muted)" }}
+        style={{ color: "var(--t-accent)" }}
       >
-        Temporada LVBP 2026-27
+        Una experiencia de Rusher
       </p>
       <h1
         className="mt-3 text-center text-[30px] font-extrabold leading-tight tracking-tight"

@@ -16,7 +16,7 @@ export function PulsePerfilPage() {
           className="text-[11px] font-extrabold uppercase tracking-[0.2em]"
           style={{ color: "var(--p-accent)" }}
         >
-          Pulse
+          Rusher
         </p>
         <h1 className="mt-0.5 text-[26px] font-extrabold leading-none tracking-tight">
           Perfil
@@ -26,8 +26,8 @@ export function PulsePerfilPage() {
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {/* Avatar + name */}
         <div
-          className="mb-4 rounded-[28px] bg-white px-5 py-6"
-          style={{ boxShadow: "0 8px 20px rgba(24,160,133,0.08)" }}
+          className="mb-4 rounded-[28px] px-5 py-6"
+          style={{ backgroundColor: "#14171A", border: "1px solid #2A2F33" }}
         >
           <div className="flex items-center gap-4">
             <div
@@ -48,8 +48,8 @@ export function PulsePerfilPage() {
 
         {/* Points */}
         <div
-          className="mb-4 rounded-[24px] bg-white px-5 py-5"
-          style={{ boxShadow: "0 8px 20px rgba(24,160,133,0.06)" }}
+          className="mb-4 rounded-[24px] px-5 py-5"
+          style={{ backgroundColor: "#14171A", border: "1px solid #2A2F33" }}
         >
           <p
             className="text-[11px] font-extrabold uppercase tracking-[0.18em]"
@@ -61,14 +61,14 @@ export function PulsePerfilPage() {
             {formato(totalPoints)}
           </p>
           <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
-            en todas las experiencias Pulse
+            en Rusher
           </p>
         </div>
 
         {/* Access code */}
         <div
-          className="mb-4 rounded-[24px] bg-white px-5 py-5"
-          style={{ boxShadow: "0 8px 20px rgba(24,160,133,0.06)" }}
+          className="mb-4 rounded-[24px] px-5 py-5"
+          style={{ backgroundColor: "#14171A", border: "1px solid #2A2F33" }}
         >
           <p
             className="text-[11px] font-extrabold uppercase tracking-[0.18em]"
