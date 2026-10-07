@@ -9,7 +9,7 @@ import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { myStats, type UserStats } from "@/services/analytics";
 import { usePulse } from "@/state/PulseContext";
 import type { PointsTransaction } from "@/types/pulse";
-import { pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
 import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 
 function movementLabel(tx: PointsTransaction) {
@@ -26,6 +26,7 @@ export function ProfilePage() {
   const [roundPoints, setRoundPoints] = useState(0);
   const [seasonPoints, setSeasonPoints] = useState(0);
   const [roundName, setRoundName] = useState("Ronda actual");
+  const [showingRound, setShowingRound] = useState(false);
   const [rankingLabel, setRankingLabel] = useState("ranking abierto");
   const [isAdmin, setIsAdmin] = useState(false);
   const [leagues, setLeagues] = useState<League[]>([]);
@@ -38,22 +39,22 @@ export function ProfilePage() {
         if (!alive) return;
         const leagueId = leagueRows[0]?.id;
         const seasonBoard = await loadCycleBoard("lifetime", leagueId);
-        const cycle = pickActiveCycle(cycleRows);
-        if (!cycle) {
-          setPosition(null);
-          setRoundPoints(0);
-          setSeasonPoints(seasonBoard.points);
-          setLeagues(leagueRows);
-          setStats(userStats);
-          return;
-        }
-        const roundBoard = await loadCycleBoard(cycle.id, leagueId);
+        const today = caracasDateKey(new Date());
+        const live = cycleContainingToday(cycleRows, today);
+        const standingBoard = live ? await loadCycleBoard(live.id, leagueId) : seasonBoard;
         if (!alive) return;
-        setPosition(roundBoard.mine?.position ?? null);
-        setRoundPoints(roundBoard.points);
+        setPosition(standingBoard.mine?.position ?? null);
+        setRoundPoints(live ? standingBoard.points : seasonBoard.points);
         setSeasonPoints(seasonBoard.points);
-        setRoundName(cycle.name);
-        setRankingLabel(leagueRows.length > 0 ? `ranking de ${leagueRows[0].name}` : "ranking abierto");
+        setRoundName(live?.name ?? "Puntos acumulados");
+        setShowingRound(Boolean(live));
+        setRankingLabel(
+          leagueRows.length > 0
+            ? `ranking de ${leagueRows[0].name}`
+            : live
+              ? "ranking abierto"
+              : "ranking histórico",
+        );
         setLeagues(leagueRows);
         setStats(userStats);
       })
@@ -110,7 +111,7 @@ export function ProfilePage() {
               </div>
               <div className="rounded-2xl px-3 py-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
                 <p className="text-[28px] font-extrabold tabular-nums leading-none">{formato(roundPoints)}</p>
-                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>PT de esta ronda</p>
+                <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>{showingRound ? "PT de esta ronda" : "PT acumulados"}</p>
               </div>
             </div>
             <div className="mt-1">

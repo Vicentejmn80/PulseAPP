@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type LucideIcon } from "lucide-react";
 import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
+import { formato } from "@/lib/format";
+import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
 import { trackEvent } from "@/services/analytics";
+import { listMyLeagues } from "@/services/leaguesApi";
+import { listCycles, loadCycleBoard } from "@/services/matchesApi";
+import { usePulse } from "@/state/PulseContext";
 import {
   answerTrivia,
   todayTrivia,
@@ -54,6 +59,7 @@ const LEVEL_KEY = "tobo-trivia-level";
 /* ─── Component ──────────────────────────────────────────── */
 export function TriviaPage() {
   const navigate = useNavigate();
+  const { reload } = usePulse();
 
   const stored = localStorage.getItem(LEVEL_KEY) as TriviaLevel | null;
   const [level, setLevel] = useState<TriviaLevel>(stored ?? "beginner");
@@ -69,6 +75,7 @@ export function TriviaPage() {
   const [answering, setAnswering] = useState(false);
   const [error, setError] = useState("");
   const [alreadyDone, setAlreadyDone] = useState(false);
+  const [standing, setStanding] = useState<{ points: number; position: number | null; label: string } | null>(null);
 
   const blockTimer = useRef(false);
 
@@ -188,6 +195,31 @@ export function TriviaPage() {
     setAnswering(false);
     setShowResult(true);
   }
+
+  useEffect(() => {
+    if (phase !== "done") return;
+    let alive = true;
+    reload()
+      .then(async () => {
+        const [cycles, leagues] = await Promise.all([listCycles(), listMyLeagues()]);
+        const today = caracasDateKey(new Date());
+        const live = cycleContainingToday(cycles, today);
+        const league = leagues[0];
+        const board = await loadCycleBoard(live?.id ?? "lifetime", league?.id);
+        if (!alive) return;
+        setStanding({
+          points: board.points,
+          position: board.mine?.position ?? null,
+          label: league ? league.name : live ? "el ranking global" : "el histórico",
+        });
+      })
+      .catch(() => {
+        if (alive) setStanding(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [phase, reload]);
 
   /* ── Derived ───────────────────────────────────────────── */
   const totalPts = Object.values(results).reduce((s, r) => s + (r.points ?? 0), 0);
@@ -313,6 +345,12 @@ export function TriviaPage() {
               <p className="mt-1 text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>
                 Vuelve mañana para nuevas preguntas.
               </p>
+              {standing && (
+                <p className="mt-3 text-[15px] font-extrabold">
+                  Llevas {formato(standing.points)} pts
+                  {standing.position ? ` · puesto #${standing.position} en ${standing.label}` : ""}
+                </p>
+              )}
               <div className="mt-8">
                 <GoldCta icon={Play} onClick={() => navigate("/tobo")}>Volver al inicio</GoldCta>
               </div>
@@ -363,6 +401,13 @@ export function TriviaPage() {
               </div>
 
               {/* Message */}
+              {standing && (
+                <p className="mt-4 text-[15px] font-extrabold">
+                  Llevas {formato(standing.points)} pts
+                  {standing.position ? ` · puesto #${standing.position} en ${standing.label}` : ` · ${standing.label}`}
+                </p>
+              )}
+
               <p className="mt-4 text-[15px] font-semibold" style={{ color: "var(--t-muted)" }}>
                 {pct === 100
                   ? "¡Perfecto! Eres un crack del béisbol venezolano. 🏆"

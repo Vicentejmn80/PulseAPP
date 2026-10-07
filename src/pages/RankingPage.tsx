@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, Users } from "lucide-react";
 import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
-import { pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleContainingToday, pickActiveCycle } from "@/lib/toboHome";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, loadCycleBoard, type ToboCycle } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
@@ -24,18 +24,24 @@ export function RankingPage() {
   const [myPoints, setMyPoints] = useState(0);
   const [hasPrivateLeague, setHasPrivateLeague] = useState(false);
   const [error, setError] = useState("");
+  const openedLeague = useRef(false);
 
   useEffect(() => {
     let alive = true;
     Promise.all([reload(), listCycles(), listMyLeagues()])
       .then(([, cycleRows, leagueRows]) => {
         if (!alive) return;
+        const today = caracasDateKey(new Date());
         setCycles(cycleRows);
-        setCurrentCycleId(pickActiveCycle(cycleRows)?.id ?? "");
+        setCurrentCycleId(cycleContainingToday(cycleRows, today)?.id ?? "");
         setLeagues(leagueRows);
         setHasPrivateLeague(leagueRows.length > 0);
         if (leagueRows.length > 0 && !selectedLeague) {
           setSelectedLeague(leagueRows[0].id);
+        }
+        if (leagueRows.length > 0 && !openedLeague.current) {
+          openedLeague.current = true;
+          setTab("liga");
         }
       })
       .catch((reason: unknown) => {
@@ -48,7 +54,7 @@ export function RankingPage() {
 
   useEffect(() => {
     let alive = true;
-    const cycle = tab === "temporada" ? "lifetime" : currentCycleId;
+    const cycle = tab === "temporada" || !currentCycleId ? "lifetime" : currentCycleId;
 
     if (!cycle) {
       setEntries([]);
@@ -72,6 +78,7 @@ export function RankingPage() {
   }, [tab, selectedLeague, currentCycleId]);
 
   const me = entries.find((entry) => entry.isCurrentUser);
+  const upcoming = !currentCycleId ? pickActiveCycle(cycles) : null;
   const round = tab === "semana" ? cycles.find((item) => item.id === currentCycleId) : null;
   const third = entries.find((entry) => entry.position === 3);
   const inPodium = Boolean(me && me.position <= 3);
@@ -145,7 +152,14 @@ export function RankingPage() {
             </p>
             <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>tu puesto</p>
             <p className="mt-5 text-[40px] font-extrabold leading-none tabular-nums">{formato(myPoints)}</p>
-            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>{tab === "temporada" ? "PT históricos de Juégate el Tobo" : "PT de la ronda actual"}</p>
+            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+              {tab === "temporada" || !currentCycleId ? "PT históricos de Juégate el Tobo" : "PT de la ronda actual"}
+            </p>
+            {!currentCycleId && tab !== "temporada" && (
+              <p className="mt-2 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+                La próxima ronda todavía no empieza{upcoming ? ` (${upcoming.startsOn})` : ""}. Estos son tus puntos acumulados.
+              </p>
+            )}
             <div className="mt-5">
               <div className="h-2.5 overflow-hidden rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
                 <div

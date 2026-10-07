@@ -20,7 +20,7 @@ import { IconCoin } from "@/components/ui/icons";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToNextPosition } from "@/lib/leaderboard";
-import { caracasDateKey, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleContainingToday, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
@@ -185,6 +185,7 @@ export function HomePage() {
   const [cycle, setCycle] = useState<ToboCycle | null>(null);
   const [ranking, setRanking] = useState<LeaderboardEntry[]>([]);
   const [roundPoints, setRoundPoints] = useState(0);
+  const [pointsAreRound, setPointsAreRound] = useState(false);
   const [inPrivateLeague, setInPrivateLeague] = useState(false);
   const [trivia, setTrivia] = useState<Record<TriviaLevel, TriviaQuestion[]>>({
     beginner: [],
@@ -219,12 +220,14 @@ export function HomePage() {
         .then(async ([, matchRows, cycles, basic, mid, hard, venues, leagues, points]) => {
           if (!alive) return;
           const active = pickActiveCycle(cycles);
-          const board = active ? await loadCycleBoard(active.id) : { entries: [], points: 0, mine: null };
+          const live = cycleContainingToday(cycles);
+          const board = await loadCycleBoard(live?.id ?? "lifetime", leagues[0]?.id);
           if (!alive) return;
           setMatches(matchRows);
           setCycle(active);
           setRanking(board.entries);
           setRoundPoints(board.points);
+          setPointsAreRound(Boolean(live));
           setInPrivateLeague(leagues.length > 0);
           setTrivia({
             beginner: basic.questions,
@@ -363,7 +366,7 @@ export function HomePage() {
             </p>
           )}
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <StatCell value={<>{formato(roundPoints)}<span className="ml-1 text-[11px]">PT</span></>} label="puntos de ronda" />
+            <StatCell value={<>{formato(roundPoints)}<span className="ml-1 text-[11px]">PT</span></>} label={pointsAreRound ? "puntos de ronda" : "puntos totales"} />
             <StatCell value={mine ? `#${mine.position}` : "—"} label="puesto" />
             <StatCell value={gap ?? "—"} label={mine && mine.position > 1 ? "al anterior" : "distancia"} />
           </div>

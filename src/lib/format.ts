@@ -4,6 +4,7 @@ export function formato(n: number) {
 
 export function gameTypeLabel(type: string) {
   if (type === "trivia") return "Trivia";
+  if (type === "game_challenge") return "Reto del partido";
   if (type === "prediction") return "Predicción";
   if (type === "quick_challenge") return "Reto rápido";
   if (type === "checkin") return "Check-in";

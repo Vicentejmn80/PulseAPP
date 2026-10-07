@@ -25,6 +25,11 @@ export function pickActiveCycle(cycles: ToboCycle[], today = caracasDateKey(new 
   return [...dated].sort((a, b) => b.endsOn.localeCompare(a.endsOn))[0] ?? null;
 }
 
+/** Ronda que ya está en curso. Null si hoy cae antes o después de todas. */
+export function cycleContainingToday(cycles: ToboCycle[], today = caracasDateKey(new Date())) {
+  return cycles.find((cycle) => cycle.startsOn && cycle.endsOn && cycle.startsOn <= today && today <= cycle.endsOn) ?? null;
+}
+
 /** Asigna un partido por su hora programada de inicio, nunca por la de finalización. */
 export function cycleForMatchStart(startsAt: string, cycles: ToboCycle[]) {
   const matchDay = caracasDateKey(startsAt);
