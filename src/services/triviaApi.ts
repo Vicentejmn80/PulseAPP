@@ -73,6 +73,105 @@ function asQuestion(value: unknown): TriviaQuestion | null {
 
 export type TriviaLevel = "beginner" | "intermediate" | "advanced";
 
+export type TriviaAvailability = "available" | "in_progress" | "cooldown";
+
+export interface TriviaLevelState {
+  level: TriviaLevel;
+  difficulty: string;
+  status: TriviaAvailability;
+  sessionId: string | null;
+  questionCount: number;
+  answeredCount: number;
+  availableAt: string | null;
+  serverNow: string;
+}
+
+export interface TriviaBoard {
+  serverNow: string;
+  levels: TriviaLevelState[];
+}
+
+export interface TriviaSession {
+  sessionId: string;
+  questions: TriviaQuestion[];
+  serverNow: string;
+  availableAt: string | null;
+}
+
+const ANSWER_SECONDS = 15;
+
+export { ANSWER_SECONDS };
+
+/** Reloj del servidor menos el reloj del dispositivo. La elegibilidad no usa este valor. */
+export function serverSkewMs(serverNow: string, clientNow = Date.now()) {
+  const server = Date.parse(serverNow);
+  if (Number.isNaN(server)) return 0;
+  return server - clientNow;
+}
+
+export function remainingMs(availableAt: string | null, skewMs: number, clientNow = Date.now()) {
+  if (!availableAt) return 0;
+  const at = Date.parse(availableAt);
+  if (Number.isNaN(at)) return 0;
+  return Math.max(0, at - (clientNow + skewMs));
+}
+
+export function formatCooldown(ms: number) {
+  const minutes = Math.max(0, Math.ceil(ms / 60000));
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours <= 0) return `Vuelve en ${rest} min`;
+  return `Vuelve en ${hours} h ${rest} min`;
+}
+
+function asLevel(value: unknown): TriviaLevelState | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const level = String(row.level ?? "");
+  if (level !== "beginner" && level !== "intermediate" && level !== "advanced") return null;
+  const status = String(row.status ?? "available");
+  return {
+    level,
+    difficulty: String(row.difficulty ?? ""),
+    status: status === "cooldown" || status === "in_progress" ? status : "available",
+    sessionId: row.sessionId ? String(row.sessionId) : null,
+    questionCount: Number(row.questionCount ?? 0),
+    answeredCount: Number(row.answeredCount ?? 0),
+    availableAt: row.availableAt ? String(row.availableAt) : null,
+    serverNow: String(row.serverNow ?? ""),
+  };
+}
+
+export async function triviaStatus() {
+  const result = await callRpc<OkResult & { serverNow?: string; levels?: unknown }>("pulse_trivia_status", {
+    p_token: readSessionToken(),
+  });
+  if (!result?.ok) throw new Error(result?.error || "No se pudo consultar las trivias.");
+  const levels = (Array.isArray(result.levels) ? result.levels : []).map(asLevel).filter(Boolean) as TriviaLevelState[];
+  return { serverNow: String(result.serverNow ?? ""), levels };
+}
+
+export async function startTrivia(level: TriviaLevel): Promise<TriviaSession> {
+  const result = await callRpc<OkResult & { code?: string; sessionId?: string; questions?: unknown; serverNow?: string; availableAt?: string }>(
+    "pulse_trivia_start",
+    { p_token: readSessionToken(), p_level: level },
+  );
+  if (!result?.ok) {
+    const error = new Error(result?.error || "No se pudo iniciar la trivia.") as Error & { code?: string; availableAt?: string; serverNow?: string };
+    error.code = result?.code;
+    error.availableAt = result?.availableAt ? String(result.availableAt) : undefined;
+    error.serverNow = result?.serverNow ? String(result.serverNow) : undefined;
+    throw error;
+  }
+  const questions = (Array.isArray(result.questions) ? result.questions : []).map(asQuestion).filter(Boolean) as TriviaQuestion[];
+  return {
+    sessionId: String(result.sessionId ?? ""),
+    questions,
+    serverNow: String(result.serverNow ?? ""),
+    availableAt: result.availableAt ? String(result.availableAt) : null,
+  };
+}
+
 /** Devuelve las preguntas publicadas hoy. */
 export async function todayTrivia(level: TriviaLevel = "beginner") {
   void level;
@@ -92,18 +191,30 @@ export async function todayTrivia(level: TriviaLevel = "beginner") {
   };
 }
 
-export async function answerTrivia(questionId: string, optionId: string): Promise<TriviaResult> {
-  const result = await callRpc<OkResult & TriviaResult>("pulse_trivia_answer", {
-    p_token: readSessionToken(),
-    p_question_id: questionId,
-    p_option_id: optionId,
-  });
-  expectOk(result);
+export async function answerTrivia(sessionId: string, questionId: string, optionId: string): Promise<TriviaResult & { replayed: boolean; completed: boolean; availableAt: string | null; serverNow: string }> {
+  const result = await callRpc<OkResult & TriviaResult & { replayed?: boolean; completed?: boolean; availableAt?: string; serverNow?: string; code?: string }>(
+    "pulse_trivia_answer",
+    {
+      p_token: readSessionToken(),
+      p_question_id: questionId,
+      p_option_id: optionId,
+      p_session_id: sessionId,
+    },
+  );
+  if (!result?.ok) {
+    const error = new Error(result?.error || "No se pudo responder.") as Error & { code?: string };
+    error.code = result?.code;
+    throw error;
+  }
   return {
     correct: Boolean(result.correct),
     points: Number(result.points ?? 0),
     correctOption: String(result.correctOption ?? ""),
     explanation: result.explanation ? String(result.explanation) : undefined,
+    replayed: Boolean(result.replayed),
+    completed: Boolean(result.completed),
+    availableAt: result.availableAt ? String(result.availableAt) : null,
+    serverNow: String(result.serverNow ?? ""),
   };
 }
 

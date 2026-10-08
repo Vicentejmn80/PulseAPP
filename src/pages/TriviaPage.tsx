@@ -10,9 +10,15 @@ import { listMyLeagues } from "@/services/leaguesApi";
 import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import {
+  ANSWER_SECONDS,
   answerTrivia,
-  todayTrivia,
+  formatCooldown,
+  remainingMs,
+  serverSkewMs,
+  startTrivia,
+  triviaStatus,
   type TriviaLevel,
+  type TriviaLevelState,
   type TriviaQuestion,
   type TriviaResult,
 } from "@/services/triviaApi";
@@ -31,7 +37,7 @@ interface LevelMeta {
 const LEVELS: Record<TriviaLevel, LevelMeta> = {
   beginner: {
     icon: CircleDot,
-    label: "Básica",
+    label: "Iniciado",
     sublabel: "Fácil",
     desc: "Reglas básicas y equipos de la LVBP. El punto de partida.",
     pts: "+5 pts por pregunta",
@@ -39,7 +45,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
   },
   intermediate: {
     icon: Hand,
-    label: "Intermedia",
+    label: "Intermedio",
     sublabel: "Medio",
     desc: "Jugadores venezolanos y Grandes Ligas. Un reto real.",
     pts: "+5 pts por acierto",
@@ -47,7 +53,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
   },
   advanced: {
     icon: Zap,
-    label: "Avanzada",
+    label: "Avanzado",
     sublabel: "Difícil",
     desc: "Historia, estadísticas y récords. Solo los que saben.",
     pts: "+5 pts por acierto",
@@ -56,18 +62,26 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
 };
 const LEVEL_KEY = "tobo-trivia-level";
 
+function levelLine(row: TriviaLevelState | undefined, skewMs: number, now: number, checking: boolean) {
+  if (checking) return "Confirmando…";
+  if (!row || row.status === "available") return "Disponible";
+  if (row.status === "in_progress") return "En curso";
+  const left = remainingMs(row.availableAt, skewMs, now);
+  if (left <= 0) return "Disponible nuevamente";
+  return formatCooldown(left);
+}
+
 /* ─── Component ──────────────────────────────────────────── */
 export function TriviaPage() {
   const navigate = useNavigate();
   const { reload } = usePulse();
 
-  const stored = localStorage.getItem(LEVEL_KEY) as TriviaLevel | null;
-  const [level, setLevel] = useState<TriviaLevel>(stored ?? "beginner");
-  const [phase, setPhase] = useState<Phase>(stored ? "loading" : "picker");
+  const [level, setLevel] = useState<TriviaLevel>("beginner");
+  const [phase, setPhase] = useState<Phase>("picker");
 
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(ANSWER_SECONDS);
   const [showResult, setShowResult] = useState(false);
   const [results, setResults] = useState<Record<string, TriviaResult>>({});
   const [timedOutIds, setTimedOutIds] = useState<Set<string>>(new Set());
@@ -76,16 +90,95 @@ export function TriviaPage() {
   const [error, setError] = useState("");
   const [alreadyDone, setAlreadyDone] = useState(false);
   const [standing, setStanding] = useState<{ points: number; position: number | null; label: string } | null>(null);
+  const [sessionId, setSessionId] = useState("");
+  const [levels, setLevels] = useState<TriviaLevelState[]>([]);
+  const [skewMs, setSkewMs] = useState(0);
+  const [tick, setTick] = useState(() => Date.now());
+  const [checkingLevel, setCheckingLevel] = useState<TriviaLevel | null>(null);
 
   const blockTimer = useRef(false);
+  const confirmedDue = useRef<string>("");
 
   /* ── Pick level and start ──────────────────────────────── */
+  function refreshBoard() {
+    return triviaStatus().then((board) => {
+      setLevels(board.levels);
+      setSkewMs(serverSkewMs(board.serverNow));
+      return board;
+    });
+  }
+
+  useEffect(() => {
+    if (phase !== "picker") return;
+    let alive = true;
+    refreshBoard().catch((reason: unknown) => {
+      if (alive) setError(reason instanceof Error ? reason.message : "No se pudo consultar las trivias.");
+    });
+    const id = window.setInterval(() => setTick(Date.now()), 1000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "picker") return;
+    const dueKey = levels
+      .filter((row) => row.status === "cooldown" && remainingMs(row.availableAt, skewMs, tick) === 0)
+      .map((row) => row.level)
+      .join(",");
+    if (!dueKey) {
+      confirmedDue.current = "";
+      return;
+    }
+    if (dueKey === confirmedDue.current) return;
+    confirmedDue.current = dueKey;
+    let alive = true;
+    refreshBoard()
+      .catch(() => undefined)
+      .finally(() => {
+        if (alive) setCheckingLevel(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [phase, tick, levels, skewMs]);
+
   function pickLevel(l: TriviaLevel) {
+    const row = levels.find((item) => item.level === l);
+    if (row?.status === "cooldown" && remainingMs(row.availableAt, skewMs, Date.now()) > 0) return;
+    if (row?.status === "cooldown") {
+      setCheckingLevel(l);
+      refreshBoard()
+        .then((board) => {
+          const next = board.levels.find((item) => item.level === l);
+          if (next?.status === "available" || next?.status === "in_progress") {
+            setCheckingLevel(null);
+            beginLevel(l);
+            return;
+          }
+          setCheckingLevel(null);
+        })
+        .catch(() => setCheckingLevel(null));
+      return;
+    }
+    beginLevel(l);
+  }
+
+  function beginLevel(l: TriviaLevel) {
     localStorage.setItem(LEVEL_KEY, l);
     setLevel(l);
     setAlreadyDone(false);
+    setError("");
     setPhase("loading");
   }
+
+  useEffect(() => {
+    const requested = sessionStorage.getItem("tobo-trivia-open") as TriviaLevel | null;
+    if (!requested) return;
+    sessionStorage.removeItem("tobo-trivia-open");
+    beginLevel(requested);
+  }, []);
 
   /* ── Load questions ────────────────────────────────────── */
   useEffect(() => {
@@ -93,12 +186,13 @@ export function TriviaPage() {
     blockTimer.current = false;
     let alive = true;
     setError("");
-    todayTrivia(level)
-      .then(({ questions: qs }) => {
+    startTrivia(level)
+      .then(({ sessionId: id, questions: qs }) => {
         if (!alive) return;
         const unanswered = qs.filter((q) => !q.answered);
+        setSessionId(id);
         if (qs.length === 0) {
-          setError("No hay preguntas para este nivel hoy. Vuelve mañana.");
+          setError("No hay preguntas para este nivel.");
           setPhase("picker");
           return;
         }
@@ -110,7 +204,7 @@ export function TriviaPage() {
         }
         setQuestions(unanswered);
         setCurrentQ(0);
-        setTimeLeft(10);
+        setTimeLeft(ANSWER_SECONDS);
         setShowResult(false);
         setResults({});
         setTimedOutIds(new Set());
@@ -149,7 +243,7 @@ export function TriviaPage() {
       blockTimer.current = false;
       if (currentQ < questions.length - 1) {
         setCurrentQ((q) => q + 1);
-        setTimeLeft(10);
+        setTimeLeft(ANSWER_SECONDS);
       } else {
         setPhase("done");
       }
@@ -164,7 +258,7 @@ export function TriviaPage() {
     setAnswering(true);
     const q = questions[currentQ];
     try {
-      const res = await answerTrivia(q.id, optionId);
+      const res = await answerTrivia(sessionId, q.id, optionId);
       setResults((prev) => ({ ...prev, [q.id]: res }));
       trackEvent("trivia_answered", { correct: res.correct, level });
     } catch {
@@ -184,7 +278,7 @@ export function TriviaPage() {
     setAnswering(true);
     setTimedOutIds((prev) => new Set([...prev, q.id]));
     try {
-      const res = await answerTrivia(q.id, "__timeout__");
+      const res = await answerTrivia(sessionId, q.id, "__timeout__");
       setResults((prev) => ({ ...prev, [q.id]: res }));
     } catch {
       setResults((prev) => ({
@@ -254,6 +348,10 @@ export function TriviaPage() {
                 key={key}
                 type="button"
                 onClick={() => pickLevel(key)}
+                disabled={(() => {
+                  const row = levels.find((item) => item.level === key);
+                  return row?.status === "cooldown" && remainingMs(row.availableAt, skewMs, tick) > 0;
+                })()}
                 className="rounded-[24px] px-5 py-5 text-left transition-all duration-150 active:scale-[0.97]"
                 style={{
                   backgroundColor: "var(--t-card)",
@@ -285,7 +383,11 @@ export function TriviaPage() {
                   <span className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>4 preguntas</span>
                   <span style={{ color: "var(--t-border)" }}>·</span>
                   <span className="flex items-center gap-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-                    <Clock className="h-3.5 w-3.5" /> 10 seg cada una
+                    <Clock className="h-3.5 w-3.5" /> {ANSWER_SECONDS} seg cada una
+                  </span>
+                  <span style={{ color: "var(--t-border)" }}>·</span>
+                  <span className="text-[12px] font-extrabold" style={{ color: info.color }}>
+                    {levelLine(levels.find((row) => row.level === key), skewMs, tick, checkingLevel === key)}
                   </span>
                   {key === level && (
                     <span className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-extrabold" style={{ background: "var(--t-tint)", color: "var(--t-accent)" }}>
@@ -442,7 +544,7 @@ export function TriviaPage() {
 
   const result = results[q.id];
   const isTimedOut = timedOutIds.has(q.id);
-  const timerPct = Math.max(0, (timeLeft / 10) * 100);
+  const timerPct = Math.max(0, (timeLeft / ANSWER_SECONDS) * 100);
   const timerColor = timeLeft <= 2 ? "#E23B2F" : timeLeft <= 4 ? "#FF8A3C" : "var(--t-accent)";
 
   return (

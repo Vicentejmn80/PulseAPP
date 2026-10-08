@@ -26,16 +26,16 @@ import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
 import { listCycles, listMatches, loadCycleBoard, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
-import { todayTrivia, type TriviaLevel, type TriviaQuestion } from "@/services/triviaApi";
+import { formatCooldown, remainingMs, serverSkewMs, triviaStatus, type TriviaLevel, type TriviaLevelState } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
 import { listMyLeagues } from "@/services/leaguesApi";
 import type { LeaderboardEntry } from "@/types/pulse";
 import type { LucideIcon } from "lucide-react";
 
 const TRIVIA_ROWS: { level: TriviaLevel; label: string; icon: LucideIcon; color: string }[] = [
-  { level: "beginner", label: "Básica", icon: CircleDot, color: "#22C55E" },
-  { level: "intermediate", label: "Intermedia", icon: Hand, color: "#60A5FA" },
-  { level: "advanced", label: "Avanzada", icon: Zap, color: "#C084FC" },
+  { level: "beginner", label: "Iniciado", icon: CircleDot, color: "#22C55E" },
+  { level: "intermediate", label: "Intermedio", icon: Hand, color: "#60A5FA" },
+  { level: "advanced", label: "Avanzado", icon: Zap, color: "#C084FC" },
 ];
 
 const MEDALS = ["#FFC94A", "#C5D0E0", "#D08A4A"];
@@ -187,11 +187,8 @@ export function HomePage() {
   const [roundPoints, setRoundPoints] = useState(0);
   const [pointsAreRound, setPointsAreRound] = useState(false);
   const [inPrivateLeague, setInPrivateLeague] = useState(false);
-  const [trivia, setTrivia] = useState<Record<TriviaLevel, TriviaQuestion[]>>({
-    beginner: [],
-    intermediate: [],
-    advanced: [],
-  });
+  const [trivia, setTrivia] = useState<TriviaLevelState[]>([]);
+  const [triviaSkew, setTriviaSkew] = useState(0);
   const [tascas, setTascas] = useState<Tasca[]>([]);
   const [qrPoints, setQrPoints] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -210,14 +207,12 @@ export function HomePage() {
         reload(),
         listMatches(),
         listCycles(),
-        todayTrivia("beginner"),
-        todayTrivia("intermediate"),
-        todayTrivia("advanced"),
+        triviaStatus(),
         listTascas(),
         listMyLeagues(),
         callRpc<number>("pulse_cfg_int", { p_key: "QR_POINTS" }).catch(() => null),
       ])
-        .then(async ([, matchRows, cycles, basic, mid, hard, venues, leagues, points]) => {
+        .then(async ([, matchRows, cycles, boardTrivia, venues, leagues, points]) => {
           if (!alive) return;
           const active = pickActiveCycle(cycles);
           const live = cycleContainingToday(cycles);
@@ -229,11 +224,8 @@ export function HomePage() {
           setRoundPoints(board.points);
           setPointsAreRound(Boolean(live));
           setInPrivateLeague(leagues.length > 0);
-          setTrivia({
-            beginner: basic.questions,
-            intermediate: mid.questions,
-            advanced: hard.questions,
-          });
+          setTrivia(boardTrivia.levels);
+          setTriviaSkew(serverSkewMs(boardTrivia.serverNow));
           setTascas(venues);
           setQrPoints(typeof points === "number" ? points : Number(points) || null);
           setReady(true);
@@ -276,13 +268,10 @@ export function HomePage() {
         ? `Estás a ${formato(gap)} puntos del puesto #${mine.position - 1}.`
         : "Ver ranking";
 
-  const triviaMax = TRIVIA_ROWS.reduce((sum, row) => sum + trivia[row.level].reduce((inner, question) => inner + question.points, 0), 0);
-  const triviaAnswered = TRIVIA_ROWS.reduce((sum, row) => sum + trivia[row.level].filter((question) => question.answered).length, 0);
-  const triviaCount = TRIVIA_ROWS.reduce((sum, row) => sum + trivia[row.level].length, 0);
-  const triviaPending = TRIVIA_ROWS.some((row) => {
-    const questions = trivia[row.level];
-    return questions.length > 0 && questions.some((question) => !question.answered);
-  });
+  const triviaMax = trivia.reduce((sum, row) => sum + (row.status === "available" ? row.questionCount * 5 : 0), 0);
+  const triviaAnswered = trivia.reduce((sum, row) => sum + row.answeredCount, 0);
+  const triviaCount = trivia.reduce((sum, row) => sum + row.questionCount, 0);
+  const triviaPending = trivia.some((row) => row.status === "available" || row.status === "in_progress");
   const predictionsPending = today.some((match) => homeMatchTone(match) === "predict");
   const dayComplete = ready && today.length + triviaMax > 0 && !predictionsPending && !triviaPending;
 
@@ -294,7 +283,7 @@ export function HomePage() {
   )].slice(0, 3);
 
   function openTrivia(level: TriviaLevel) {
-    localStorage.setItem("tobo-trivia-level", level);
+    sessionStorage.setItem("tobo-trivia-open", level);
     navigate("/tobo/trivias");
   }
 
@@ -409,10 +398,9 @@ export function HomePage() {
           </p>
           <div className="flex flex-col gap-3">
             {TRIVIA_ROWS.map((row) => {
-              const questions = trivia[row.level];
-              const answered = questions.filter((question) => question.answered).length;
-              const done = questions.length > 0 && answered === questions.length;
-              const open = questions.length > 0 && !done;
+              const state = trivia.find((item) => item.level === row.level);
+              const open = state?.status === "available" || state?.status === "in_progress";
+              const cooling = state?.status === "cooldown";
               return (
                 <article key={row.level} className="rounded-2xl p-3" style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid var(--t-border)" }}>
                   <div className="flex items-center gap-3">
@@ -420,24 +408,26 @@ export function HomePage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-extrabold">{row.label}</p>
                       <p className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-                        {questions.length === 0 ? "Sin preguntas hoy" : `${questions.length} preguntas · +5 PT por acierto`}
+                        {!state || state.questionCount === 0
+                          ? "Sin preguntas"
+                          : `${state.questionCount} preguntas · +5 PT por acierto`}
                       </p>
                     </div>
                     <p className="text-[16px] font-extrabold tabular-nums">
-                      {questions.length === 0 ? "—" : `${answered}/${questions.length}`}
+                      {!state || state.questionCount === 0 ? "—" : `${state.answeredCount}/${state.questionCount}`}
                     </p>
                   </div>
                   {open && (
                     <div className="mt-3">
-                      <GoldCta icon={Play} onClick={() => openTrivia(row.level)}>Jugar ahora</GoldCta>
+                      <GoldCta icon={Play} onClick={() => openTrivia(row.level)}>{state?.status === "in_progress" ? "Continuar" : "Jugar ahora"}</GoldCta>
                     </div>
                   )}
-                  {done && (
+                  {cooling && (
                     <p className="mt-3 flex items-center gap-1.5 text-[13px] font-extrabold" style={{ color: row.color }}>
-                      <Check className="h-4 w-4" /> Completada
+                      <Check className="h-4 w-4" /> {formatCooldown(remainingMs(state?.availableAt ?? null, triviaSkew, now))}
                     </p>
                   )}
-                  {questions.length === 0 && (
+                  {state && state.questionCount === 0 && (
                     <p className="mt-3 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
                       <Lock className="h-4 w-4" /> Hoy no está disponible
                     </p>
