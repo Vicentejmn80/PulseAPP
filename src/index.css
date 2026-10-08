@@ -22,7 +22,7 @@ body {
 :root {
   --p-bg: #0B0D0F;
   --p-card: #14171A;
-  --p-accent: #C8FF00;
+  --p-accent: #CFFF00;
   --p-accent-dim: #A6D400;
   --p-text: #F5F7F2;
   --p-muted: #9BA1A6;
@@ -39,7 +39,7 @@ body {
   --t-border: #1B1F22;
   --t-tint: rgba(200, 255, 0, 0.12);
   --t-dark: #0B0D0F;
-  --t-accent: #C8FF00;
+  --t-accent: #CFFF00;
   --t-accent-dim: #A6D400;
   --t-accent-text: #0B0D0F;
   --t-text: #F5F7F2;
@@ -90,8 +90,13 @@ body {
   animation: rusher-in 0.7s ease both;
 }
 
+.rusher-logo-header {
+  display: block;
+  flex-shrink: 0;
+}
+
 .rusher-mark-glow {
-  filter: drop-shadow(0 0 28px rgba(200, 255, 0, 0.28));
+  filter: drop-shadow(0 0 28px rgba(207, 255, 0, 0.32));
 }
 
 @media (prefers-reduced-motion: reduce) {

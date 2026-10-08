@@ -104,13 +104,13 @@ export default defineConfig(({ mode }) => {
       pulseApi(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ["rusher-mark.png"],
+        includeAssets: ["rusher-mark.png", "rusher-app-icon.png"],
         manifest: {
           name: "Rusher",
           short_name: "Rusher",
           description: "Cualquier lugar puede tener un Rush.",
           theme_color: "#0B0D0F",
-          background_color: "#0B0D0F",
+          background_color: "#CFFF00",
           display: "standalone",
           orientation: "portrait",
           start_url: "/",
@@ -118,19 +118,19 @@ export default defineConfig(({ mode }) => {
           lang: "es",
           icons: [
             {
-              src: "rusher-mark.png",
+              src: "rusher-app-icon.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "any",
             },
             {
-              src: "rusher-mark.png",
+              src: "rusher-app-icon.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "maskable",
             },
             {
-              src: "rusher-mark.png",
+              src: "rusher-app-icon.png",
               sizes: "192x192",
               type: "image/png",
               purpose: "any",

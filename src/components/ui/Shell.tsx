@@ -13,7 +13,7 @@ export function Shell({ children }: { children: ReactNode }) {
 export function Notice({ message }: { message: string }) {
   if (!message) return null;
   return (
-    <div className="absolute left-4 right-4 top-4 z-[60] rounded-2xl bg-[#C8FF00] px-4 py-3 text-center text-[13px] font-bold text-[#0B0D0F] shadow-lg">
+    <div className="absolute left-4 right-4 top-4 z-[60] rounded-2xl bg-[#CFFF00] px-4 py-3 text-center text-[13px] font-bold text-[#0B0D0F] shadow-lg">
       {message}
     </div>
   );

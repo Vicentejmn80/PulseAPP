@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { RusherMark } from "@/components/ui/RusherMark";
 import { Notice, Shell } from "@/components/ui/Shell";
 import { ToboLayout } from "@/components/tobo/ToboLayout";
 import { AdminCyclesPage } from "@/pages/AdminCyclesPage";
@@ -79,7 +80,7 @@ export function App() {
     return (
       <Shell>
         <div className="flex h-[100dvh] flex-col items-center justify-center" style={{ backgroundColor: "#0B0D0F" }}>
-          <img src="/rusher-mark.png" alt="" width={96} height={96} className="rusher-mark-glow" />
+          <RusherMark size={96} glow />
         </div>
       </Shell>
     );
