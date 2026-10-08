@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { RusherMark } from "@/components/ui/RusherMark";
+import { RusherSplash } from "@/components/ui/RusherSplash";
 import { checkAlias, FlowError } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
@@ -33,6 +34,7 @@ const fieldClass = "mt-1 h-14 w-full rounded-2xl border bg-[#14171A] px-4 text-[
 export function EnterPage({ hint = "" }: { hint?: string }) {
   const { createAccount, loginWithPin, authError, setAuthError } = usePulse();
   const [step, setStep] = useState<"splash" | "welcome" | "auth">("splash");
+  const [splashPhase, setSplashPhase] = useState<"play" | "exit">("play");
   const [mode, setMode] = useState<Mode>("choose");
   const [country, setCountry] = useState(COUNTRIES[0]);
   const [localPhone, setLocalPhone] = useState("");
@@ -46,8 +48,14 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const id = window.setTimeout(() => setStep("welcome"), reduced ? 200 : 1600);
-    return () => window.clearTimeout(id);
+    const hold = reduced ? 500 : 2300;
+    const exit = reduced ? 200 : 420;
+    const startExit = window.setTimeout(() => setSplashPhase("exit"), hold);
+    const next = window.setTimeout(() => setStep("welcome"), hold + exit);
+    return () => {
+      window.clearTimeout(startExit);
+      window.clearTimeout(next);
+    };
   }, []);
 
   useEffect(() => {
@@ -131,13 +139,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
 
   if (step === "splash") {
     return (
-      <div className="rusher-in flex min-h-0 flex-1 flex-col items-center justify-center px-8 text-center" style={{ backgroundColor: "#0B0D0F", color: "#F5F7F2" }}>
-        <RusherMark size={168} glow />
-        <p className="mt-8 text-[28px] font-extrabold tracking-[0.22em]">RUSHER</p>
-        <p className="mt-3 max-w-[18ch] text-[15px] font-semibold" style={{ color: "var(--p-muted)" }}>
-          Cualquier lugar puede tener un Rush.
-        </p>
-      </div>
+        <RusherSplash phase={splashPhase} />
     );
   }
 

@@ -96,24 +96,224 @@ body {
   justify-content: center;
   flex-shrink: 0;
   line-height: 0;
+  color: #CCFF00;
 }
 
 .rusher-logo-header {
   display: block;
-  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
 }
 
-/* Destello alrededor de la silueta de la R (PNG transparente), no de un cubo. */
+/* Destello sobre la silueta del SVG, no sobre un cubo. */
 .rusher-mark-glow {
   filter:
-    drop-shadow(0 0 10px rgba(207, 255, 0, 0.95))
-    drop-shadow(0 0 28px rgba(207, 255, 0, 0.55))
-    drop-shadow(0 0 56px rgba(207, 255, 0, 0.28));
+    drop-shadow(0 0 6px rgba(204, 255, 0, 0.9))
+    drop-shadow(0 0 16px rgba(204, 255, 0, 0.55))
+    drop-shadow(0 0 36px rgba(204, 255, 0, 0.28));
+}
+
+/* ── Splash ───────────────────────────────────────────── */
+.rusher-splash {
+  --neon: #CCFF00;
+  --plate: #1A1D21;
+  --glow-tight: rgba(204, 255, 0, 0.95);
+  --glow-mid: rgba(204, 255, 0, 0.55);
+  --glow-wide: rgba(204, 255, 0, 0.28);
+  --glow-air: rgba(204, 255, 0, 0.12);
+  position: relative;
+  display: flex;
+  min-height: 100%;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding:
+    max(1.5rem, env(safe-area-inset-top))
+    1.5rem
+    max(1.5rem, env(safe-area-inset-bottom));
+  background: var(--plate);
+  color: #F5F7F2;
+  text-align: center;
+}
+
+.rusher-splash__bloom {
+  position: absolute;
+  width: min(78vw, 340px);
+  height: min(78vw, 340px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(204, 255, 0, 0.22) 0%, rgba(204, 255, 0, 0.05) 42%, transparent 70%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0;
+  animation: rusher-bloom 2.2s ease forwards;
+}
+
+.rusher-splash__mark {
+  position: relative;
+  z-index: 1;
+  width: min(46vw, 176px);
+  height: min(46vw, 176px);
+  color: var(--neon);
+  animation: rusher-glow 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards, rusher-breathe 3.6s ease-in-out 2.2s infinite;
+}
+
+.rusher-splash__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rusher-splash__star {
+  fill: var(--neon);
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: rusher-star 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.rusher-splash__letter {
+  fill: var(--neon);
+  clip-path: circle(0% at 49.27% 42.52%);
+  animation: rusher-ignite 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.rusher-splash__name,
+.rusher-splash__slogan {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  animation: rusher-copy 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.rusher-splash__name {
+  margin-top: 1.75rem;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+}
+
+.rusher-splash__slogan {
+  margin-top: 0.75rem;
+  max-width: 18ch;
+  font-size: 15px;
+  font-weight: 600;
+  color: #9AA39A;
+}
+
+.rusher-splash.is-exit {
+  animation: rusher-splash-out 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes rusher-star {
+  0%, 8% { opacity: 0; transform: scale(0.15); }
+  18% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 16px var(--neon)); }
+  28% { opacity: 1; transform: scale(1); filter: none; }
+  46%, 100% { opacity: 0; transform: scale(1); }
+}
+
+@keyframes rusher-ignite {
+  0%, 20% { clip-path: circle(0% at 49.27% 42.52%); }
+  48%, 100% { clip-path: circle(140% at 49.27% 42.52%); }
+}
+
+@keyframes rusher-glow {
+  0%, 18% { filter: drop-shadow(0 0 0 transparent); }
+  36% {
+    filter:
+      drop-shadow(0 0 4px var(--glow-tight))
+      drop-shadow(0 0 14px var(--glow-mid))
+      drop-shadow(0 0 32px var(--glow-wide));
+  }
+  /* Pico + dos micro-flickers de neón. */
+  41% {
+    filter:
+      drop-shadow(0 0 6px #fff)
+      drop-shadow(0 0 16px var(--glow-tight))
+      drop-shadow(0 0 40px var(--glow-mid))
+      drop-shadow(0 0 72px var(--glow-wide));
+  }
+  44% { filter: drop-shadow(0 0 8px var(--glow-mid)); }
+  47% {
+    filter:
+      drop-shadow(0 0 5px var(--glow-tight))
+      drop-shadow(0 0 22px var(--glow-mid))
+      drop-shadow(0 0 48px var(--glow-wide));
+  }
+  50% { filter: drop-shadow(0 0 6px var(--glow-mid)); }
+  59%, 100% {
+    filter:
+      drop-shadow(0 0 4px var(--glow-tight))
+      drop-shadow(0 0 12px var(--glow-mid))
+      drop-shadow(0 0 28px var(--glow-wide))
+      drop-shadow(0 0 60px var(--glow-air));
+  }
+}
+
+@keyframes rusher-breathe {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 4px var(--glow-tight))
+      drop-shadow(0 0 12px var(--glow-mid))
+      drop-shadow(0 0 28px var(--glow-wide));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 6px var(--glow-tight))
+      drop-shadow(0 0 20px var(--glow-mid))
+      drop-shadow(0 0 44px var(--glow-wide));
+  }
+}
+
+@keyframes rusher-bloom {
+  0%, 22% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.85; transform: scale(1); }
+}
+
+@keyframes rusher-copy {
+  0%, 58% { opacity: 0; transform: translateY(10px); }
+  78%, 100% { opacity: 1; transform: none; }
+}
+
+@keyframes rusher-splash-out {
+  to { opacity: 0; transform: scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rusher-splash__star { display: none; }
+  .rusher-splash__letter {
+    clip-path: none;
+    animation: rusher-fade 0.35s ease both;
+  }
+  .rusher-splash__mark,
+  .rusher-splash__bloom,
+  .rusher-splash__name,
+  .rusher-splash__slogan {
+    animation: rusher-fade 0.35s ease both;
+  }
+  .rusher-splash__mark {
+    filter:
+      drop-shadow(0 0 4px var(--glow-tight))
+      drop-shadow(0 0 16px var(--glow-mid));
+  }
+  .rusher-splash.is-exit { animation: rusher-fade-out 0.2s ease forwards; }
+  .rusher-mark-glow { filter: none; }
+}
+
+@keyframes rusher-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rusher-fade-out {
+  to { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .rusher-in { animation: none; }
-  .rusher-mark-glow { filter: none; }
 }
 [data-theme="tobo"] .shadow-\[0_6px_16px_rgba\(80\,40\,10\,0\.08\)\]      { box-shadow: 0 6px 16px rgba(0,0,0,0.25) !important; }
 [data-theme="tobo"] .shadow-\[0_0_80px_rgba\(70\,32\,10\,0\.08\)\]        { box-shadow: 0 0 80px rgba(0,0,0,0.25) !important; }
