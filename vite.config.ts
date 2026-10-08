@@ -104,7 +104,7 @@ export default defineConfig(({ mode }) => {
       pulseApi(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ["rusher-mark.png", "rusher-app-icon.png"],
+        includeAssets: ["rusher-mark.png", "rusher-home.png"],
         manifest: {
           name: "Rusher",
           short_name: "Rusher",
@@ -118,19 +118,19 @@ export default defineConfig(({ mode }) => {
           lang: "es",
           icons: [
             {
-              src: "rusher-app-icon.png",
+              src: "rusher-home.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "any",
             },
             {
-              src: "rusher-app-icon.png",
+              src: "rusher-home.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "maskable",
             },
             {
-              src: "rusher-app-icon.png",
+              src: "rusher-home.png",
               sizes: "192x192",
               type: "image/png",
               purpose: "any",
