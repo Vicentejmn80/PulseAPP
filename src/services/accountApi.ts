@@ -3,10 +3,8 @@ import { decideSession } from "@/lib/sessionGate";
 import type { Game, Participation, PointsTransaction, UserProfile } from "@/types/pulse";
 
 const SESSION_KEY = "pulse-session";
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "https://ovgwqeoslaitsmhdkxbl.supabase.co";
-const SUPABASE_ANON_KEY =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92Z3dxZW9zbGFpdHNtaGRreGJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMDA3NDcsImV4cCI6MjEwNTc3Njc0N30.T6e7hMV-BkuI_RJtRm2qMax5n7DmbTJpNYLVGpO-Vd8";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "";
 
 export interface AccountSnapshot {
   token: string;
@@ -27,7 +25,9 @@ interface ApiResult extends Partial<AccountSnapshot> {
 }
 
 function supabaseClient() {
-  if (!SUPABASE_ANON_KEY) return null;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error("Falta VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY");
+  }
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
