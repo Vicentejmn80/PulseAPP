@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { QrBlock } from "@/components/demo/QrBlock";
+import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { DEMO_MATCH_ID, venueQrPath } from "@/lib/demoMatch";
 import { scanVenue, venueBySlug, type VenueCard } from "@/services/demoApi";
@@ -260,6 +261,7 @@ export function VenuePage({ guest = false }: { guest?: boolean }) {
                   Jugar en Pulse
                 </PrimaryButton>
               </div>
+              <ToboBackHome />
             </div>
           </div>
         )}

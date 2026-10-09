@@ -194,6 +194,7 @@ export function HomePage() {
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30000);
@@ -255,6 +256,14 @@ export function HomePage() {
   const nextMatch =
     upcoming.find((m) => new Date(m.startsAt).getTime() >= now - 30 * 60 * 1000) ?? upcoming[0] ?? null;
   const gamesToShow = today.filter((match) => homeMatchTone(match) !== "cancelled");
+  const shownIds = new Set(gamesToShow.length > 0 ? gamesToShow.map((match) => match.id) : nextMatch ? [nextMatch.id] : []);
+  const moreGames = upcoming
+    .filter((match) => !shownIds.has(match.id))
+    .filter((match) => {
+      const tone = homeMatchTone(match);
+      return tone === "predict" || tone === "saved";
+    })
+    .slice(0, 4);
   const predictedToday = today.filter((match) => match.prediction).length;
   const mine = ranking.find((entry) => entry.isCurrentUser);
   const gap = mine ? pointsToNextPosition(ranking, mine.user.id) : null;
@@ -388,6 +397,29 @@ export function HomePage() {
             <p className="text-[15px] font-extrabold">📅 No hay juegos programados a futuro.</p>
           )}
         </ToboCard>
+
+        <div>
+          <GhostCta onClick={() => setMoreOpen((open) => !open)}>{moreOpen ? "Ocultar" : "Más pronósticos"}</GhostCta>
+          {moreOpen && (
+            <div className="mt-3 flex flex-col gap-3">
+              {moreGames.length === 0 ? (
+                <p className="text-[14px] font-extrabold">Por ahora no hay más juegos disponibles</p>
+              ) : (
+                moreGames.map((match) => (
+                  <MatchCard key={match.id} match={match} now={now} onOpen={() => navigate(`/tobo/partidos/${match.id}`)} />
+                ))
+              )}
+              <button
+                type="button"
+                onClick={() => navigate("/tobo/mi-quiniela")}
+                className="min-h-11 text-[13px] font-extrabold"
+                style={{ color: "var(--t-accent)" }}
+              >
+                Ver todos
+              </button>
+            </div>
+          )}
+        </div>
 
         <FounderBanner />
 

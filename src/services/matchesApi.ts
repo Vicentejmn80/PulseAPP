@@ -225,6 +225,34 @@ export async function loadCycleBoard(cycle: string, leagueId?: string) {
   return { entries, points, mine: mine ?? null };
 }
 
+export async function loadCycleWindow(cycle: string, leagueId?: string, top = 10, neighbors = 2) {
+  const result = await callRpc<{
+    ok?: boolean;
+    error?: string;
+    points?: number;
+    total?: number;
+    top?: LeaderboardEntry[];
+    zone?: LeaderboardEntry[];
+    above?: LeaderboardEntry | null;
+  }>("pulse_cycle_window", {
+    p_token: readSessionToken(),
+    p_cycle: cycle,
+    p_league_id: leagueId ?? null,
+    p_top: top,
+    p_neighbors: neighbors,
+  });
+  if (!result?.ok) throw new Error(result?.error || "No se pudo cargar el ranking de la ronda.");
+  const topRows = Array.isArray(result.top) ? result.top : [];
+  const zone = Array.isArray(result.zone) ? result.zone : [];
+  const above = result.above && typeof result.above === "object" ? result.above : null;
+  const points = Number(result.points ?? 0);
+  const mine = [...topRows, ...zone].find((entry) => entry.isCurrentUser) ?? null;
+  if (mine && mine.points !== points) {
+    throw new Error("El puntaje personal no coincide con el ranking de esta ronda. Actualiza e inténtalo de nuevo.");
+  }
+  return { top: topRows, zone, above, points, mine, total: Number(result.total ?? 0) };
+}
+
 export async function listCycles() {
   const data = await callRpc<ToboCycle[]>("pulse_cycles_list", {});
   return Array.isArray(data) ? data : [];

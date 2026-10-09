@@ -5,6 +5,7 @@ import { cycleForMatchStart } from "@/lib/toboHome";
 import { DuelBox, LiveCenter, ShareLine } from "@/components/live/LiveCenter";
 import { MatchExtras } from "@/components/tobo/PilotExtras";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
+import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { TabBar } from "@/components/ui/TabBar";
 import { matchCenter, type MatchCenter } from "@/services/liveApi";
 import { DemoExperience } from "@/components/demo/DemoExperience";
@@ -355,6 +356,9 @@ export function MatchPredictPage() {
         {match && phase !== "live" && <MatchExtras matchId={match.id} />}
         {match && phase !== "live" && <MatchCrowd matchId={match.id} />}
         {error && phase !== "open" && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
+        <div className="mt-6">
+          <ToboBackHome />
+        </div>
       </div>
     </div>
   );

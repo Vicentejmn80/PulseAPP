@@ -1,9 +1,12 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
+import { ToboBackHome } from "./ToboBackHome";
 
 export function ToboLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const atHome = location.pathname === "/tobo";
 
   return (
     <div
@@ -32,6 +35,12 @@ export function ToboLayout() {
           Júgate el Tobo
         </span>
       </div>
+
+      {!atHome && (
+        <div className="shrink-0 px-4 pb-2 pt-2">
+          <ToboBackHome />
+        </div>
+      )}
 
       {/* Phase 4: Entry brand animation */}
       <CategoryTransition />

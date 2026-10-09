@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
@@ -420,6 +421,9 @@ export function TriviaPage() {
         <p className="text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>
           Preparando preguntas de {lvl.label}…
         </p>
+        <div className="w-full max-w-sm px-4">
+          <ToboBackHome />
+        </div>
       </div>
     );
   }

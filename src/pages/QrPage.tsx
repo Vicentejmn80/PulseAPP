@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Countdown } from "@/components/tobo/PilotExtras";
+import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { answerFlash, visitQr, type QrVisit } from "@/services/mechanicsApi";
 
 const visits = new Map<string, Promise<QrVisit>>();
@@ -90,6 +91,9 @@ export function QrPage() {
         </section>
       )}
       {flash?.myOption && <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-[14px] font-extrabold">Respuesta enviada. Si aciertas, suman +{flash.points} pts.</p>}
+      <div className="mt-6">
+        <ToboBackHome />
+      </div>
     </div>
   );
 }

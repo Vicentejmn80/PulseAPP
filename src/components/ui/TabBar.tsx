@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 
 const items = [
   { id: "inicio",   to: "/tobo",              label: "Inicio"     },
@@ -12,7 +13,15 @@ export function TabBar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const atHome = location.pathname === "/tobo";
+
   return (
+    <div className="shrink-0">
+      {!atHome && (
+        <div className="px-4 pb-2 pt-2">
+          <ToboBackHome />
+        </div>
+      )}
     <div
       className="flex h-[74px] shrink-0 items-start justify-around border-t px-1 pt-2 pb-[max(0.4rem,env(safe-area-inset-bottom))]"
       style={{
@@ -37,6 +46,7 @@ export function TabBar() {
           </button>
         );
       })}
+    </div>
     </div>
   );
 }

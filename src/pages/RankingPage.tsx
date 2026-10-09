@@ -4,9 +4,10 @@ import { CalendarDays, Users } from "lucide-react";
 import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
+import { pointsToPass, RANKING_TOP, shortAlias, showZoneEllipsis, ZONA_VECINOS } from "@/lib/rankingView";
 import { caracasDateKey, cycleContainingToday, pickActiveCycle } from "@/lib/toboHome";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
-import { listCycles, loadCycleBoard, type ToboCycle } from "@/services/matchesApi";
+import { listCycles, loadCycleWindow, type ToboCycle } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
 
@@ -16,12 +17,15 @@ export function RankingPage() {
   const navigate = useNavigate();
   const { reload } = usePulse();
   const [tab, setTab] = useState<Tab>("global");
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [top, setTop] = useState<LeaderboardEntry[]>([]);
+  const [zone, setZone] = useState<LeaderboardEntry[]>([]);
+  const [above, setAbove] = useState<LeaderboardEntry | null>(null);
   const [cycles, setCycles] = useState<ToboCycle[]>([]);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string>("");
   const [currentCycleId, setCurrentCycleId] = useState("");
   const [myPoints, setMyPoints] = useState(0);
+  const [mine, setMine] = useState<LeaderboardEntry | null>(null);
   const [hasPrivateLeague, setHasPrivateLeague] = useState(false);
   const [error, setError] = useState("");
   const openedLeague = useRef(false);
@@ -57,17 +61,30 @@ export function RankingPage() {
     const cycle = tab === "temporada" || !currentCycleId ? "lifetime" : currentCycleId;
 
     if (!cycle) {
-      setEntries([]);
+      setTop([]);
+      setZone([]);
+      setAbove(null);
+      setMine(null);
       return;
     }
 
     const leagueId = tab === "liga" ? selectedLeague || undefined : undefined;
-    loadCycleBoard(cycle, leagueId)
-      .then(({ entries: rows, points }) => {
-        if (alive) {
-          setEntries(tab === "liga" && !selectedLeague ? [] : rows);
-          setMyPoints(points);
-        }
+    if (tab === "liga" && !selectedLeague) {
+      setTop([]);
+      setZone([]);
+      setAbove(null);
+      setMine(null);
+      return;
+    }
+
+    loadCycleWindow(cycle, leagueId, RANKING_TOP, ZONA_VECINOS)
+      .then((board) => {
+        if (!alive) return;
+        setTop(board.top);
+        setZone(board.zone);
+        setAbove(board.above);
+        setMine(board.mine);
+        setMyPoints(board.points);
       })
       .catch((reason: unknown) => {
         if (alive) setError(reason instanceof Error ? reason.message : "No se pudo cargar el ranking.");
@@ -77,17 +94,10 @@ export function RankingPage() {
     };
   }, [tab, selectedLeague, currentCycleId]);
 
-  const me = entries.find((entry) => entry.isCurrentUser);
   const upcoming = !currentCycleId ? pickActiveCycle(cycles) : null;
   const round = tab === "semana" ? cycles.find((item) => item.id === currentCycleId) : null;
-  const third = entries.find((entry) => entry.position === 3);
-  const inPodium = Boolean(me && me.position <= 3);
-  const gapToPodium = me && !inPodium && third ? Math.max(1, third.points - me.points + 1) : null;
-  const podiumProgress = !me
-    ? 0
-    : inPodium || !third || third.points <= 0
-      ? 100
-      : Math.max(8, Math.min(100, Math.round((me.points / (third.points + 1)) * 100)));
+  const gap = mine && mine.position > 1 && above ? pointsToPass(mine.points, above.points) : null;
+  const ellipsis = zone.length > 0 && showZoneEllipsis(zone[0].position, RANKING_TOP);
 
   return (
     <div className="flex h-full flex-col">
@@ -145,40 +155,31 @@ export function RankingPage() {
 
           <ToboCard>
             <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
-              {tab === "liga" ? "Tu liga" : tab === "temporada" ? "Temporada" : "Esta ronda"}
+              Tu posición
             </p>
             <p className="mt-3 text-[64px] font-extrabold leading-none tabular-nums" style={{ color: "var(--t-accent)" }}>
-              {me ? `#${me.position}` : "—"}
+              {mine ? `#${mine.position}` : "—"}
             </p>
-            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>tu puesto</p>
             <p className="mt-5 text-[40px] font-extrabold leading-none tabular-nums">{formato(myPoints)}</p>
             <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
               {tab === "temporada" || !currentCycleId ? "PT históricos de Juégate el Tobo" : "PT de la ronda actual"}
+            </p>
+            <p className="mt-4 text-[15px] font-extrabold">
+              {!mine
+                ? hasPrivateLeague && tab !== "liga"
+                  ? "Participas en una liga privada y no apareces en el ranking abierto."
+                  : "Pronostica y entras a la carrera."
+                : mine.position <= 1
+                  ? "Vas en primer lugar"
+                  : gap != null && above
+                    ? `Te faltan ${formato(gap)} pts para pasar al #${above.position}`
+                    : "El ranking se arma con los primeros puntos de la ronda."}
             </p>
             {!currentCycleId && tab !== "temporada" && (
               <p className="mt-2 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
                 La próxima ronda todavía no empieza{upcoming ? ` (${upcoming.startsOn})` : ""}. Estos son tus puntos acumulados.
               </p>
             )}
-            <div className="mt-5">
-              <div className="h-2.5 overflow-hidden rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${podiumProgress}%`, backgroundColor: "var(--t-accent)" }}
-                />
-              </div>
-              <p className="mt-2 text-[13px] font-extrabold">
-                {!me
-                  ? hasPrivateLeague && tab !== "liga"
-                    ? "Participas en una liga privada y no apareces en el ranking abierto."
-                    : "Pronostica y entras a la carrera. 🎯"
-                  : inPodium
-                    ? "Estás en el podio. Sigue sumando. 🥇"
-                    : gapToPodium
-                      ? `Te faltan ${formato(gapToPodium)} pts para el top 3.`
-                      : "El podio se arma con los primeros puntos de la ronda."}
-              </p>
-            </div>
             {round && (
               <p className="mt-2 flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
                 <CalendarDays className="h-3.5 w-3.5" />
@@ -186,9 +187,63 @@ export function RankingPage() {
               </p>
             )}
           </ToboCard>
+
+          <ToboCard>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>Top 10</p>
+            <div className="mt-3 flex flex-col gap-2">
+              {top.length === 0 && (
+                <p className="text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>Todavía no hay jugadores en este ranking.</p>
+              )}
+              {top.map((entry) => (
+                <RankRow key={entry.user.id} entry={entry} />
+              ))}
+            </div>
+          </ToboCard>
+
+          {ellipsis && (
+            <p className="text-center text-[18px] font-extrabold tracking-[0.4em]" style={{ color: "var(--t-muted)" }}>...</p>
+          )}
+
+          {zone.length > 0 && (
+            <ToboCard>
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>Tu zona</p>
+              <div className="mt-3 flex flex-col gap-2">
+                {zone.map((entry) => (
+                  <RankRow key={entry.user.id} entry={entry} />
+                ))}
+              </div>
+            </ToboCard>
+          )}
+
+          <p className="px-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+            Ante empate en puntos, queda primero quien llegó antes a esa puntuación.
+          </p>
         </div>
       </div>
       <TabBar />
+    </div>
+  );
+}
+
+function RankRow({ entry }: { entry: LeaderboardEntry }) {
+  const podium = entry.position <= 3;
+  const mine = entry.isCurrentUser;
+  return (
+    <div
+      className="flex items-center gap-3 rounded-2xl px-3 py-3"
+      style={
+        mine
+          ? { backgroundColor: "var(--t-tint)", border: "1px solid var(--t-accent)" }
+          : podium
+            ? { backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid var(--t-accent)" }
+            : { backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid var(--t-border)" }
+      }
+    >
+      <p className="w-10 text-[16px] font-extrabold tabular-nums" style={{ color: podium || mine ? "var(--t-accent)" : "var(--t-text)" }}>
+        #{entry.position}
+      </p>
+      <p className="min-w-0 flex-1 truncate text-[14px] font-extrabold">{shortAlias(entry.user.alias)}</p>
+      <p className="text-[14px] font-extrabold tabular-nums">{formato(entry.points)}</p>
     </div>
   );
 }
