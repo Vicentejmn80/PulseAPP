@@ -20,7 +20,7 @@ import { IconCoin } from "@/components/ui/icons";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToNextPosition } from "@/lib/leaderboard";
-import { caracasDateKey, cycleContainingToday, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleClosesLabel, cycleContainingToday, cyclePeriodLabel, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
@@ -61,27 +61,6 @@ function dayLabel(startsAt: string, now: number) {
   if (matchKey === caracasDateKey(tomorrow)) return "MAÑANA";
   const text = d.toLocaleDateString("es-VE", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Caracas" });
   return text.toUpperCase();
-}
-
-function rangeLabel(start: string, end: string) {
-  const fmt = (value: string) => {
-    const date = new Date(`${value}T12:00:00`);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString("es-VE", { day: "numeric", month: "short", timeZone: "America/Caracas" });
-  };
-  return `${fmt(start)} — ${fmt(end)}`;
-}
-
-function closesLabel(end: string) {
-  const date = new Date(`${end}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return "";
-  const text = date.toLocaleDateString("es-VE", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-    timeZone: "America/Caracas",
-  });
-  return `Cierra el ${text} · 11:59 p. m.`;
 }
 
 function closesIn(startsAt: string, now: number) {
@@ -335,32 +314,25 @@ export function HomePage() {
             className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(255,201,74,0.35), transparent 70%)" }}
           />
-          <p className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
-            <Sparkles className="h-3.5 w-3.5" />
-            Bienvenido a Pulse
-          </p>
-          <h2 className="mt-2 text-[22px] font-extrabold leading-tight">Pronostica. Suma. Gana.</h2>
-          <p className="mt-1 max-w-[34ch] text-[13px] font-semibold leading-snug" style={{ color: "var(--t-muted)" }}>
-            Elige el resultado de cada juego, acumula puntos y compite por un premio cada semana.
+          <h2 className="flex items-start gap-2 text-[20px] font-extrabold leading-tight">
+            <Sparkles className="mt-1 h-4 w-4 shrink-0" style={{ color: "var(--t-accent)" }} />
+            Bienvenido a la experiencia Béisbol Rush LVBP
+          </h2>
+          <p className="mt-2 max-w-[38ch] text-[13px] font-semibold leading-snug" style={{ color: "var(--t-muted)" }}>
+            Pronostica los partidos, demuestra lo que sabes, suma puntos y compite por recompensas durante la temporada.
           </p>
         </section>
 
         <ToboCard>
           <CardHead icon={CalendarDays} title="Ronda actual" />
-          <h2 className="text-[26px] font-extrabold leading-none">{cycle?.name ?? "Temporada"}</h2>
+          <h2 className="text-[18px] font-extrabold leading-tight tracking-tight">{cycle ? cyclePeriodLabel(cycle) : "Temporada"}</h2>
           <p className="mt-2 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
             🏆 {TOBO_ROUND_PRIZE_SUBTITLE}
           </p>
           {cycle && (
             <p className="mt-2 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-              <CalendarDays className="h-3.5 w-3.5" />
-              {rangeLabel(cycle.startsOn, cycle.endsOn)}
-            </p>
-          )}
-          {cycle && (
-            <p className="mt-1 flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-              <Clock className="h-3.5 w-3.5" />
-              {closesLabel(cycle.endsOn)}
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              {cycleClosesLabel(cycle.endsOn)}
             </p>
           )}
           <div className="mt-4 grid grid-cols-3 gap-2">
