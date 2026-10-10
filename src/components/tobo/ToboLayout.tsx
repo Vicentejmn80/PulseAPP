@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
 import { ToboBackHome } from "./ToboBackHome";
+import { ToboOnboarding } from "./ToboOnboarding";
 
 export function ToboLayout() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export function ToboLayout() {
   return (
     <div
       data-theme="tobo"
-      className="flex h-full flex-col"
+      className="relative flex h-full flex-col"
       style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)" }}
     >
       {/* Phase 5: Back-to-Pulse persistent bar */}
@@ -49,6 +50,7 @@ export function ToboLayout() {
       <div className="min-h-0 flex-1">
         <Outlet />
       </div>
+      <ToboOnboarding />
     </div>
   );
 }

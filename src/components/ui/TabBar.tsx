@@ -1,13 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { ToboBackHome } from "@/components/tobo/ToboBackHome";
-
-const items = [
-  { id: "inicio",   to: "/tobo",              label: "Inicio"     },
-  { id: "quiniela", to: "/tobo/mi-quiniela",   label: "Pronósticos"},
-  { id: "ranking",  to: "/tobo/ranking",       label: "Ranking"    },
-  { id: "tascas",   to: "/tobo/tascas",        label: "Tascas"     },
-  { id: "perfil",   to: "/tobo/profile",       label: "Perfil"     },
-];
+import { isToboTabActive, TOBO_TABS } from "@/lib/toboTabs";
 
 export function TabBar() {
   const location = useLocation();
@@ -29,11 +22,8 @@ export function TabBar() {
         backgroundColor: "var(--t-card)",
       }}
     >
-      {items.map((item) => {
-        const on =
-          item.to === "/tobo"
-            ? location.pathname === "/tobo"
-            : location.pathname.startsWith(item.to);
+      {TOBO_TABS.map((item) => {
+        const on = isToboTabActive(location.pathname, item.to);
         return (
           <button
             key={item.id}

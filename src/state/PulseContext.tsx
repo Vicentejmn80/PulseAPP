@@ -232,7 +232,7 @@ export function PulseProvider({ children }: { children: ReactNode }) {
       directEnter: (phone: string, fullName: string, alias: string) => enter(directEnterAccount(phone, fullName, alias)),
       async createAccount(phone: string, fullName: string, alias: string, pin: string) {
         await enter(registerWithPinRequest(phone, fullName, alias, pin));
-        setNotice("¡Bienvenido a Pulse!");
+        setNotice("¡Bienvenido a Rusher!");
       },
       async loginWithPin(phone: string, pin: string) {
         await enter(loginWithPinRequest(phone, pin));
