@@ -7,6 +7,7 @@
     "dev": "vite --host",
     "seed:test": "node scripts/seed-test.mjs",
     "cleanup:test": "node scripts/cleanup-test.mjs",
+    "sync:cycles": "node scripts/sync-lvbp-cycles.mjs",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "preview": "vite preview"

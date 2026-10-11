@@ -115,7 +115,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "Rusher",
           short_name: "Rusher",
-          description: "Cualquier lugar puede tener un Rush.",
+          description: "Béisbol Rush LVBP · Rusher",
           theme_color: "#0B0D0F",
           background_color: "#1A1D21",
           display: "standalone",
@@ -131,7 +131,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,webp,svg,woff2}"],
           navigateFallback: "/index.html",
           navigateFallbackDenylist: [/^\/api\//],
         },
