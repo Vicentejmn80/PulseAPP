@@ -1,3 +1,4 @@
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
 import { formato } from "@/lib/format";
 import { usePulse } from "@/state/PulseContext";
@@ -65,7 +66,7 @@ export function PulsePremiosPage() {
           className="mt-5 text-center text-[12px] font-semibold"
           style={{ color: "var(--p-muted)" }}
         >
-          Júgate el Tobo es la experiencia activa. Entra, suma puntos y compite por el premio de la ronda.
+          {LVBP_EXPERIENCE_TITLE} es la experiencia activa. Entra, suma puntos y compite por el premio de la ronda.
         </p>
       </div>
 

@@ -11,7 +11,6 @@ import {
   Pencil,
   Play,
   Trophy,
-  Sparkles,
   Users,
   Zap,
 } from "lucide-react";
@@ -21,6 +20,13 @@ import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToNextPosition } from "@/lib/leaderboard";
 import { caracasDateKey, cycleClosesLabel, cycleContainingToday, cyclePeriodLabel, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
+import {
+  LVBP_EXPERIENCE_TITLE,
+  LVBP_SEASON_LABEL,
+  LVBP_VENUES_TAB_LABEL,
+  LVBP_WELCOME_BODY,
+  LVBP_WELCOME_HEADLINE,
+} from "@/config/lvbpBrand";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
@@ -263,7 +269,6 @@ export function HomePage() {
   const predictionsPending = today.some((match) => homeMatchTone(match) === "predict");
   const dayComplete = ready && today.length + triviaMax > 0 && !predictionsPending && !triviaPending;
 
-  const spotlight = tascas.find((tasca) => tasca.isFounder) ?? tascas[0] ?? null;
   const prizeLabels = [...new Set(
     tascas
       .map((tasca) => tasca.roundPrize)
@@ -279,8 +284,8 @@ export function HomePage() {
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-3">
         <div className="min-w-0">
-          <h1 className="truncate text-[20px] font-extrabold leading-none tracking-tight">Juégate el Tobo</h1>
-          <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>Temporada LVBP 2026–27</p>
+          <h1 className="text-[18px] font-extrabold leading-tight tracking-tight">{LVBP_EXPERIENCE_TITLE}</h1>
+          <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>{LVBP_SEASON_LABEL}</p>
         </div>
         <button
           type="button"
@@ -302,26 +307,14 @@ export function HomePage() {
           </p>
         )}
 
-        <section
-          className="flyer-in relative overflow-hidden rounded-[22px] px-4 py-4"
-          style={{
-            background: "linear-gradient(145deg, #1A2E5A 0%, #0B1A3C 55%, #13284F 100%)",
-            border: "1px solid rgba(255,201,74,0.35)",
-            boxShadow: "0 12px 28px rgba(0,0,0,0.28)",
-          }}
-        >
-          <span
-            className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(255,201,74,0.35), transparent 70%)" }}
-          />
-          <h2 className="flex items-start gap-2 text-[20px] font-extrabold leading-tight">
-            <Sparkles className="mt-1 h-4 w-4 shrink-0" style={{ color: "var(--t-accent)" }} />
-            Bienvenido a la experiencia Béisbol Rush LVBP
-          </h2>
-          <p className="mt-2 max-w-[38ch] text-[13px] font-semibold leading-snug" style={{ color: "var(--t-muted)" }}>
-            Pronostica los partidos, demuestra lo que sabes, suma puntos y compite por recompensas durante la temporada.
+        <ToboCard className="flyer-in">
+          <h2 className="text-[20px] font-extrabold leading-snug">{LVBP_WELCOME_HEADLINE}</h2>
+          <p className="mt-3 text-[14px] font-semibold leading-relaxed" style={{ color: "var(--t-muted)" }}>
+            {LVBP_WELCOME_BODY}
           </p>
-        </section>
+        </ToboCard>
+
+        <FounderBanner />
 
         <ToboCard>
           <CardHead icon={CalendarDays} title="Ronda actual" />
@@ -393,8 +386,6 @@ export function HomePage() {
           )}
         </div>
 
-        <FounderBanner />
-
         <ToboCard>
           <CardHead icon={Zap} title="Trivia de hoy" action={{ label: "Ver todos →", onClick: () => navigate("/tobo/trivias") }} />
           <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
@@ -446,7 +437,7 @@ export function HomePage() {
           <CardHead icon={Check} title="Actividad de hoy" />
           <ActivityRow icon={CircleDot} color="#FFC94A" label="Pronósticos" value={`${predictedToday}/${today.length}`} />
           <ActivityRow icon={Zap} color="#C084FC" label="Trivia" value={`${triviaAnswered}/${triviaCount}`} />
-          <ActivityRow icon={MapPin} color="#60A5FA" label="Tasca" value={qrPoints != null ? `+${formato(qrPoints)} PT` : "QR"} />
+          <ActivityRow icon={MapPin} color="#60A5FA" label="Local" value={qrPoints != null ? `+${formato(qrPoints)} PT` : "QR"} />
         </ToboCard>
 
         {dayComplete && (
@@ -454,7 +445,7 @@ export function HomePage() {
             <p className="text-[15px] font-extrabold">Has completado tus actividades de hoy.</p>
             <div className="mt-3 grid grid-cols-3 gap-2">
               <GhostCta onClick={() => navigate("/tobo/ranking")}>Ranking</GhostCta>
-              <GhostCta onClick={() => navigate("/tobo/tascas")}>Tascas</GhostCta>
+              <GhostCta onClick={() => navigate("/tobo/tascas")}>{LVBP_VENUES_TAB_LABEL}</GhostCta>
               <GhostCta onClick={() => navigate("/tobo/mi-quiniela")}>Calendario</GhostCta>
             </div>
           </ToboCard>
@@ -464,34 +455,6 @@ export function HomePage() {
           <CardHead icon={Trophy} title="Tu ronda" action={{ label: "Ver ranking →", onClick: () => navigate("/tobo/ranking") }} />
           <p className="mb-3 text-[14px] font-extrabold">{climb}</p>
           <GoldCta icon={Trophy} onClick={() => navigate("/tobo/ranking")}>Ver ranking</GoldCta>
-        </ToboCard>
-
-        <ToboCard className="overflow-hidden p-0">
-          <div
-            className="flex h-[88px] items-end px-4 pb-3"
-            style={{
-              background: spotlight?.imageUrl
-                ? `linear-gradient(to top, rgba(7,14,31,0.82), rgba(7,14,31,0.15)), url(${spotlight.imageUrl}) center/cover`
-                : "linear-gradient(135deg, #1E3A6E 0%, #0B1A3C 70%)",
-            }}
-          >
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white">Suma puntos en una tasca</p>
-          </div>
-          <div className="p-4">
-            <p className="flex items-center gap-2 text-[16px] font-extrabold">
-              <MapPin className="h-4 w-4" style={{ color: "var(--t-accent)" }} />
-              {spotlight?.name ?? "Tasca participante"}
-            </p>
-            <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-              Visita una tasca participante y escanea el QR.
-            </p>
-            {qrPoints != null && qrPoints > 0 && (
-              <p className="mt-2 text-[14px] font-extrabold" style={{ color: "var(--t-accent)" }}>+{formato(qrPoints)} PT hoy</p>
-            )}
-            <div className="mt-3">
-              <GoldCta icon={MapPin} onClick={() => navigate("/tobo/tascas")}>Ver tascas</GoldCta>
-            </div>
-          </div>
         </ToboCard>
 
         <ToboCard>
@@ -509,7 +472,7 @@ export function HomePage() {
             ))}
           </div>
           <p className="mt-3 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-            Canjeable en cualquier tasca afiliada a Pulse.
+            Canjeable en cualquier local afiliado.
           </p>
         </ToboCard>
 

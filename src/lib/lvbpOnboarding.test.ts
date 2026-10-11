@@ -29,7 +29,7 @@ describe("introducción LVBP", () => {
     expect(LVBP_ONBOARDING_STEPS.map((step) => step.title)).toEqual(TOBO_TABS.map((tab) => tab.label));
     expect(LVBP_ONBOARDING_STEPS.some((step) => step.title === "Trivias")).toBe(false);
     expect(LVBP_ONBOARDING_STEPS[0]?.body).toContain("trivias del día");
-    expect(LVBP_ONBOARDING_STEPS[3]?.title).toBe("Tascas");
+    expect(LVBP_ONBOARDING_STEPS[3]?.title).toBe("Afiliados");
   });
 
   it("guarda el cierre por cuenta y no lo repite hasta que se pide de nuevo", () => {

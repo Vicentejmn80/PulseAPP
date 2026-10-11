@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { predictionBackTarget } from "@/lib/toboNav";
 import { cycleForMatchStart } from "@/lib/toboHome";
 import { DuelBox, LiveCenter, ShareLine } from "@/components/live/LiveCenter";
@@ -54,7 +55,7 @@ export function MatchesPage() {
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
         <BackButton onClick={() => navigate("/tobo")} />
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">{LVBP_EXPERIENCE_TITLE}</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Próximos partidos</h2>
         </div>
       </div>
@@ -244,9 +245,9 @@ export function MatchPredictPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <BackButton onClick={() => navigate(predictionBackTarget())} label="Volver a Juégate el Tobo" />
+        <BackButton onClick={() => navigate(predictionBackTarget())} label={`Volver a ${LVBP_EXPERIENCE_TITLE}`} />
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">← Juégate el Tobo</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">← {LVBP_EXPERIENCE_TITLE}</p>
           <p className="text-[14px] font-extrabold">Pronóstico</p>
         </div>
       </div>
@@ -261,7 +262,7 @@ export function MatchPredictPage() {
         )}
         {match && phase === "locked" && (
           <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
+            <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">{LVBP_EXPERIENCE_TITLE}</p>
             <h2 className="mt-2 text-[28px] font-extrabold tracking-tight">Pronóstico cerrado</h2>
             <p className="mt-3 text-[20px] font-extrabold">{match.awayTeam}</p>
             <p className="text-[14px] font-bold text-[#A08B80]">vs. {match.homeTeam}</p>
@@ -408,7 +409,7 @@ function FinishedCard({ match }: { match: BaseballMatch }) {
   const prediction = match.prediction;
   return (
     <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
-      <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
+      <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">{LVBP_EXPERIENCE_TITLE}</p>
       <h2 className="mt-2 text-[22px] font-extrabold">Resultado</h2>
       <p className="mt-1 text-[20px] font-extrabold">
         {match.homeScore !== null && match.awayScore !== null ? scoreLine(match, match.homeScore, match.awayScore) : "Pendiente"}

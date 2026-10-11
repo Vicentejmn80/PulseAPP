@@ -4,6 +4,7 @@ import { Camera, MapPin } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
 import { cyclePeriodLabel, pickActiveCycle } from "@/lib/toboHome";
 import { listCycles, listTascas, type Tasca, type ToboCycle } from "@/services/matchesApi";
+import { LVBP_EXPERIENCE_TITLE, LVBP_SEASON_LABEL, LVBP_VENUES_TAB_LABEL } from "@/config/lvbpBrand";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 
 function externalHref(kind: "instagram" | "whatsapp" | "maps", value: string, lat?: number | null, lng?: number | null) {
@@ -190,11 +191,11 @@ export function TascasPage() {
       {/* Header */}
       <div className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
         <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>
-          Juégate el Tobo
+          {LVBP_EXPERIENCE_TITLE}
         </p>
-        <h2 className="text-[26px] font-extrabold tracking-tight">Red Pulse 🍺</h2>
+        <h2 className="text-[26px] font-extrabold tracking-tight">Locales afiliados</h2>
         <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-          La red de tascas que hace posibles los premios.
+          Descubre los negocios participantes, sus beneficios y escanea el QR cuando los visites.
         </p>
       </div>
 
@@ -210,14 +211,14 @@ export function TascasPage() {
           className="mb-3 px-1 text-[12px] font-extrabold uppercase tracking-[0.14em]"
           style={{ color: "var(--t-muted)" }}
         >
-          Tascas activas
+          {LVBP_VENUES_TAB_LABEL} activos
         </p>
 
         {tascas.length === 0 && !error && (
           <div className="rounded-[28px] px-6 py-8 text-center" style={{ backgroundColor: "var(--t-card)" }}>
-            <p className="text-[16px] font-extrabold">Las tascas se publican aquí</p>
+            <p className="text-[16px] font-extrabold">Los locales se publican aquí</p>
             <p className="mt-2 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-              Pronto verás la red de tascas del piloto.
+              Pronto verás la red de locales afiliados del piloto.
             </p>
           </div>
         )}
@@ -242,14 +243,14 @@ export function TascasPage() {
             🏆 Premio de la ronda
           </p>
           <p className="mt-0.5 text-[13px] font-semibold opacity-80">
-            {active ? cyclePeriodLabel(active) : "Temporada LVBP 2026-27"}
+            {active ? cyclePeriodLabel(active) : LVBP_SEASON_LABEL}
           </p>
           <p className="mt-3 text-[13px] font-extrabold opacity-95">
             {TOBO_ROUND_PRIZE_SUBTITLE}
           </p>
           <div className="mt-4 grid grid-cols-3 gap-2">
             {[
-              { n: activeTascas.length, label: "tascas" },
+              { n: activeTascas.length, label: "locales" },
               { n: withPrize.length, label: "premios" },
               { n: 3, label: "ganadores 🥇" },
             ].map((item) => (

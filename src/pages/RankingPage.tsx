@@ -5,6 +5,7 @@ import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToPass, RANKING_TOP, shortAlias, showZoneEllipsis, ZONA_VECINOS } from "@/lib/rankingView";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { caracasDateKey, cycleContainingToday, cyclePeriodLabel, pickActiveCycle } from "@/lib/toboHome";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, loadCycleWindow, type ToboCycle } from "@/services/matchesApi";
@@ -102,7 +103,7 @@ export function RankingPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
-        <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>Juégate el Tobo</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>{LVBP_EXPERIENCE_TITLE}</p>
         <h2 className="text-[24px] font-extrabold tracking-tight">Ranking</h2>
         <p className="mt-1 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
           🥇🥈🥉 Los primeros 3 lugares ganan un premio cada semana.
@@ -162,7 +163,7 @@ export function RankingPage() {
             </p>
             <p className="mt-5 text-[40px] font-extrabold leading-none tabular-nums">{formato(myPoints)}</p>
             <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-              {tab === "temporada" || !currentCycleId ? "PT históricos de Juégate el Tobo" : "PT de la ronda actual"}
+              {tab === "temporada" || !currentCycleId ? `PT históricos de ${LVBP_EXPERIENCE_TITLE}` : "PT de la ronda actual"}
             </p>
             <p className="mt-4 text-[15px] font-extrabold">
               {!mine

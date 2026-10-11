@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { listMatches, matchPhase, scoreLine, type BaseballMatch } from "@/services/matchesApi";
 import { isFinalizedPrediction, isSuspendedMatch, isUpcomingPrediction, predictionBadge } from "@/lib/predictions/state";
 
@@ -92,7 +93,7 @@ export function MiQuinielaPage() {
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
         <BackButton onClick={() => navigate("/tobo")} />
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>{LVBP_EXPERIENCE_TITLE}</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Pronósticos</h2>
         </div>
       </div>

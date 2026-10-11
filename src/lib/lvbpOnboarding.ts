@@ -1,3 +1,4 @@
+import { LVBP_VENUES_TAB_LABEL } from "@/config/lvbpBrand";
 import { TOBO_TABS, type ToboTabId } from "@/lib/toboTabs";
 
 /**
@@ -42,9 +43,9 @@ export const LVBP_ONBOARDING_STEPS: ReadonlyArray<{
   },
   {
     id: "tascas",
-    title: "Tascas",
-    body: "Descubre las tascas participantes, abre su ficha y escanea el QR cuando las visites.",
-    action: "Entra a una tasca para ver su ficha.",
+    title: LVBP_VENUES_TAB_LABEL,
+    body: "Descubre los locales afiliados, abre su ficha y escanea el QR cuando los visites.",
+    action: "Entra a un local para ver su ficha.",
   },
   {
     id: "perfil",
