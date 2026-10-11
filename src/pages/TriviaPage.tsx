@@ -4,6 +4,7 @@ import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type Lucid
 import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { formato } from "@/lib/format";
 import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
 import { trackEvent } from "@/services/analytics";
@@ -329,7 +330,7 @@ export function TriviaPage() {
       <div className="flex h-full flex-col">
         <div className="px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>
-            Juégate el Tobo
+            {LVBP_EXPERIENCE_TITLE}
           </p>
           <h2 className="text-[28px] font-extrabold tracking-tight">Trivia del día</h2>
           <p className="text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>

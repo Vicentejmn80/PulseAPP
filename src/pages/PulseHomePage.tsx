@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
 import { RusherMark } from "@/components/ui/RusherMark";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { formato } from "@/lib/format";
 import { usePulse } from "@/state/PulseContext";
 
@@ -60,12 +61,12 @@ export function PulseHomePage() {
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em]" style={{ color: "var(--p-accent)" }}>
               Experiencia activa
             </p>
-            <h2 className="mt-3 text-[32px] font-extrabold leading-none tracking-tight">Júgate el Tobo</h2>
+            <h2 className="mt-3 text-[28px] font-extrabold leading-tight tracking-tight">{LVBP_EXPERIENCE_TITLE}</h2>
             <p className="mt-2 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
               Una experiencia de Rusher.
             </p>
             <p className="mt-3 text-[15px] font-semibold leading-snug">
-              Pronostica, acumula puntos y gana en tu tasca.
+              Pronostica, acumula puntos y gana en locales afiliados.
             </p>
             <div
               className="mt-5 flex h-12 items-center justify-center rounded-2xl text-[15px] font-extrabold tracking-wide text-[#0B0D0F]"

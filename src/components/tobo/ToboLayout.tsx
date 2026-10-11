@@ -1,4 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
 import { ToboBackHome } from "./ToboBackHome";
@@ -23,17 +24,17 @@ export function ToboLayout() {
         <button
           type="button"
           onClick={() => navigate(toboExitTarget())}
-          aria-label="Salir de Juégate el Tobo"
+          aria-label={`Salir de ${LVBP_EXPERIENCE_TITLE}`}
           className="flex items-center gap-1.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em]"
           style={{ color: "var(--t-accent)" }}
         >
           ← Rusher
         </button>
         <span
-          className="text-[10px] font-extrabold uppercase tracking-[0.2em]"
+          className="max-w-[48%] truncate text-right text-[9px] font-extrabold uppercase tracking-[0.12em]"
           style={{ color: "var(--t-muted)" }}
         >
-          Júgate el Tobo
+          {LVBP_EXPERIENCE_TITLE}
         </span>
       </div>
 

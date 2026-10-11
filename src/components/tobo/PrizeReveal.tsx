@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Trophy } from "lucide-react";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { GoldCta } from "@/components/tobo/surface";
 import { markPrizeSeen, type ToboPrize } from "@/services/matchesApi";
 
@@ -21,7 +22,7 @@ export function PrizeReveal({ prize, onOpen }: { prize: ToboPrize; onOpen: () =>
           <Trophy className="h-8 w-8" />
         </span>
         <p className="mt-4 text-[12px] font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--t-accent)" }}>
-          Juégate el Tobo
+          {LVBP_EXPERIENCE_TITLE}
         </p>
         <h1 className="mt-2 text-[34px] font-extrabold leading-none">¡Ganaste!</h1>
         <p className="mt-3 text-[15px] font-bold" style={{ color: "var(--t-muted)" }}>

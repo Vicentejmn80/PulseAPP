@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 
 const SESSION_KEY = "tobo-intro-shown";
 
@@ -37,12 +38,10 @@ export function CategoryTransition() {
         Una experiencia de Rusher
       </p>
       <h1
-        className="mt-3 text-center text-[30px] font-extrabold leading-tight tracking-tight"
+        className="mt-3 max-w-[16ch] text-center text-[26px] font-extrabold leading-tight tracking-tight"
         style={{ color: "var(--t-text)" }}
       >
-        Juégate
-        <br />
-        el Tobo
+        {LVBP_EXPERIENCE_TITLE}
       </h1>
       <div
         className="mt-5 h-1 w-12 rounded-full"

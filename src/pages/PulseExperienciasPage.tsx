@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
 import { usePulse } from "@/state/PulseContext";
 
@@ -37,9 +38,9 @@ export function PulseExperienciasPage() {
           <p className="text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--p-accent)" }}>
             Activa
           </p>
-          <h2 className="mt-2 text-[24px] font-extrabold">Júgate el Tobo</h2>
+          <h2 className="mt-2 text-[24px] font-extrabold">{LVBP_EXPERIENCE_TITLE}</h2>
           <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
-            Pronostica, compite y gana en tu tasca.
+            Pronostica, compite y gana en locales afiliados.
           </p>
         </button>
         <p className="mt-8 px-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>

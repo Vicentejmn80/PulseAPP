@@ -5,6 +5,7 @@ import { RankingList } from "@/components/ranking/RankingList";
 import { BackButton } from "@/components/ui/Buttons";
 import { CardHead, GoldCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { pickActiveCycle } from "@/lib/toboHome";
 import { createLeague, getLeague, joinLeague, listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, loadCycleBoard } from "@/services/matchesApi";
@@ -113,7 +114,7 @@ export function LeaguePage() {
       <div className="flex items-center gap-3 px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
         <BackButton onClick={() => navigate("/tobo/ranking")} />
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">Juégate el Tobo</p>
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>{LVBP_EXPERIENCE_TITLE}</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">{current ? current.name : "Mis Ligas"}</h2>
         </div>
       </div>

@@ -3,15 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { BarChart3 } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
 import { CardHead, StatLine, ToboCard } from "@/components/tobo/surface";
+import { replayLvbpOnboarding } from "@/components/tobo/ToboOnboarding";
+import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { formato, gameTypeLabel } from "@/lib/format";
+import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
+import { myStats, type UserStats } from "@/services/analytics";
 import { adminVenueList } from "@/services/demoApi";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
-import { myStats, type UserStats } from "@/services/analytics";
+import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
 import type { PointsTransaction } from "@/types/pulse";
-import { replayLvbpOnboarding } from "@/components/tobo/ToboOnboarding";
-import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
-import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 
 function movementLabel(tx: PointsTransaction) {
   if (tx.sourceType === "prediction" && tx.metadata) {
@@ -80,29 +81,34 @@ export function ProfilePage() {
   const recent = [...transactions].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
 
   return (
-    <div className="flex h-full flex-col bg-[#FFF7F1]">
-      <div className="shrink-0 rounded-b-[32px] bg-gradient-to-b from-[#FF8A3C] to-[#FF4F1A] pb-10 pt-[max(1rem,env(safe-area-inset-top))]">
-        <div className="flex flex-col items-center">
-          <div className="rounded-full bg-white/25 p-1">
-            <div
-              className="flex h-[84px] w-[84px] items-center justify-center rounded-full text-[28px] font-extrabold text-white"
-              style={{ background: currentUser.avatarColor }}
-            >
-              {currentUser.initials}
-            </div>
+    <div className="flex h-full flex-col" style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)" }}>
+      <div className="shrink-0 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
+          {LVBP_EXPERIENCE_TITLE}
+        </p>
+        <div className="mt-4 flex items-center gap-4">
+          <div
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full text-[24px] font-extrabold"
+            style={{ background: currentUser.avatarColor, border: "2px solid var(--t-border)" }}
+          >
+            {currentUser.initials}
           </div>
-          <h2 className="mt-3 text-[24px] font-extrabold tracking-tight text-white">{currentUser.alias}</h2>
-          <p className="text-[13px] font-bold text-white/80">{currentUser.handle}</p>
+          <div className="min-w-0">
+            <h2 className="truncate text-[22px] font-extrabold leading-tight">{currentUser.alias}</h2>
+            <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>{currentUser.handle}</p>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-4">
-        <div className="relative z-10 -mt-6 mx-4 rounded-[26px] bg-white px-4 py-4 text-center shadow-[0_12px_28px_rgba(80,40,10,0.08)]">
-          <p className="text-[42px] font-extrabold leading-none tracking-tight tabular-nums">{formato(seasonPoints)}</p>
-          <p className="mt-1 text-[13px] font-bold text-[#A08B80]">puntos históricos de Juégate el Tobo</p>
-        </div>
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <ToboCard className="text-center">
+          <p className="text-[40px] font-extrabold leading-none tabular-nums">{formato(seasonPoints)}</p>
+          <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+            puntos históricos en {LVBP_EXPERIENCE_TITLE}
+          </p>
+        </ToboCard>
 
-        <div className="mt-3 px-4">
+        <div className="mt-3">
           <ToboCard>
             <CardHead icon={BarChart3} title={`Resumen · ${roundName}`} />
             <div className="grid grid-cols-2 gap-2">
@@ -124,64 +130,78 @@ export function ProfilePage() {
           </ToboCard>
         </div>
 
-        {/* MIS LIGAS */}
-        <div className="mt-5 px-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[14px] font-extrabold">Mis ligas</h3>
-            <button type="button" onClick={() => navigate("/tobo/ligas")} className="text-[12px] font-extrabold text-[#FF4F1A]">
-              Gestionar
-            </button>
-          </div>
+        <div className="mt-5 flex items-center justify-between px-1">
+          <h3 className="text-[14px] font-extrabold">Mis ligas</h3>
+          <button type="button" onClick={() => navigate("/tobo/ligas")} className="text-[12px] font-extrabold" style={{ color: "var(--t-accent)" }}>
+            Gestionar
+          </button>
         </div>
-        <div className="mt-2 flex flex-col gap-2 px-4">
+        <div className="mt-2 flex flex-col gap-2">
           {leagues.length === 0 && (
-            <p className="rounded-2xl bg-white px-4 py-4 text-[13px] font-semibold text-[#8D7366]">Aun no tienes ligas privadas.</p>
+            <p className="rounded-2xl px-4 py-4 text-[13px] font-semibold" style={{ backgroundColor: "var(--t-card)", color: "var(--t-muted)" }}>
+              Aun no tienes ligas privadas.
+            </p>
           )}
           {leagues.map((league) => (
             <button
               key={league.id}
               type="button"
               onClick={() => navigate(`/tobo/ligas/${league.id}`)}
-              className="rounded-2xl bg-white px-4 py-3 text-left"
+              className="rounded-2xl px-4 py-3 text-left"
+              style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}
             >
               <div className="flex items-center justify-between">
                 <p className="text-[14px] font-extrabold">{league.name}</p>
-                <span className="text-[12px] font-bold text-[#8D7366]">{league.memberCount} participantes</span>
+                <span className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>{league.memberCount} participantes</span>
               </div>
             </button>
           ))}
         </div>
 
-        {/* ACTIVIDAD */}
-        <div className="mt-5 px-5">
-          <h3 className="text-[14px] font-extrabold">Actividad reciente</h3>
-        </div>
-        <div className="mt-2 flex flex-col gap-2 px-4 pb-2">
+        <h3 className="mt-5 px-1 text-[14px] font-extrabold">Actividad reciente</h3>
+        <div className="mt-2 flex flex-col gap-2 pb-2">
           {recent.length === 0 && (
-            <p className="rounded-2xl bg-white px-4 py-4 text-[13px] font-semibold text-[#8D7366]">Todavia no hay movimientos de puntos.</p>
+            <p className="rounded-2xl px-4 py-4 text-[13px] font-semibold" style={{ backgroundColor: "var(--t-card)", color: "var(--t-muted)" }}>
+              Todavia no hay movimientos de puntos.
+            </p>
           )}
           {recent.map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between rounded-2xl bg-white px-3 py-3">
+            <div
+              key={tx.id}
+              className="flex items-center justify-between rounded-2xl px-3 py-3"
+              style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}
+            >
               <p className="text-[13px] font-extrabold">{movementLabel(tx)}</p>
-              <p className="text-[14px] font-extrabold text-[#C47B12]">+{formato(tx.points)}</p>
+              <p className="text-[14px] font-extrabold tabular-nums" style={{ color: "var(--t-accent)" }}>+{formato(tx.points)}</p>
             </div>
           ))}
         </div>
 
-        {/* SUPER ADMIN */}
         {isAdmin && (
-          <div className="mx-5 mt-5 rounded-[22px] bg-white px-4 py-4">
+          <ToboCard className="mt-5">
             <p className="text-[14px] font-extrabold">Super Admin</p>
-            <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Partidos, tascas, trivias, ciclos y demo.</p>
+            <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Partidos, locales, trivias, ciclos y demo.</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => navigate("/admin/partidos")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[12px] font-extrabold text-[#FF4F1A]">Partidos</button>
-              <button type="button" onClick={() => navigate("/admin/tascas")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[12px] font-extrabold text-[#FF4F1A]">Tascas</button>
-              <button type="button" onClick={() => navigate("/admin/trivias")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[12px] font-extrabold text-[#FF4F1A]">Trivias</button>
-              <button type="button" onClick={() => navigate("/admin/ciclos")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[12px] font-extrabold text-[#FF4F1A]">Ciclos</button>
-              <button type="button" onClick={() => navigate("/admin/ligas")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[12px] font-extrabold text-[#FF4F1A]">Ligas</button>
-              <button type="button" onClick={() => navigate("/admin/simulacion")} className="h-11 rounded-2xl bg-[#FFF1EA] text-[12px] font-extrabold text-[#FF4F1A]">Demo</button>
+              {[
+                ["Partidos", "/admin/partidos"],
+                ["Locales", "/admin/tascas"],
+                ["Trivias", "/admin/trivias"],
+                ["Ciclos", "/admin/ciclos"],
+                ["Ligas", "/admin/ligas"],
+                ["Demo", "/admin/simulacion"],
+              ].map(([label, to]) => (
+                <button
+                  key={to}
+                  type="button"
+                  onClick={() => navigate(to)}
+                  className="h-11 rounded-2xl text-[12px] font-extrabold"
+                  style={{ backgroundColor: "var(--t-tint)", color: "var(--t-accent)" }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-          </div>
+          </ToboCard>
         )}
 
         <button
@@ -190,11 +210,12 @@ export function ProfilePage() {
             replayLvbpOnboarding(currentUser.id);
             navigate("/tobo");
           }}
-          className="mx-5 mt-6 min-h-11 text-[14px] font-extrabold text-[#FF4F1A]"
+          className="mx-1 mt-6 min-h-11 text-[14px] font-extrabold"
+          style={{ color: "var(--t-accent)" }}
         >
           Ver introducción de nuevo
         </button>
-        <button type="button" onClick={logout} className="mx-5 mb-4 mt-3 text-[14px] font-extrabold text-[#E23B2F]">
+        <button type="button" onClick={logout} className="mx-1 mb-4 mt-3 text-[14px] font-extrabold text-[#E23B2F]">
           Cerrar sesion en este telefono
         </button>
       </div>
