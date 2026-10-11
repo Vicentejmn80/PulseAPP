@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, MapPin } from "lucide-react";
 import { TabBar } from "@/components/ui/TabBar";
+import { cyclePeriodLabel, pickActiveCycle } from "@/lib/toboHome";
 import { listCycles, listTascas, type Tasca, type ToboCycle } from "@/services/matchesApi";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 
@@ -180,7 +181,7 @@ export function TascasPage() {
     return () => { alive = false; };
   }, []);
 
-  const active = cycles.find((c) => c.status === "open") ?? cycles[0];
+  const active = pickActiveCycle(cycles);
   const activeTascas = tascas.filter((t) => t.active !== false);
   const withPrize = activeTascas.filter((t) => t.roundPrize && t.roundPrize !== "Por confirmar");
 
@@ -241,7 +242,7 @@ export function TascasPage() {
             🏆 Premio de la ronda
           </p>
           <p className="mt-0.5 text-[13px] font-semibold opacity-80">
-            {active ? `${active.name} · ${active.startsOn} al ${active.endsOn}` : "Temporada LVBP 2026-27"}
+            {active ? cyclePeriodLabel(active) : "Temporada LVBP 2026-27"}
           </p>
           <p className="mt-3 text-[13px] font-extrabold opacity-95">
             {TOBO_ROUND_PRIZE_SUBTITLE}

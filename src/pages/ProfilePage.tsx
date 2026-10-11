@@ -9,6 +9,7 @@ import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { myStats, type UserStats } from "@/services/analytics";
 import { usePulse } from "@/state/PulseContext";
 import type { PointsTransaction } from "@/types/pulse";
+import { replayLvbpOnboarding } from "@/components/tobo/ToboOnboarding";
 import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
 import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 
@@ -183,7 +184,17 @@ export function ProfilePage() {
           </div>
         )}
 
-        <button type="button" onClick={logout} className="mx-5 mb-4 mt-6 text-[14px] font-extrabold text-[#E23B2F]">
+        <button
+          type="button"
+          onClick={() => {
+            replayLvbpOnboarding(currentUser.id);
+            navigate("/tobo");
+          }}
+          className="mx-5 mt-6 min-h-11 text-[14px] font-extrabold text-[#FF4F1A]"
+        >
+          Ver introducción de nuevo
+        </button>
+        <button type="button" onClick={logout} className="mx-5 mb-4 mt-3 text-[14px] font-extrabold text-[#E23B2F]">
           Cerrar sesion en este telefono
         </button>
       </div>

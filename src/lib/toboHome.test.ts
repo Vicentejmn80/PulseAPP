@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BaseballMatch, ToboCycle } from "@/services/matchesApi";
-import { caracasDateKey, cycleForMatchStart, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleClosesLabel, cycleForMatchStart, cyclePeriodLabel, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
 
 function match(partial: Partial<BaseballMatch>): BaseballMatch {
   return {
@@ -32,6 +32,9 @@ const cycles: ToboCycle[] = [
 describe("tobo home", () => {
   it("elige la ronda que contiene el día", () => {
     expect(pickActiveCycle(cycles, "2026-10-14")?.id).toBe("ronda_1");
+    expect(pickActiveCycle(cycles, "2026-10-22")?.id).toBe("ronda_1");
+    expect(pickActiveCycle(cycles, "2026-10-23")?.id).toBe("ronda_2");
+    expect(pickActiveCycle(cycles, "2026-11-05")?.id).toBe("ronda_3");
   });
 
   it("si hoy cae antes de la temporada, muestra la próxima ronda", () => {
@@ -56,5 +59,14 @@ describe("tobo home", () => {
 
   it("normaliza el día en Caracas", () => {
     expect(caracasDateKey("2026-10-13T02:30:00.000Z")).toBe("2026-10-12");
+  });
+
+  it("etiqueta la ronda 1 del 12 al 22 de octubre y deja intactas las siguientes", () => {
+    expect(cyclePeriodLabel(cycles[0])).toBe("RONDA 1 · 12 OCT — 22 OCT");
+    expect(cycleClosesLabel(cycles[0].endsOn)).toBe("Cierra el 22 de octubre de 2026 · 23:59");
+    expect(cyclePeriodLabel(cycles[1])).toBe("RONDA 2 · 23 OCT — 29 OCT");
+    expect(cyclePeriodLabel(cycles[2])).toBe("RONDA 3 · 30 OCT — 5 NOV");
+    expect(cycles[1]).toMatchObject({ startsOn: "2026-10-23", endsOn: "2026-10-29" });
+    expect(cycles[2]).toMatchObject({ startsOn: "2026-10-30", endsOn: "2026-11-05" });
   });
 });

@@ -5,7 +5,7 @@ import { CardHead, GhostCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToPass, RANKING_TOP, shortAlias, showZoneEllipsis, ZONA_VECINOS } from "@/lib/rankingView";
-import { caracasDateKey, cycleContainingToday, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleContainingToday, cyclePeriodLabel, pickActiveCycle } from "@/lib/toboHome";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, loadCycleWindow, type ToboCycle } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
@@ -177,13 +177,13 @@ export function RankingPage() {
             </p>
             {!currentCycleId && tab !== "temporada" && (
               <p className="mt-2 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-                La próxima ronda todavía no empieza{upcoming ? ` (${upcoming.startsOn})` : ""}. Estos son tus puntos acumulados.
+                La próxima ronda todavía no empieza{upcoming ? ` (${cyclePeriodLabel(upcoming)})` : ""}. Estos son tus puntos acumulados.
               </p>
             )}
             {round && (
               <p className="mt-2 flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
                 <CalendarDays className="h-3.5 w-3.5" />
-                {round.startsOn} al {round.endsOn}
+                {cyclePeriodLabel(round)}
               </p>
             )}
           </ToboCard>
