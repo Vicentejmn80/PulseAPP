@@ -1,0 +1,1708 @@
+{
+  "receivedRows": 90,
+  "perFile": {
+    "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf": 30,
+    "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf": 30,
+    "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante (1).pdf": 30
+  },
+  "fileSha256": {
+    "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf": "0797b8d52fb47a3980b8e104615df8086e37ada622ae1d2460f8611e9a045cf7",
+    "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf": "530ae9019ff45917f90ba3618039c9be6d76aa4fe4a9edafa5dd8e2d04e2aab4",
+    "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante (1).pdf": "530ae9019ff45917f90ba3618039c9be6d76aa4fe4a9edafa5dd8e2d04e2aab4"
+  },
+  "incorporated": 60,
+  "exactDuplicatesRemoved": 30,
+  "semanticDuplicatesRemoved": 0,
+  "needsReview": 1,
+  "questions": [
+    {
+      "id": "trv_ini_p001",
+      "code": "P001",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿En qué ciudad está el estadio Luis Aparicio “El Grande”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Maracay"
+        },
+        {
+          "id": "b",
+          "label": "Barquisimeto"
+        },
+        {
+          "id": "c",
+          "label": "Valencia"
+        },
+        {
+          "id": "d",
+          "label": "Maracaibo"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Estadios",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p002",
+      "code": "P002",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuál es la ciudad sede de los Tigres de Aragua?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Caracas"
+        },
+        {
+          "id": "b",
+          "label": "Maracay"
+        },
+        {
+          "id": "c",
+          "label": "Puerto La Cruz"
+        },
+        {
+          "id": "d",
+          "label": "Valencia"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Equipos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p003",
+      "code": "P003",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo de la LVBP representa a la isla de Margarita?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Bravos"
+        },
+        {
+          "id": "b",
+          "label": "Tiburones"
+        },
+        {
+          "id": "c",
+          "label": "Navegantes"
+        },
+        {
+          "id": "d",
+          "label": "Caribes"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Equipos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p004",
+      "code": "P004",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿En qué ciudad tiene su sede Cardenales de Lara?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Maracay"
+        },
+        {
+          "id": "b",
+          "label": "Barquisimeto"
+        },
+        {
+          "id": "c",
+          "label": "Maracaibo"
+        },
+        {
+          "id": "d",
+          "label": "Acarigua"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Equipos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p005",
+      "code": "P005",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿En qué ciudad está el estadio Alfonso “Chico” Carrasquel?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Puerto La Cruz"
+        },
+        {
+          "id": "b",
+          "label": "Maturín"
+        },
+        {
+          "id": "c",
+          "label": "Cumaná"
+        },
+        {
+          "id": "d",
+          "label": "Ciudad Bolívar"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Estadios",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p006",
+      "code": "P006",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué significan las siglas LVBP?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Liga Venezolana de Béisbol Pelota"
+        },
+        {
+          "id": "b",
+          "label": "y Liga Venezolana de Béisbol Provincial"
+        },
+        {
+          "id": "c",
+          "label": "Liga Venezolana de Béisbol Profesional"
+        },
+        {
+          "id": "d",
+          "label": "Liga de Verano de Béisbol Profesional"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Liga",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p007",
+      "code": "P007",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué venezolano es conocido como “El Gato”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "David Concepción"
+        },
+        {
+          "id": "b",
+          "label": "Bob Abreu"
+        },
+        {
+          "id": "c",
+          "label": "Andrés Galarraga"
+        },
+        {
+          "id": "d",
+          "label": "Antonio Armas"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p008",
+      "code": "P008",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué lanzador venezolano es conocido como “El Rey”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Freddy García"
+        },
+        {
+          "id": "b",
+          "label": "Johan Santana"
+        },
+        {
+          "id": "c",
+          "label": "Carlos Zambrano"
+        },
+        {
+          "id": "d",
+          "label": "Félix Hernández"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p009",
+      "code": "P009",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuál es la posición por la que se reconoce principalmente a Salvador Pérez?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lanzador"
+        },
+        {
+          "id": "b",
+          "label": "Campocorto"
+        },
+        {
+          "id": "c",
+          "label": "Receptor"
+        },
+        {
+          "id": "d",
+          "label": "Jardinero central"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Jugadores",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p010",
+      "code": "P010",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Quién fue el primer venezolano exaltado a Cooperstown?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Antonio Armas"
+        },
+        {
+          "id": "b",
+          "label": "David Concepción"
+        },
+        {
+          "id": "c",
+          "label": "Andrés Galarraga"
+        },
+        {
+          "id": "d",
+          "label": "Luis Aparicio"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Venezolanos en MLB",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p011",
+      "code": "P011",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo de la LVBP lleva el nombre de la capital venezolana?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Leones del Caracas"
+        },
+        {
+          "id": "b",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "c",
+          "label": "Bravos de Margarita"
+        },
+        {
+          "id": "d",
+          "label": "Tigres de Aragua"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Equipos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p012",
+      "code": "P012",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué ciudad se convirtió en sede de Magallanes en 1969?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Valencia"
+        },
+        {
+          "id": "b",
+          "label": "Maracay"
+        },
+        {
+          "id": "c",
+          "label": "Barquisimeto"
+        },
+        {
+          "id": "d",
+          "label": "Maracaibo"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Equipos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p013",
+      "code": "P013",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo de la LVBP representa a La Guaira?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Águilas"
+        },
+        {
+          "id": "b",
+          "label": "Tiburones"
+        },
+        {
+          "id": "c",
+          "label": "Tigres"
+        },
+        {
+          "id": "d",
+          "label": "Cardenales"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Equipos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p014",
+      "code": "P014",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿A qué equipo se le llama “los pájaros rojos”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "b",
+          "label": "Caribes de Anzoátegui"
+        },
+        {
+          "id": "c",
+          "label": "Tiburones de La Guaira"
+        },
+        {
+          "id": "d",
+          "label": "Águilas del Zulia"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p015",
+      "code": "P015",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo de la LVBP es conocido como “La Tribu”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Navegantes del Magallanes"
+        },
+        {
+          "id": "b",
+          "label": "Caribes de Anzoátegui"
+        },
+        {
+          "id": "c",
+          "label": "Tigres de Aragua"
+        },
+        {
+          "id": "d",
+          "label": "Bravos de Margarita"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p016",
+      "code": "P016",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo de la LVBP es conocido como “los bengalíes”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tiburones de La Guaira"
+        },
+        {
+          "id": "b",
+          "label": "Tigres de Aragua"
+        },
+        {
+          "id": "c",
+          "label": "Águilas del Zulia"
+        },
+        {
+          "id": "d",
+          "label": "Leones del Caracas"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p017",
+      "code": "P017",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿A qué equipo de la LVBP se le llama “los melenudos”?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Caribes de Anzoátegui"
+        },
+        {
+          "id": "b",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "c",
+          "label": "Navegantes del Magallanes"
+        },
+        {
+          "id": "d",
+          "label": "Leones del Caracas"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p018",
+      "code": "P018",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Con qué equipo venezolano comenzó Miguel Cabrera su carrera profesional?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tigres de Aragua"
+        },
+        {
+          "id": "b",
+          "label": "Águilas del Zulia"
+        },
+        {
+          "id": "c",
+          "label": "Leones del Caracas"
+        },
+        {
+          "id": "d",
+          "label": "Cardenales de Lara"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Jugadores",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p019",
+      "code": "P019",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Con qué equipo de la LVBP se identifica la trayectoria de David Concepción?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tigres de Aragua"
+        },
+        {
+          "id": "b",
+          "label": "Caribes de Anzoátegui"
+        },
+        {
+          "id": "c",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "d",
+          "label": "Bravos de Margarita"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Jugadores",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p020",
+      "code": "P020",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Con qué club de la LVBP jugó Robert Pérez sus 27 temporadas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Leones del Caracas"
+        },
+        {
+          "id": "b",
+          "label": "Águilas del Zulia"
+        },
+        {
+          "id": "c",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "d",
+          "label": "Tigres de Aragua"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Jugadores",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p021",
+      "code": "P021",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántos outs terminan el turno ofensivo de un equipo en una entrada?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Dos"
+        },
+        {
+          "id": "b",
+          "label": "Cinco"
+        },
+        {
+          "id": "c",
+          "label": "Tres"
+        },
+        {
+          "id": "d",
+          "label": "Cuatro"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p022",
+      "code": "P022",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántas bolas en la cuenta conceden una base por bolas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tres"
+        },
+        {
+          "id": "b",
+          "label": "Cinco"
+        },
+        {
+          "id": "c",
+          "label": "Dos"
+        },
+        {
+          "id": "d",
+          "label": "Cuatro"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p023",
+      "code": "P023",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántos jugadores coloca un equipo a la defensiva?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Nueve"
+        },
+        {
+          "id": "b",
+          "label": "Once"
+        },
+        {
+          "id": "c",
+          "label": "Diez"
+        },
+        {
+          "id": "d",
+          "label": "Ocho"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p024",
+      "code": "P024",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántas entradas tiene un juego estándar, sin acortamientos ni extrainnings?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Siete"
+        },
+        {
+          "id": "b",
+          "label": "Nueve"
+        },
+        {
+          "id": "c",
+          "label": "Diez"
+        },
+        {
+          "id": "d",
+          "label": "Ocho"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p025",
+      "code": "P025",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántas bases hay en el diamante, contando el home?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tres"
+        },
+        {
+          "id": "b",
+          "label": "Cinco"
+        },
+        {
+          "id": "c",
+          "label": "Seis"
+        },
+        {
+          "id": "d",
+          "label": "Cuatro"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p026",
+      "code": "P026",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo batea en la parte alta de una entrada?",
+      "options": [
+        {
+          "id": "a",
+          "label": "El que va ganando"
+        },
+        {
+          "id": "b",
+          "label": "El local"
+        },
+        {
+          "id": "c",
+          "label": "El visitante"
+        },
+        {
+          "id": "d",
+          "label": "El que va perdiendo"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p027",
+      "code": "P027",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "Un defensor atrapa legalmente un elevado antes del bote. ¿Qué ocurre con el bateador?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Recibe una base"
+        },
+        {
+          "id": "b",
+          "label": "Es out"
+        },
+        {
+          "id": "c",
+          "label": "Batea de nuevo"
+        },
+        {
+          "id": "d",
+          "label": "Anota una carrera"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p028",
+      "code": "P028",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Qué significa tener las bases llenas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Hay dos corredores en home"
+        },
+        {
+          "id": "b",
+          "label": "Hay tres outs"
+        },
+        {
+          "id": "c",
+          "label": "Hay corredores en primera, segunda y tercera"
+        },
+        {
+          "id": "d",
+          "label": "Todos los defensores están en una base"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p029",
+      "code": "P029",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántas carreras produce un grand slam válido?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Una"
+        },
+        {
+          "id": "b",
+          "label": "Tres"
+        },
+        {
+          "id": "c",
+          "label": "Dos"
+        },
+        {
+          "id": "d",
+          "label": "Cuatro"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p030",
+      "code": "P030",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_01_90 - Principiante.pdf",
+      "prompt": "¿Cuántos outs consigue la defensa en un doble play?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cuatro"
+        },
+        {
+          "id": "b",
+          "label": "Dos"
+        },
+        {
+          "id": "c",
+          "label": "Tres"
+        },
+        {
+          "id": "d",
+          "label": "Uno"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p061",
+      "code": "P061",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué posición destacó Jesús Marcano Trillo?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Receptor"
+        },
+        {
+          "id": "b",
+          "label": "Jardinero central"
+        },
+        {
+          "id": "c",
+          "label": "Lanzador"
+        },
+        {
+          "id": "d",
+          "label": "Segunda base"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Figuras venezolanas",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p062",
+      "code": "P062",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué localidad de Anzoátegui nació Antonio Armas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "El Tigre"
+        },
+        {
+          "id": "b",
+          "label": "Puerto Píritu"
+        },
+        {
+          "id": "c",
+          "label": "Anaco"
+        },
+        {
+          "id": "d",
+          "label": "Cantaura"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Geografía del béisbol",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p063",
+      "code": "P063",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué localidad mirandina nació Oswaldo Guillén?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ocumare del Tuy"
+        },
+        {
+          "id": "b",
+          "label": "Guarenas"
+        },
+        {
+          "id": "c",
+          "label": "Higuerote"
+        },
+        {
+          "id": "d",
+          "label": "Los Teques"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Geografía del béisbol",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p064",
+      "code": "P064",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Cuál era el nombre de «Chico» Carrasquel?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Alfredo"
+        },
+        {
+          "id": "b",
+          "label": "Alfonso"
+        },
+        {
+          "id": "c",
+          "label": "Antonio"
+        },
+        {
+          "id": "d",
+          "label": "Alejandro"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Figuras venezolanas",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p065",
+      "code": "P065",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué posición ocupaba Baudilio Díaz?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Receptor"
+        },
+        {
+          "id": "b",
+          "label": "Jardinero central"
+        },
+        {
+          "id": "c",
+          "label": "Campocorto"
+        },
+        {
+          "id": "d",
+          "label": "Segunda base"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Figuras venezolanas",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p066",
+      "code": "P066",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "En el juego venezolano de «chapitas», ¿qué se batea?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Una bola de papel"
+        },
+        {
+          "id": "b",
+          "label": "Una pelota de tenis"
+        },
+        {
+          "id": "c",
+          "label": "Una tapa metálica de botella"
+        },
+        {
+          "id": "d",
+          "label": "Una moneda"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Cultura beisbolera",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p067",
+      "code": "P067",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué posición defensiva destacó Omar Vizquel?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Primera base"
+        },
+        {
+          "id": "b",
+          "label": "Lanzador"
+        },
+        {
+          "id": "c",
+          "label": "Campocorto"
+        },
+        {
+          "id": "d",
+          "label": "Receptor"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Figuras venezolanas",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p068",
+      "code": "P068",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Con qué equipo debutó Edgardo Alfonzo en la LVBP?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tiburones de La Guaira"
+        },
+        {
+          "id": "b",
+          "label": "Leones del Caracas"
+        },
+        {
+          "id": "c",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "d",
+          "label": "Navegantes del Magallanes"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Trayectorias LVBP",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p069",
+      "code": "P069",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué equipo destacó Melvin Mora durante la década de 2000?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Padres de San Diego"
+        },
+        {
+          "id": "b",
+          "label": "Cachorros de Chicago"
+        },
+        {
+          "id": "c",
+          "label": "Orioles de Baltimore"
+        },
+        {
+          "id": "d",
+          "label": "Reales de Kansas City"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Venezolanos en MLB",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p070",
+      "code": "P070",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿A qué equipo de Detroit perteneció Carlos Guillén?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Marineros"
+        },
+        {
+          "id": "b",
+          "label": "Mellizos"
+        },
+        {
+          "id": "c",
+          "label": "Piratas"
+        },
+        {
+          "id": "d",
+          "label": "Tigres"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Venezolanos en MLB",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p071",
+      "code": "P071",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Quién es «Balbineitor» en la LVBP?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Balbino Fuenmayor"
+        },
+        {
+          "id": "b",
+          "label": "Renato Núñez"
+        },
+        {
+          "id": "c",
+          "label": "Jesús Aguilar"
+        },
+        {
+          "id": "d",
+          "label": "Luis Jiménez"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p072",
+      "code": "P072",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué lanzador venezolano es conocido como «El Torpedo»?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Freddy García"
+        },
+        {
+          "id": "b",
+          "label": "Félix Doubront"
+        },
+        {
+          "id": "c",
+          "label": "Ramón Ramírez"
+        },
+        {
+          "id": "d",
+          "label": "Ricardo Pinto"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p073",
+      "code": "P073",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿A qué jugador de Cardenales llaman «Caripito»?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Luis Sojo"
+        },
+        {
+          "id": "b",
+          "label": "Ildemaro Vargas"
+        },
+        {
+          "id": "c",
+          "label": "Robert Pérez"
+        },
+        {
+          "id": "d",
+          "label": "César Izturis"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p074",
+      "code": "P074",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué jardinero venezolano usa el apodo «The Hunter»?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Gorkys Hernández"
+        },
+        {
+          "id": "b",
+          "label": "Endy Chávez"
+        },
+        {
+          "id": "c",
+          "label": "Ezequiel Carrera"
+        },
+        {
+          "id": "d",
+          "label": "Gregor Blanco"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p075",
+      "code": "P075",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué zona defensiva jugaba principalmente Antonio Armas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "La receptoría"
+        },
+        {
+          "id": "b",
+          "label": "Los jardines"
+        },
+        {
+          "id": "c",
+          "label": "El campocorto"
+        },
+        {
+          "id": "d",
+          "label": "La lomita"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Figuras venezolanas",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p076",
+      "code": "P076",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué venezolano es conocido como «El Indio» Trillo?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Manny Ramírez"
+        },
+        {
+          "id": "b",
+          "label": "Jesús Marcano Trillo"
+        },
+        {
+          "id": "c",
+          "label": "Manny Machado"
+        },
+        {
+          "id": "d",
+          "label": "Manny Sanguillén"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p077",
+      "code": "P077",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Con qué equipo de la LVBP jugó Baudilio Díaz?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cardenales de Lara"
+        },
+        {
+          "id": "b",
+          "label": "Bravos de Margarita"
+        },
+        {
+          "id": "c",
+          "label": "Caribes de Anzoátegui"
+        },
+        {
+          "id": "d",
+          "label": "Leones del Caracas"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Trayectorias LVBP",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p078",
+      "code": "P078",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Con qué equipo ganó Luis Sojo las Series Mundiales de 1996, 1998, 1999 y 2000?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Yankees de Nueva York"
+        },
+        {
+          "id": "b",
+          "label": "Angelinos de California"
+        },
+        {
+          "id": "c",
+          "label": "Mets de Nueva York"
+        },
+        {
+          "id": "d",
+          "label": "Marineros de Seattle"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Venezolanos en MLB",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p079",
+      "code": "P079",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué equipo venezolano tuvo a Omar Vizquel como campocorto?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Leones del Caracas"
+        },
+        {
+          "id": "b",
+          "label": "Caribes de Anzoátegui"
+        },
+        {
+          "id": "c",
+          "label": "Bravos de Margarita"
+        },
+        {
+          "id": "d",
+          "label": "Tigres de Aragua"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Trayectorias LVBP",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p080",
+      "code": "P080",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué venezolano recibió el apodo «Fonzie» en los Mets?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Wilmer Flores"
+        },
+        {
+          "id": "b",
+          "label": "Francisco Álvarez"
+        },
+        {
+          "id": "c",
+          "label": "Edgardo Alfonzo"
+        },
+        {
+          "id": "d",
+          "label": "Luis Guillorme"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Apodos",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p081",
+      "code": "P081",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué pelotero venezolano nació en Agua Negra?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Magglio Ordóñez"
+        },
+        {
+          "id": "b",
+          "label": "Bob Abreu"
+        },
+        {
+          "id": "c",
+          "label": "Melvin Mora"
+        },
+        {
+          "id": "d",
+          "label": "Carlos Guillén"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Geografía del béisbol",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p082",
+      "code": "P082",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué función cumplía Freddy García en el terreno?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Primera base"
+        },
+        {
+          "id": "b",
+          "label": "Jardinero derecho"
+        },
+        {
+          "id": "c",
+          "label": "Receptor"
+        },
+        {
+          "id": "d",
+          "label": "Lanzador"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Figuras venezolanas",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p083",
+      "code": "P083",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿En qué localidad de Monagas nació Jesús Marcano Trillo?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Caripito"
+        },
+        {
+          "id": "b",
+          "label": "Temblador"
+        },
+        {
+          "id": "c",
+          "label": "Caripe"
+        },
+        {
+          "id": "d",
+          "label": "Punta de Mata"
+        }
+      ],
+      "correctOption": "a",
+      "category": "Geografía del béisbol",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p084",
+      "code": "P084",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué equipos protagonizan el clásico Caracas–Magallanes?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tiburones y Tigres"
+        },
+        {
+          "id": "b",
+          "label": "Leones y Navegantes"
+        },
+        {
+          "id": "c",
+          "label": "Águilas y Caribes"
+        },
+        {
+          "id": "d",
+          "label": "Cardenales y Bravos"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Cultura LVBP",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p085",
+      "code": "P085",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Cuántos strikes completan un ponche?",
+      "options": [
+        {
+          "id": "a",
+          "label": "2"
+        },
+        {
+          "id": "b",
+          "label": "4"
+        },
+        {
+          "id": "c",
+          "label": "5"
+        },
+        {
+          "id": "d",
+          "label": "3"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p086",
+      "code": "P086",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Cuántos lados tiene el home plate?",
+      "options": [
+        {
+          "id": "a",
+          "label": "4"
+        },
+        {
+          "id": "b",
+          "label": "3"
+        },
+        {
+          "id": "c",
+          "label": "5"
+        },
+        {
+          "id": "d",
+          "label": "6"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p087",
+      "code": "P087",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Cómo se llama una jugada defensiva que consigue tres outs?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Doble play"
+        },
+        {
+          "id": "b",
+          "label": "Triple play"
+        },
+        {
+          "id": "c",
+          "label": "Toque de bola"
+        },
+        {
+          "id": "d",
+          "label": "Elevado de sacrificio"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p088",
+      "code": "P088",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Cómo se llama la zona donde calientan los relevistas?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cajón de bateo"
+        },
+        {
+          "id": "b",
+          "label": "Dugout"
+        },
+        {
+          "id": "c",
+          "label": "Bullpen"
+        },
+        {
+          "id": "d",
+          "label": "Círculo de espera"
+        }
+      ],
+      "correctOption": "c",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p089",
+      "code": "P089",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Qué nombre recibe el bateo suave que se hace sosteniendo el bate sin un swing completo?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Jonrón"
+        },
+        {
+          "id": "b",
+          "label": "Elevado profundo"
+        },
+        {
+          "id": "c",
+          "label": "Línea"
+        },
+        {
+          "id": "d",
+          "label": "Toque de bola"
+        }
+      ],
+      "correctOption": "d",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    },
+    {
+      "id": "trv_ini_p090",
+      "code": "P090",
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "prompt": "¿Cómo se llama al sustituto que entra a correr por otro jugador?",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lanzador abridor"
+        },
+        {
+          "id": "b",
+          "label": "Corredor emergente"
+        },
+        {
+          "id": "c",
+          "label": "Receptor suplente"
+        },
+        {
+          "id": "d",
+          "label": "Bateador designado"
+        }
+      ],
+      "correctOption": "b",
+      "category": "Conceptos del juego",
+      "difficulty": "easy",
+      "points": 2
+    }
+  ],
+  "review": [
+    {
+      "source": "RUSHER_Biblioteca_Trivia_Lote_03_90 - Principiante.pdf",
+      "code": "P072",
+      "prompt": "¿Qué lanzador venezolano es conocido como «El Torpedo»?",
+      "reason": "parecida a P008 (0.94) con otra respuesta; se conservan ambas"
+    }
+  ],
+  "semanticRemoved": []
+}

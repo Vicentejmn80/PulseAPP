@@ -42,7 +42,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
     label: "Iniciado",
     sublabel: "Fácil",
     desc: "Reglas básicas y equipos de la LVBP. El punto de partida.",
-    pts: "+5 pts por pregunta",
+    pts: "+2 pts por acierto",
     color: "#22C55E",
   },
   intermediate: {
@@ -50,7 +50,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
     label: "Intermedio",
     sublabel: "Medio",
     desc: "Jugadores venezolanos y Grandes Ligas. Un reto real.",
-    pts: "+5 pts por acierto",
+    pts: "+4 pts por acierto",
     color: "#60A5FA",
   },
   advanced: {
@@ -58,7 +58,7 @@ const LEVELS: Record<TriviaLevel, LevelMeta> = {
     label: "Avanzado",
     sublabel: "Difícil",
     desc: "Historia, estadísticas y récords. Solo los que saben.",
-    pts: "+5 pts por acierto",
+    pts: "+6 pts por acierto",
     color: "#C084FC",
   },
 };

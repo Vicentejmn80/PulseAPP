@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const BANNER_SRC = "/banners/garrison-aliados.jpg";
+const BANNER_SRC = "/rusher-locales-afiliados.png";
 
 const BANNER_COPY =
   "Nuevos aliados. Locales afiliados. Juega, escanea el QR y gana beneficios en los lugares que ya conoces. Garrison Barber Society. Beneficio en tu primera visita escaneando el QR en la barbería. Pronostica, escanea y gana.";
@@ -35,8 +35,8 @@ export function FounderBanner() {
       <img
         src={BANNER_SRC}
         alt=""
-        width={1080}
-        height={540}
+        width={768}
+        height={384}
         draggable={false}
         className="block h-auto w-full max-w-full"
         onError={() => setImageReady(false)}

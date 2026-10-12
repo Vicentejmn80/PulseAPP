@@ -31,7 +31,7 @@ import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
 import { listCycles, listMatches, loadCycleBoard, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
-import { FounderBanner } from "@/components/tobo/FounderBanner";
+import { triviaPointsForDifficulty } from "@/lib/triviaPoints";
 import { formatCooldown, remainingMs, serverSkewMs, triviaStatus, type TriviaLevel, type TriviaLevelState } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
 import { listMyLeagues } from "@/services/leaguesApi";
@@ -262,7 +262,7 @@ export function HomePage() {
         ? `Estás a ${formato(gap)} puntos del puesto #${mine.position - 1}.`
         : "Ver ranking";
 
-  const triviaMax = trivia.reduce((sum, row) => sum + (row.status === "available" ? row.questionCount * 5 : 0), 0);
+  const triviaMax = trivia.reduce((sum, row) => sum + (row.status === "available" ? row.questionCount * triviaPointsForDifficulty(row.level) : 0), 0);
   const triviaAnswered = trivia.reduce((sum, row) => sum + row.answeredCount, 0);
   const triviaCount = trivia.reduce((sum, row) => sum + row.questionCount, 0);
   const triviaPending = trivia.some((row) => row.status === "available" || row.status === "in_progress");
@@ -405,7 +405,7 @@ export function HomePage() {
                       <p className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
                         {!state || state.questionCount === 0
                           ? "Sin preguntas"
-                          : `${state.questionCount} preguntas · +5 PT por acierto`}
+                          : `${state.questionCount} preguntas · +${triviaPointsForDifficulty(row.level)} PT por acierto`}
                       </p>
                     </div>
                     <p className="text-[16px] font-extrabold tabular-nums">

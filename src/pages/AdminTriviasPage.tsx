@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { storedAdminKey } from "@/lib/adminKey";
+import { triviaPointsForDifficulty } from "@/lib/triviaPoints";
 import { listTriviaAdmin, saveTriviaAdmin, setTriviaStatusAdmin, type TriviaAdminQuestion } from "@/services/triviaApi";
 
 type Tab = "lista" | "nueva";
@@ -29,7 +30,7 @@ export function AdminTriviasPage() {
     difficulty: "medium",
     status: "draft",
     publishDate: new Date().toISOString().slice(0, 10),
-    points: 5,
+    points: triviaPointsForDifficulty("medium"),
   });
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export function AdminTriviasPage() {
         difficulty: editing.difficulty || "medium",
         status: editing.status || "draft",
         publishDate: editing.publishDate || null,
-        points: editing.points || 5,
+        points: triviaPointsForDifficulty(editing.difficulty || "medium"),
       });
       setSuccess("Trivia guardada.");
       setTab("lista");
@@ -103,7 +104,7 @@ export function AdminTriviasPage() {
         difficulty: "medium",
         status: "draft",
         publishDate: new Date().toISOString().slice(0, 10),
-        points: 5,
+        points: triviaPointsForDifficulty("medium"),
       });
       await load();
     } catch (reason: unknown) {
@@ -262,7 +263,10 @@ export function AdminTriviasPage() {
               </select>
               <select
                 value={editing.difficulty}
-                onChange={(e) => setEditing((p) => ({ ...p, difficulty: e.target.value }))}
+                onChange={(e) => {
+                  const difficulty = e.target.value;
+                  setEditing((p) => ({ ...p, difficulty, points: triviaPointsForDifficulty(difficulty) }));
+                }}
                 className="h-12 rounded-2xl bg-[#FFF7F1] px-3 text-[14px] font-extrabold outline-none"
               >
                 <option value="easy">Facil</option>
@@ -279,9 +283,9 @@ export function AdminTriviasPage() {
               />
               <input
                 type="number"
-                value={editing.points}
-                onChange={(e) => setEditing((p) => ({ ...p, points: Number(e.target.value) }))}
-                placeholder="Puntos"
+                readOnly
+                value={triviaPointsForDifficulty(editing.difficulty || "medium")}
+                aria-label="Puntos por acierto"
                 className="h-12 rounded-2xl bg-[#FFF7F1] px-3 text-[14px] font-extrabold outline-none"
               />
             </div>
