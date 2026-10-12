@@ -19,8 +19,8 @@ export function FounderBanner() {
       type="button"
       onClick={() => navigate("/tobo/tascas")}
       aria-label={`${BANNER_COPY} Ver más.`}
-      className="block w-full overflow-hidden rounded-[20px] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF00]"
-      style={{ border: "1px solid #2A2F33", backgroundColor: "#0B0D0F" }}
+      className="relative block w-full shrink-0 overflow-hidden rounded-[20px] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFFF00]"
+      style={{ aspectRatio: "2 / 1", border: "1px solid #2A2F33", backgroundColor: "#0B0D0F" }}
     >
       {failed ? (
         <span className="block px-5 py-6">
@@ -39,12 +39,11 @@ export function FounderBanner() {
         <img
           src={BANNER_SRC}
           alt={BANNER_COPY}
-          width={768}
-          height={384}
+          width={1024}
+          height={512}
           draggable={false}
           decoding="async"
-          className="block h-auto w-full max-w-full object-contain"
-          style={{ aspectRatio: "2 / 1" }}
+          className="absolute inset-0 h-full w-full object-contain"
           onError={() => {
             console.error("No se pudo cargar el banner de aliados", BANNER_SRC);
             setFailed(true);
