@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<defs>
+<radialGradient id="bg" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#243028"/><stop offset="1" stop-color="#0B0D0F"/></radialGradient>
+<linearGradient id="lime" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3FF9A"/><stop offset="1" stop-color="#B6E000"/></linearGradient>
+<linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F7F2"/><stop offset="1" stop-color="#9AA39A"/></linearGradient>
+</defs>
+<circle cx="64" cy="64" r="62" fill="url(#bg)" stroke="#CFFF00" stroke-width="4"/>
+<path d="M38 72c0-20 12-34 26-34s26 14 26 34-10 30-26 30-26-10-26-30z" fill="#F0A202"/><path d="M44 58h8l-2 16h-4zm28 0h8l-2 16h-6z" fill="#0B0D0F"/><circle cx="54" cy="70" r="3" fill="#0B0D0F"/><circle cx="74" cy="70" r="3" fill="#0B0D0F"/><path d="M64 74l4 6h-8z" fill="#0B0D0F"/>
+</svg>

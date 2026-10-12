@@ -255,6 +255,14 @@ export async function registerWithPin(phone: string, fullName: string, alias: st
   return asSnapshot(result, token);
 }
 
+export async function saveAvatar(avatarId: string) {
+  const result = await callRpc<{ ok?: boolean; error?: string }>("pulse_set_avatar", {
+    p_token: readSessionToken(),
+    p_avatar_id: avatarId,
+  });
+  if (!result?.ok) throw new Error(result?.error || "No se pudo guardar el avatar.");
+}
+
 export async function loginWithPin(phone: string, pin: string) {
   const result = await postAuth("/api/pulse", { action: "login-account", phone, pin });
   const token = result.token ?? "";

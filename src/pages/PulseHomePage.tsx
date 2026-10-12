@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Avatar } from "@/components/ui/Avatar";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
 import { RusherMark } from "@/components/ui/RusherMark";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
@@ -37,11 +38,11 @@ export function PulseHomePage() {
           <button
             type="button"
             onClick={() => navigate("/perfil")}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-extrabold text-[#0B0D0F]"
+            className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full"
             style={{ backgroundColor: "var(--p-accent)" }}
             aria-label="Perfil"
           >
-            {currentUser.initials?.slice(0, 1) || "R"}
+            <Avatar initials={currentUser.initials?.slice(0, 1) || "R"} bg={currentUser.avatarColor ?? "#CFFF00"} avatarId={currentUser.avatarId} size={36} />
           </button>
         </div>
       </nav>

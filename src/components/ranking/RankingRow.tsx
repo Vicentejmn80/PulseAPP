@@ -1,8 +1,11 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { formato } from "@/lib/format";
+import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
 
 export function RankingRow({ entry, subtitle }: { entry: LeaderboardEntry; subtitle?: string }) {
+  const { currentUser } = usePulse();
+  const avatarId = entry.isCurrentUser ? entry.user.avatarId || currentUser.avatarId : entry.user.avatarId;
   return (
     <div
       className={`flex items-center gap-3 rounded-2xl px-3 py-3 ${
@@ -12,7 +15,7 @@ export function RankingRow({ entry, subtitle }: { entry: LeaderboardEntry; subti
       <span className={`w-6 text-center text-[16px] font-extrabold ${entry.position === 1 ? "text-[#E0A106]" : "text-[#B6A297]"}`}>
         {entry.position}
       </span>
-      <Avatar initials={entry.user.initials} bg={entry.user.avatarColor} />
+      <Avatar initials={entry.user.initials} bg={entry.user.avatarColor} avatarId={avatarId} />
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 font-extrabold">
           {entry.user.alias}

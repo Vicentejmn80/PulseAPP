@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BarChart3 } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { AvatarPicker } from "@/components/tobo/AvatarPicker";
 import { TabBar } from "@/components/ui/TabBar";
 import { CardHead, StatLine, ToboCard } from "@/components/tobo/surface";
 import { replayLvbpOnboarding } from "@/components/tobo/ToboOnboarding";
@@ -87,12 +89,7 @@ export function ProfilePage() {
           {LVBP_EXPERIENCE_TITLE}
         </p>
         <div className="mt-4 flex items-center gap-4">
-          <div
-            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full text-[24px] font-extrabold"
-            style={{ background: currentUser.avatarColor, border: "2px solid var(--t-border)" }}
-          >
-            {currentUser.initials}
-          </div>
+          <Avatar initials={currentUser.initials} bg={currentUser.avatarColor} avatarId={currentUser.avatarId} size={72} />
           <div className="min-w-0">
             <h2 className="truncate text-[22px] font-extrabold leading-tight">{currentUser.alias}</h2>
             <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>{currentUser.handle}</p>
@@ -129,6 +126,8 @@ export function ProfilePage() {
             </div>
           </ToboCard>
         </div>
+
+        <AvatarPicker />
 
         <div className="mt-5 flex items-center justify-between px-1">
           <h3 className="text-[14px] font-extrabold">Mis ligas</h3>

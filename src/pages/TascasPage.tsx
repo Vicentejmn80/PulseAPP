@@ -72,9 +72,17 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
         {/* Prize */}
         <div className="mb-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "var(--t-tint)" }}>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--t-accent)" }}>
-            🏆 Premio de la semana
+            {tasca.id === "venue-garrison" ? "Beneficio" : "🏆 Premio de la semana"}
           </p>
           <p className="mt-0.5 text-[16px] font-extrabold">{tasca.roundPrize || "Por confirmar"}</p>
+          {tasca.description && (
+            <p className="mt-1 text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>{tasca.description}</p>
+          )}
+          {tasca.id === "venue-garrison" && (
+            <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+              El canje por QR todavía no está configurado.
+            </p>
+          )}
         </div>
 
         {/* Highlights chips */}
@@ -144,7 +152,7 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
                 className="flex h-11 items-center justify-center gap-1.5 rounded-2xl text-[13px] font-extrabold transition-opacity active:opacity-80"
                 style={{ backgroundColor: "var(--t-border)", color: "var(--t-text)" }}
               >
-                Ver tasca →
+                {tasca.id === "venue-garrison" ? "Consultar beneficio" : "Ver tasca →"}
               </button>
             ) : (
               <span

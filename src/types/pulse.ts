@@ -352,6 +352,7 @@ export interface UserProfile {
   handle: string;
   initials: string;
   avatarColor: string;
+  avatarId?: string | null;
   phone?: string;
   accessCode?: string;
   city?: string;

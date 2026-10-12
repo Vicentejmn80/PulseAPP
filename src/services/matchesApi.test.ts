@@ -84,14 +84,21 @@ describe("tascas públicas del MVP", () => {
     imageUrl: "foto.png",
   };
 
-  it("deja visible únicamente la ficha Europea Beethoven; excluye La Europea y demos", () => {
+  it("deja visibles a Garrison y a Europea Beethoven; excluye La Europea y demos", () => {
+    const garrison = {
+      id: "venue-garrison",
+      name: "Garrison Barber Society",
+      slug: "garrison-barber-society",
+      active: true,
+    };
     const result = visibleMvpTascas([
       target,
+      garrison,
       { id: "venue-alias", name: "La Europea", slug: "la-europea", active: true },
       { id: "venue-jose", name: "Tasca San José", slug: "tasca-san-jose", active: true },
       { id: "venue-other", name: "Tasca Central", slug: "tasca-central", active: true },
     ]);
-    expect(result).toEqual([target]);
+    expect(result.map((row) => row.id)).toEqual(["venue-garrison", "venue-beethoven"]);
   });
 
   it("no duplica fichas coincidentes y conserva la ficha con más datos existentes", () => {

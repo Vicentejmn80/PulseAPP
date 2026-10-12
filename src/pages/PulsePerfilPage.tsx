@@ -1,3 +1,4 @@
+import { Avatar } from "@/components/ui/Avatar";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
 import { formato } from "@/lib/format";
 import { usePulse } from "@/state/PulseContext";
@@ -30,12 +31,7 @@ export function PulsePerfilPage() {
           style={{ backgroundColor: "#14171A", border: "1px solid #2A2F33" }}
         >
           <div className="flex items-center gap-4">
-            <div
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-[22px] font-extrabold text-white"
-              style={{ backgroundColor: currentUser.avatarColor ?? "var(--p-accent)" }}
-            >
-              {currentUser.initials}
-            </div>
+            <Avatar initials={currentUser.initials} bg={currentUser.avatarColor ?? "#CFFF00"} avatarId={currentUser.avatarId} size={64} />
             <div>
               <p className="text-[20px] font-extrabold leading-tight">{currentUser.alias}</p>
               <p className="text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>

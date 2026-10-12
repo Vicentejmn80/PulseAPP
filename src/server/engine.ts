@@ -110,6 +110,7 @@ function publicUser(profile: CloudProfile | UserProfile): UserProfile {
     handle: profile.handle,
     initials: profile.initials,
     avatarColor: profile.avatarColor,
+    avatarId: profile.avatarId ?? null,
   };
 }
 

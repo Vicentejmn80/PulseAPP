@@ -33,10 +33,12 @@ export function VenuePage({ guest = false }: { guest?: boolean }) {
     let alive = true;
     const load = guest
       ? venueBySlug(slug)
-      : scanVenue(slug).then((result) => {
-          if (alive) setVisit(result.already ? "Hoy ya registramos tu visita aquí." : "¡Visita registrada! ✅");
-          return result.venue;
-        });
+      : scanVenue(slug)
+          .then((result) => {
+            if (alive) setVisit(result.already ? "Hoy ya registramos tu visita aquí." : "¡Visita registrada! ✅");
+            return result.venue;
+          })
+          .catch(() => venueBySlug(slug));
     load
       .then((row) => { if (alive) setVenue(row); })
       .catch((reason: unknown) => {

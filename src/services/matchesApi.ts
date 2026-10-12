@@ -264,16 +264,30 @@ export async function listTascas() {
   return visibleMvpTascas(tascas);
 }
 
+const PUBLIC_VENUES: Record<string, string> = {
+  "venue-garrison": "garrison barber society",
+  "venue-beethoven": "la europea beethoven",
+};
+
 export function visibleMvpTascas<T extends Pick<Tasca, "id" | "name" | "slug" | "active"> & Partial<Tasca>>(rows: T[]) {
   const normalized = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const candidates = rows.filter((row) => {
-    if (row.active === false || row.id !== "venue-beethoven") return false;
-    return normalized(row.name).trim() === "la europea beethoven";
+    if (row.active === false) return false;
+    const expected = PUBLIC_VENUES[row.id];
+    return Boolean(expected) && normalized(row.name).trim() === expected;
   });
   const completeness = (row: T) => [row.address, row.description, row.roundPrize, row.prizeDetail, row.logoUrl, row.imageUrl]
     .filter((value) => Boolean(value && String(value).trim())).length;
-  const chosen = [...candidates].sort((a, b) => completeness(b) - completeness(a) || a.id.localeCompare(b.id))[0];
-  return chosen ? [chosen] : [];
+  const bestById = new Map<string, T>();
+  for (const row of candidates) {
+    const current = bestById.get(row.id);
+    if (!current || completeness(row) > completeness(current)) bestById.set(row.id, row);
+  }
+  return [...bestById.values()].sort((a, b) => {
+    if (a.id === "venue-garrison") return -1;
+    if (b.id === "venue-garrison") return 1;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export async function myPrizes() {
