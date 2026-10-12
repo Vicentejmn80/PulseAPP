@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { decideSession } from "@/lib/sessionGate";
 import type { Game, Participation, PointsTransaction, UserProfile } from "@/types/pulse";
 
@@ -24,13 +24,23 @@ interface ApiResult extends Partial<AccountSnapshot> {
   gamePoints?: number;
 }
 
+let sharedClient: SupabaseClient | null = null;
+
 function supabaseClient() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error("Falta VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY");
   }
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  if (!sharedClient) {
+    sharedClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storageKey: "pulse-rpc-auth",
+      },
+    });
+  }
+  return sharedClient;
 }
 
 export async function callRpc<T>(fn: string, args: Record<string, unknown>) {

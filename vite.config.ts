@@ -167,8 +167,20 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,webp,svg,woff2}"],
+          cleanupOutdatedCaches: true,
           navigateFallback: "/index.html",
           navigateFallbackDenylist: [/^\/api\//],
+          runtimeCaching: [
+            {
+              urlPattern: ({ request }) => request.mode === "navigate",
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "rusher-pages-v3",
+                networkTimeoutSeconds: 4,
+                expiration: { maxEntries: 8, maxAgeSeconds: 24 * 60 * 60 },
+              },
+            },
+          ],
         },
         devOptions: {
           enabled: false,

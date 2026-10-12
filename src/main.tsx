@@ -6,16 +6,24 @@ import "./index.css";
 import { PulseProvider } from "./state/PulseContext";
 import { registerSW } from "virtual:pwa-register";
 
+let reloadingForUpdate = false;
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadingForUpdate) return;
+    reloadingForUpdate = true;
+    window.location.reload();
+  });
+}
+
 registerSW({
   immediate: true,
   onRegisteredSW(_swUrl, registration) {
     if (!registration) return;
     const poll = () => registration.update().catch(() => undefined);
     poll();
-    window.setInterval(poll, 60 * 60 * 1000);
+    window.setInterval(poll, 60 * 1000);
   },
   onNeedRefresh() {
-    // Tras un deploy, la PWA en iOS puede quedarse en el bundle anterior.
     window.location.reload();
   },
 });
