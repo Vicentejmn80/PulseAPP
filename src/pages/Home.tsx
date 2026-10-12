@@ -28,6 +28,7 @@ import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { listCycles, listMatches, loadCycleBoard, scoreLine, type BaseballMatch, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
+import { RetosPanel } from "@/components/tobo/RetosPanel";
 import { triviaPointsForDifficulty } from "@/lib/triviaPoints";
 import { formatCooldown, remainingMs, serverSkewMs, triviaStatus, type TriviaLevel, type TriviaLevelState } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
@@ -298,6 +299,8 @@ export function HomePage() {
             <StatCell value={gap ?? "—"} label={mine && mine.position > 1 ? "al anterior" : "distancia"} />
           </div>
         </ToboCard>
+
+        <RetosPanel />
 
         <ToboCard>
           <CardHead

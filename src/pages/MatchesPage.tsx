@@ -355,7 +355,7 @@ export function MatchPredictPage() {
           </form>
         )}
         {match && phase !== "live" && <MatchExtras matchId={match.id} />}
-        {match && phase !== "live" && <MatchCrowd matchId={match.id} />}
+        {match && phase !== "live" && <MatchCrowd matchId={match.id} predictionSaved={Boolean(saved)} />}
         {error && phase !== "open" && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
         <div className="mt-6">
           <ToboBackHome />
@@ -377,7 +377,7 @@ function almostLine(prediction: MatchPrediction) {
   return "";
 }
 
-function MatchCrowd({ matchId }: { matchId: string }) {
+function MatchCrowd({ matchId, predictionSaved }: { matchId: string; predictionSaved: boolean }) {
   const [center, setCenter] = useState<MatchCenter | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -400,7 +400,7 @@ function MatchCrowd({ matchId }: { matchId: string }) {
           <ShareLine share={center.winnerShare} empty="Equipo" />
         </section>
       )}
-      <DuelBox matchId={matchId} duels={center.duels ?? []} onDone={() => setTick((value) => value + 1)} />
+      <DuelBox matchId={matchId} duels={center.duels ?? []} predictionSaved={predictionSaved} onDone={() => setTick((value) => value + 1)} />
     </div>
   );
 }

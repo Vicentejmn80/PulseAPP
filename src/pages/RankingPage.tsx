@@ -27,7 +27,6 @@ export function RankingPage() {
   const [currentCycleId, setCurrentCycleId] = useState("");
   const [myPoints, setMyPoints] = useState(0);
   const [mine, setMine] = useState<LeaderboardEntry | null>(null);
-  const [hasPrivateLeague, setHasPrivateLeague] = useState(false);
   const [error, setError] = useState("");
   const openedLeague = useRef(false);
 
@@ -40,7 +39,6 @@ export function RankingPage() {
         setCycles(cycleRows);
         setCurrentCycleId(cycleContainingToday(cycleRows, today)?.id ?? "");
         setLeagues(leagueRows);
-        setHasPrivateLeague(leagueRows.length > 0);
         if (leagueRows.length > 0 && !selectedLeague) {
           setSelectedLeague(leagueRows[0].id);
         }
@@ -167,9 +165,7 @@ export function RankingPage() {
             </p>
             <p className="mt-4 text-[15px] font-extrabold">
               {!mine
-                ? hasPrivateLeague && tab !== "liga"
-                  ? "Participas en una liga privada y no apareces en el ranking abierto."
-                  : "Pronostica y entras a la carrera."
+                ? "Pronostica y entras a la carrera."
                 : mine.position <= 1
                   ? "Vas en primer lugar"
                   : gap != null && above

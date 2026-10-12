@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { answerLive } from "@/services/mechanicsApi";
-import { challengeAlias, matchCenter, type CrowdShare, type LiveEvent, type MatchCenter } from "@/services/liveApi";
+import { matchCenter, type CrowdShare, type LiveEvent, type MatchCenter } from "@/services/liveApi";
+import { RetosPanel } from "@/components/tobo/RetosPanel";
 import { Countdown } from "@/components/tobo/PilotExtras";
 
 const LABELS: Record<string, string> = {
@@ -51,46 +52,8 @@ export function ShareLine({ share, empty }: { share: CrowdShare | null; empty: s
   );
 }
 
-export function DuelBox({ matchId, duels, onDone }: { matchId: string; duels: MatchCenter["duels"]; onDone: () => void }) {
-  const [alias, setAlias] = useState("");
-  const [note, setNote] = useState("");
-  const [error, setError] = useState("");
-
-  async function send() {
-    setError("");
-    setNote("");
-    try {
-      const result = await challengeAlias(matchId, alias);
-      setAlias("");
-      setNote(result.pending ? `Reto enviado a ${result.alias}. Falta el pronóstico.` : `Reto listo con ${result.alias}.`);
-      onDone();
-    } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "No se pudo retar.");
-    }
-  }
-
-  return (
-    <section className="rounded-[24px] bg-white px-4 py-4">
-      <h3 className="text-[16px] font-extrabold">Retar a un amigo</h3>
-      <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Comparan los puntos de este juego. No mueve el ranking ni el tobo.</p>
-      <div className="mt-3 flex gap-2">
-        <input value={alias} onChange={(event) => setAlias(event.target.value)} placeholder="Alias" aria-label="Alias del amigo" className="h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold outline-none" />
-        <button type="button" onClick={() => void send()} className="h-12 shrink-0 rounded-2xl bg-[#241710] px-4 text-[13px] font-extrabold text-white">Retar</button>
-      </div>
-      {note && <p className="mt-2 text-[13px] font-extrabold text-[#FF4F1A]">{note}</p>}
-      {error && <p className="mt-2 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
-      {duels.map((duel) => (
-        <p key={duel.id} className="mt-3 text-[14px] font-extrabold">
-          {duel.status === "resolved" && duel.tie && `Empate con ${duel.opponent}, ${duel.mine} a ${duel.theirs}.`}
-          {duel.status === "resolved" && !duel.tie && duel.iWon && `Le ganaste a ${duel.opponent} ${duel.mine} a ${duel.theirs}.`}
-          {duel.status === "resolved" && !duel.tie && !duel.iWon && `${duel.opponent} te ganó ${duel.theirs} a ${duel.mine}.`}
-          {duel.status === "pending" && `Reto con ${duel.opponent}: falta un pronóstico.`}
-          {duel.status === "ready" && `Reto con ${duel.opponent}: se define al final.`}
-          {duel.status === "void" && `El reto con ${duel.opponent} no se pudo definir.`}
-        </p>
-      ))}
-    </section>
-  );
+export function DuelBox({ matchId, predictionSaved = true }: { matchId: string; duels?: MatchCenter["duels"]; onDone?: () => void; predictionSaved?: boolean }) {
+  return <RetosPanel matchId={matchId} predictionSaved={predictionSaved} />;
 }
 
 function EventRow({ event, fresh }: { event: LiveEvent; fresh: boolean }) {
