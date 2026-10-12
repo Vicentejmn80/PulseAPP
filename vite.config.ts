@@ -138,6 +138,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: [
+          "rusher-locales-afiliados.jpg",
           "rusher-locales-afiliados.png",
           "rusher-logo.svg",
           "icons/rusher-any-180.png",

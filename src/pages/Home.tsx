@@ -7,10 +7,8 @@ import {
   Clock,
   Hand,
   Lock,
-  MapPin,
   Pencil,
   Play,
-  Trophy,
   Users,
   Zap,
 } from "lucide-react";
@@ -23,19 +21,16 @@ import { caracasDateKey, cycleClosesLabel, cycleContainingToday, cyclePeriodLabe
 import {
   LVBP_EXPERIENCE_TITLE,
   LVBP_SEASON_LABEL,
-  LVBP_VENUES_TAB_LABEL,
   LVBP_WELCOME_BODY,
   LVBP_WELCOME_HEADLINE,
 } from "@/config/lvbpBrand";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
-import { callRpc } from "@/services/accountApi";
-import { listCycles, listMatches, loadCycleBoard, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
+import { listCycles, listMatches, loadCycleBoard, scoreLine, type BaseballMatch, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
 import { triviaPointsForDifficulty } from "@/lib/triviaPoints";
 import { formatCooldown, remainingMs, serverSkewMs, triviaStatus, type TriviaLevel, type TriviaLevelState } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
-import { listMyLeagues } from "@/services/leaguesApi";
 import type { LeaderboardEntry } from "@/types/pulse";
 import type { LucideIcon } from "lucide-react";
 
@@ -44,8 +39,6 @@ const TRIVIA_ROWS: { level: TriviaLevel; label: string; icon: LucideIcon; color:
   { level: "intermediate", label: "Intermedio", icon: Hand, color: "#60A5FA" },
   { level: "advanced", label: "Avanzado", icon: Zap, color: "#C084FC" },
 ];
-
-const MEDALS = ["#FFC94A", "#C5D0E0", "#D08A4A"];
 
 function clockLabel(value: string) {
   const date = new Date(value);
@@ -172,11 +165,8 @@ export function HomePage() {
   const [ranking, setRanking] = useState<LeaderboardEntry[]>([]);
   const [roundPoints, setRoundPoints] = useState(0);
   const [pointsAreRound, setPointsAreRound] = useState(false);
-  const [inPrivateLeague, setInPrivateLeague] = useState(false);
   const [trivia, setTrivia] = useState<TriviaLevelState[]>([]);
   const [triviaSkew, setTriviaSkew] = useState(0);
-  const [tascas, setTascas] = useState<Tasca[]>([]);
-  const [qrPoints, setQrPoints] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -195,26 +185,20 @@ export function HomePage() {
         listMatches(),
         listCycles(),
         triviaStatus(),
-        listTascas(),
-        listMyLeagues(),
-        callRpc<number>("pulse_cfg_int", { p_key: "QR_POINTS" }).catch(() => null),
       ])
-        .then(async ([, matchRows, cycles, boardTrivia, venues, leagues, points]) => {
+        .then(async ([, matchRows, cycles, boardTrivia]) => {
           if (!alive) return;
           const active = pickActiveCycle(cycles);
           const live = cycleContainingToday(cycles);
-          const board = await loadCycleBoard(live?.id ?? "lifetime", leagues[0]?.id);
+          const board = await loadCycleBoard(live?.id ?? "lifetime");
           if (!alive) return;
           setMatches(matchRows);
           setCycle(active);
           setRanking(board.entries);
           setRoundPoints(board.points);
           setPointsAreRound(Boolean(live));
-          setInPrivateLeague(leagues.length > 0);
           setTrivia(boardTrivia.levels);
           setTriviaSkew(serverSkewMs(boardTrivia.serverNow));
-          setTascas(venues);
-          setQrPoints(typeof points === "number" ? points : Number(points) || null);
           setReady(true);
         })
         .catch((reason: unknown) => {
@@ -250,31 +234,10 @@ export function HomePage() {
       return tone === "predict" || tone === "saved";
     })
     .slice(0, 4);
-  const predictedToday = today.filter((match) => match.prediction).length;
   const mine = ranking.find((entry) => entry.isCurrentUser);
   const gap = mine ? pointsToNextPosition(ranking, mine.user.id) : null;
-  const climb = !mine
-    ? inPrivateLeague
-      ? "Participas en una liga privada y no apareces en el ranking abierto."
-      : "Pronostica y entras al ranking."
-    : mine.position <= 1
-      ? "Vas primero en la ronda."
-      : gap
-        ? `Estás a ${formato(gap)} puntos del puesto #${mine.position - 1}.`
-        : "Ver ranking";
 
   const triviaMax = trivia.reduce((sum, row) => sum + (row.status === "available" ? row.questionCount * triviaPointsForDifficulty(row.level) : 0), 0);
-  const triviaAnswered = trivia.reduce((sum, row) => sum + row.answeredCount, 0);
-  const triviaCount = trivia.reduce((sum, row) => sum + row.questionCount, 0);
-  const triviaPending = trivia.some((row) => row.status === "available" || row.status === "in_progress");
-  const predictionsPending = today.some((match) => homeMatchTone(match) === "predict");
-  const dayComplete = ready && today.length + triviaMax > 0 && !predictionsPending && !triviaPending;
-
-  const prizeLabels = [...new Set(
-    tascas
-      .map((tasca) => tasca.roundPrize)
-      .filter((prize) => prize && prize !== "Por confirmar"),
-  )].slice(0, 3);
 
   function openTrivia(level: TriviaLevel) {
     sessionStorage.setItem("tobo-trivia-open", level);
@@ -308,14 +271,14 @@ export function HomePage() {
           </p>
         )}
 
+        <FounderBanner />
+
         <ToboCard className="flyer-in">
           <h2 className="text-[20px] font-extrabold leading-snug">{LVBP_WELCOME_HEADLINE}</h2>
           <p className="mt-3 text-[14px] font-semibold leading-relaxed" style={{ color: "var(--t-muted)" }}>
             {LVBP_WELCOME_BODY}
           </p>
         </ToboCard>
-
-        <FounderBanner />
 
         <ToboCard>
           <CardHead icon={CalendarDays} title="Ronda actual" />
@@ -435,49 +398,6 @@ export function HomePage() {
         </ToboCard>
 
         <ToboCard>
-          <CardHead icon={Check} title="Actividad de hoy" />
-          <ActivityRow icon={CircleDot} color="#FFC94A" label="Pronósticos" value={`${predictedToday}/${today.length}`} />
-          <ActivityRow icon={Zap} color="#C084FC" label="Trivia" value={`${triviaAnswered}/${triviaCount}`} />
-          <ActivityRow icon={MapPin} color="#60A5FA" label="Local" value={qrPoints != null ? `+${formato(qrPoints)} PT` : "QR"} />
-        </ToboCard>
-
-        {dayComplete && (
-          <ToboCard>
-            <p className="text-[15px] font-extrabold">Has completado tus actividades de hoy.</p>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <GhostCta onClick={() => navigate("/tobo/ranking")}>Ranking</GhostCta>
-              <GhostCta onClick={() => navigate("/tobo/tascas")}>{LVBP_VENUES_TAB_LABEL}</GhostCta>
-              <GhostCta onClick={() => navigate("/tobo/mi-quiniela")}>Calendario</GhostCta>
-            </div>
-          </ToboCard>
-        )}
-
-        <ToboCard>
-          <CardHead icon={Trophy} title="Tu ronda" action={{ label: "Ver ranking →", onClick: () => navigate("/tobo/ranking") }} />
-          <p className="mb-3 text-[14px] font-extrabold">{climb}</p>
-          <GoldCta icon={Trophy} onClick={() => navigate("/tobo/ranking")}>Ver ranking</GoldCta>
-        </ToboCard>
-
-        <ToboCard>
-          <CardHead icon={Trophy} title="Premios de esta ronda" />
-          <p className="mb-2 text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>Los 3 primeros lugares ganan premio.</p>
-          <p className="mb-3 text-[15px] font-extrabold">
-            {prizeLabels.length > 0 ? `${prizeLabels.length} premios en juego` : "Hay premios que todavía puedes ganar."}
-          </p>
-          <div className="flex flex-col gap-3">
-            {prizeLabels.map((prize, index) => (
-              <div key={prize} className="flex items-center gap-3">
-                <PrizeMark place={index + 1} />
-                <p className="min-w-0 text-[14px] font-extrabold leading-tight">{prize}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-            Canjeable en cualquier local aliado.
-          </p>
-        </ToboCard>
-
-        <ToboCard>
           <CardHead icon={Users} title="Juega con los tuyos" />
           <p className="mb-3 text-[14px] font-extrabold">Crea una liga privada y compite con tus amigos.</p>
           <div className="grid grid-cols-2 gap-2">
@@ -491,32 +411,3 @@ export function HomePage() {
   );
 }
 
-function ActivityRow({ icon, color, label, value }: { icon: LucideIcon; color: string; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-3 py-2.5" style={{ borderTop: "1px solid var(--t-border)" }}>
-      <IconChip icon={icon} color={color} size="sm" />
-      <p className="flex-1 text-[14px] font-extrabold">{label}</p>
-      <p className="text-[15px] font-extrabold tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function PrizeMark({ place }: { place: number }) {
-  const color = MEDALS[place - 1] ?? "#FFC94A";
-  return (
-    <span className="relative">
-      <span
-        className="flex h-12 w-12 items-center justify-center rounded-full"
-        style={{ backgroundColor: `${color}22`, color }}
-      >
-        <Trophy className="h-6 w-6" />
-      </span>
-      <span
-        className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-extrabold"
-        style={{ backgroundColor: color, color: "#0B1A3C" }}
-      >
-        #{place}
-      </span>
-    </span>
-  );
-}
