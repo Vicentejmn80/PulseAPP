@@ -193,7 +193,7 @@ export function TascasPage() {
         <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>
           {LVBP_EXPERIENCE_TITLE}
         </p>
-        <h2 className="text-[26px] font-extrabold tracking-tight">Locales afiliados</h2>
+        <h2 className="text-[26px] font-extrabold tracking-tight">Locales aliados</h2>
         <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
           Descubre los negocios participantes, sus beneficios y escanea el QR cuando los visites.
         </p>
@@ -218,7 +218,7 @@ export function TascasPage() {
           <div className="rounded-[28px] px-6 py-8 text-center" style={{ backgroundColor: "var(--t-card)" }}>
             <p className="text-[16px] font-extrabold">Los locales se publican aquí</p>
             <p className="mt-2 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-              Pronto verás la red de locales afiliados del piloto.
+              Pronto verás la red de locales aliados del piloto.
             </p>
           </div>
         )}

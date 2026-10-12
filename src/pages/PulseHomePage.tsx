@@ -66,7 +66,7 @@ export function PulseHomePage() {
               Una experiencia de Rusher.
             </p>
             <p className="mt-3 text-[15px] font-semibold leading-snug">
-              Pronostica, acumula puntos y gana en locales afiliados.
+              Pronostica, acumula puntos y gana en locales aliados.
             </p>
             <div
               className="mt-5 flex h-12 items-center justify-center rounded-2xl text-[15px] font-extrabold tracking-wide text-[#0B0D0F]"

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const BANNER_SRC = "/rusher-locales-afiliados.png";
 
 const BANNER_COPY =
-  "Nuevos aliados. Locales afiliados. Juega, escanea el QR y gana beneficios en los lugares que ya conoces. Garrison Barber Society. Beneficio en tu primera visita escaneando el QR en la barbería. Pronostica, escanea y gana.";
+  "Nuevos aliados. Locales aliados. Juega, escanea el QR y gana beneficios en los lugares que ya conoces. Garrison Barber Society. Beneficio en tu primera visita escaneando el QR en la barbería. Pronostica, escanea y gana.";
 
 /**
  * Banner de Garrison Barber Society en el inicio de Béisbol Rush.
@@ -60,7 +60,7 @@ function GarrisonBannerCopy({ onOpen }: { onOpen: () => void }) {
       <h2 className="mt-3 text-[28px] font-extrabold uppercase leading-none text-white">
         Locales
         <br />
-        <span className="text-[#CFFF00]">afiliados</span>
+        <span className="text-[#CFFF00]">aliados</span>
       </h2>
       <p className="mt-3 max-w-[34ch] text-[13px] font-semibold leading-snug text-[#C5C9C0]">
         Juega, escanea el QR y gana beneficios en los lugares que ya conoces.

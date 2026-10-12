@@ -31,6 +31,7 @@ import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { callRpc } from "@/services/accountApi";
 import { listCycles, listMatches, loadCycleBoard, listTascas, scoreLine, type BaseballMatch, type Tasca, type ToboCycle } from "@/services/matchesApi";
+import { FounderBanner } from "@/components/tobo/FounderBanner";
 import { triviaPointsForDifficulty } from "@/lib/triviaPoints";
 import { formatCooldown, remainingMs, serverSkewMs, triviaStatus, type TriviaLevel, type TriviaLevelState } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
@@ -472,7 +473,7 @@ export function HomePage() {
             ))}
           </div>
           <p className="mt-3 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-            Canjeable en cualquier local afiliado.
+            Canjeable en cualquier local aliado.
           </p>
         </ToboCard>
 

@@ -1,6 +1,8 @@
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { defineConfig, loadEnv, type Plugin } from "vite";
+import { authorizeAdminCall } from "./lib/registration/adminGate.mjs";
+import { clientAddress, createAttemptGate, createMemoryStore, createUpstashStore, readGateConfig, rejectionBody } from "./lib/registration/attemptGate.mjs";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
@@ -20,6 +22,8 @@ function json(res: ServerResponse, status: number, payload: unknown) {
 }
 
 function pulseApi(): Plugin {
+  const gate = createAttemptGate(readGateConfig(), createUpstashStore() || createMemoryStore());
+  let lastCapNote = 0;
   return {
     name: "pulse-api",
     configureServer(server) {
@@ -33,9 +37,38 @@ function pulseApi(): Plugin {
           const raw = await readBody(req);
           const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
           const action = String(body.action ?? "");
+          const callerIp = clientAddress(req.headers, req.socket?.remoteAddress || "");
+          if (action === "admin-call") {
+            const verdict = authorizeAdminCall(body);
+            if (!verdict.ok) {
+              console.info(JSON.stringify({ event: "admin_rejected", code: verdict.code }));
+              json(response, 403, { ok: false, code: verdict.code, error: "No autorizado." });
+              return;
+            }
+            console.info(JSON.stringify({ event: "admin_call", fn: String(body.fn ?? "") }));
+            json(response, 403, { ok: false, code: "ADMIN_UNAVAILABLE", error: "No autorizado." });
+            return;
+          }
+          const decision = await gate.check(action, callerIp);
+          if (!decision.ok) {
+            if (decision.scope === "global" && Date.now() - lastCapNote > 1000) {
+              lastCapNote = Date.now();
+              console.info(JSON.stringify({ event: "pin_global_cap" }));
+            }
+            json(response, 429, rejectionBody());
+            return;
+          }
+          if (action === "start-pin-recovery" || action === "confirm-pin-recovery") {
+            const { confirmPinRecovery, startPinRecovery } = await server.ssrLoadModule("/src/server/pinRecovery.ts");
+            const result = action === "start-pin-recovery" ? await startPinRecovery(body) : await confirmPinRecovery(body);
+            if (!result.ok) await gate.noteFailure(callerIp);
+            json(response, result.ok ? 200 : 400, result);
+            return;
+          }
           if (action === "register-account" || action === "login-account" || action === "logout-account") {
             const { handlePinAction } = await server.ssrLoadModule("/src/server/pinAuth.ts");
             const result = await handlePinAction(action, body);
+            if (!result.ok && (action === "login-account" || action === "register-account")) await gate.noteFailure(callerIp);
             json(response, result.ok ? 200 : 400, result);
             return;
           }
@@ -105,6 +138,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: [
+          "rusher-locales-afiliados.png",
           "rusher-logo.svg",
           "icons/rusher-any-180.png",
           "icons/rusher-any-192.png",

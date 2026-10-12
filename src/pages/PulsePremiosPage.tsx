@@ -57,7 +57,7 @@ export function PulsePremiosPage() {
             className="mt-2 text-[14px] font-semibold leading-snug"
             style={{ color: "var(--p-muted)" }}
           >
-            Cuando ganes en una experiencia, el premio aparece aquí. Canjeable en una tasca afiliada.
+            Cuando ganes en una experiencia, el premio aparece aquí. Canjeable en una tasca aliada.
           </p>
         </div>
 

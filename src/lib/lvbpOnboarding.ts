@@ -44,7 +44,7 @@ export const LVBP_ONBOARDING_STEPS: ReadonlyArray<{
   {
     id: "tascas",
     title: LVBP_VENUES_TAB_LABEL,
-    body: "Descubre los locales afiliados, abre su ficha y escanea el QR cuando los visites.",
+    body: "Descubre los locales aliados, abre su ficha y escanea el QR cuando los visites.",
     action: "Entra a un local para ver su ficha.",
   },
   {

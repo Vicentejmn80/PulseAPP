@@ -40,7 +40,7 @@ export function PulseExperienciasPage() {
           </p>
           <h2 className="mt-2 text-[24px] font-extrabold">{LVBP_EXPERIENCE_TITLE}</h2>
           <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
-            Pronostica, compite y gana en locales afiliados.
+            Pronostica, compite y gana en locales aliados.
           </p>
         </button>
         <p className="mt-8 px-1 text-[13px] font-semibold" style={{ color: "var(--p-muted)" }}>
