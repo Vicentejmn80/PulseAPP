@@ -186,7 +186,7 @@ const FLOW_COPY: Record<string, string> = {
   OTP_DISABLED: "El login por WhatsApp está desactivado temporalmente.",
   DIRECT_ENTER_DISABLED: "Crea tu cuenta con nombre, alias, teléfono y PIN.",
   INVALID_PIN: "El PIN debe tener 6 números y no ser una secuencia obvia.",
-  PIN_INVALID: "El número o PIN no son correctos.",
+  AUTH_INVALID: "No pudimos validar tus credenciales.",
   ACCOUNT_NOT_FOUND: "No encontramos una cuenta con este número.",
 };
 
@@ -265,6 +265,29 @@ export async function saveAvatar(avatarId: string) {
 
 export async function loginWithPin(phone: string, pin: string) {
   const result = await postAuth("/api/pulse", { action: "login-account", phone, pin });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
+export function detectCredentialKind(credential: string): "pin" | "password" {
+  return /^\d{6}$/.test(credential.trim()) ? "pin" : "password";
+}
+
+export function passwordMeetsPolicy(password: string): boolean {
+  if (password.length < 8 || password.length > 128) return false;
+  return /\p{Lu}/u.test(password) && /\p{Nd}/u.test(password) && /[^\p{L}\p{N}]/u.test(password);
+}
+
+export async function registerWithPassword(phone: string, fullName: string, alias: string, pin: string, password: string) {
+  const result = await postAuth("/api/pulse", { action: "register-account-password", phone, fullName, alias, pin, password });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
+export async function loginSmart(phone: string, credential: string) {
+  const result = await postAuth("/api/pulse", { action: "login-account-password", phone, credential, method: "auto" });
   const token = result.token ?? "";
   writeSessionToken(token);
   return asSnapshot(result, token);

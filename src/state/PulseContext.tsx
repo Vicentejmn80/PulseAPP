@@ -10,11 +10,13 @@ import {
   finishSignup as finishSignupRequest,
   loadAccount,
   loginAccount,
+  loginSmart as loginSmartRequest,
   loginWithPin as loginWithPinRequest,
   logoutAccount,
   readSessionToken,
   registerAccount,
   registerWithPin as registerWithPinRequest,
+  registerWithPassword as registerWithPasswordRequest,
   requestOtp as requestOtpRequest,
   writeSessionToken,
   type AccountSnapshot,
@@ -68,7 +70,9 @@ interface PulseContextValue {
   finishSignup: (ticket: string, alias: string, city: string) => Promise<void>;
   directEnter: (phone: string, fullName: string, alias: string) => Promise<void>;
   createAccount: (phone: string, fullName: string, alias: string, pin: string) => Promise<void>;
+  createAccountWithPassword: (phone: string, fullName: string, alias: string, pin: string, password: string) => Promise<void>;
   loginWithPin: (phone: string, pin: string) => Promise<void>;
+  loginSmart: (phone: string, credential: string) => Promise<void>;
   logout: () => void;
   completeGame: (input: CompleteGameInput) => Promise<number>;
   submitPrediction: (game: Game, optionId: string) => Promise<number>;
@@ -236,6 +240,14 @@ export function PulseProvider({ children }: { children: ReactNode }) {
       },
       async loginWithPin(phone: string, pin: string) {
         await enter(loginWithPinRequest(phone, pin));
+        setNotice("¡Bienvenido de nuevo!");
+      },
+      async createAccountWithPassword(phone: string, fullName: string, alias: string, pin: string, password: string) {
+        await enter(registerWithPasswordRequest(phone, fullName, alias, pin, password));
+        setNotice("¡Bienvenido a Rusher!");
+      },
+      async loginSmart(phone: string, credential: string) {
+        await enter(loginSmartRequest(phone, credential));
         setNotice("¡Bienvenido de nuevo!");
       },
       logout: () => {

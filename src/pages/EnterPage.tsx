@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { RusherMark } from "@/components/ui/RusherMark";
 import { RusherSplash } from "@/components/ui/RusherSplash";
-import { checkAlias, FlowError } from "@/services/accountApi";
+import { checkAlias, FlowError, passwordMeetsPolicy } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
 type Mode = "choose" | "register" | "login";
@@ -32,7 +32,7 @@ function composePhone(dial: string, local: string) {
 const fieldClass = "mt-1 h-14 w-full rounded-2xl border bg-[#14171A] px-4 text-[16px] font-bold text-[#F5F7F2] outline-none";
 
 export function EnterPage({ hint = "" }: { hint?: string }) {
-  const { createAccount, loginWithPin, authError, setAuthError } = usePulse();
+  const { createAccount, createAccountWithPassword, loginSmart, authError, setAuthError } = usePulse();
   const [step, setStep] = useState<"splash" | "welcome" | "auth">("splash");
   const [splashPhase, setSplashPhase] = useState<"play" | "exit">("play");
   const [mode, setMode] = useState<Mode>("choose");
@@ -42,6 +42,10 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   const [alias, setAlias] = useState("");
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
+  const [authMode, setAuthMode] = useState<"pin" | "both">("pin");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [credential, setCredential] = useState("");
   const [pending, setPending] = useState(false);
   const [aliasState, setAliasState] = useState<"idle" | "checking" | "free" | "taken" | "invalid">("idle");
   const [switchHint, setSwitchHint] = useState<"login" | "register" | "">("");
@@ -89,6 +93,9 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     setSwitchHint("");
     setPin("");
     setPinConfirm("");
+    setPassword("");
+    setPasswordConfirm("");
+    setCredential("");
   }
 
   async function onRegister(event: FormEvent) {
@@ -97,11 +104,19 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
       setAuthError("Los PIN no coinciden.");
       return;
     }
+    if (authMode === "both" && password !== passwordConfirm) {
+      setAuthError("Las contraseñas no coinciden.");
+      return;
+    }
     setPending(true);
     setAuthError("");
     setSwitchHint("");
     try {
-      await createAccount(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), pin);
+      if (authMode === "both") {
+        await createAccountWithPassword(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), pin, password);
+      } else {
+        await createAccount(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), pin);
+      }
     } catch (error) {
       if (error instanceof FlowError && error.code === "PHONE_ALREADY_REGISTERED") setSwitchHint("login");
       if (error instanceof FlowError && error.code === "ALIAS_ALREADY_TAKEN") setSwitchHint("");
@@ -116,7 +131,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     setAuthError("");
     setSwitchHint("");
     try {
-      await loginWithPin(composePhone(country.dial, localPhone), pin);
+      await loginSmart(composePhone(country.dial, localPhone), credential);
     } catch (error) {
       if (error instanceof FlowError && error.code === "ACCOUNT_NOT_FOUND") setSwitchHint("register");
     } finally {
@@ -128,14 +143,18 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   const pinReady = /^\d{6}$/.test(pin);
   const pinConfirmReady = /^\d{6}$/.test(pinConfirm);
   const pinsMatch = pin === pinConfirm;
+  const passwordsMatch = password === passwordConfirm;
+  const passwordReady = passwordMeetsPolicy(password) && passwordsMatch;
   const registerReady =
     phoneReady &&
     fullName.trim().length >= 2 &&
     aliasState === "free" &&
     pinReady &&
     pinConfirmReady &&
-    pinsMatch;
-  const loginReady = phoneReady && pinReady;
+    pinsMatch &&
+    (authMode === "pin" || passwordReady);
+  const loginReady = phoneReady && credential.trim().length > 0;
+  const credentialLooksPin = /^\d{0,6}$/.test(credential);
 
   if (step === "splash") {
     return (
@@ -250,6 +269,26 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
               />
             </label>
             <AliasHint state={aliasState} />
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAuthMode("pin")}
+                className="rounded-2xl border-2 px-3 py-3 text-left"
+                style={{ borderColor: authMode === "pin" ? "var(--p-accent)" : "#2A2F33" }}
+              >
+                <p className="text-[14px] font-extrabold">Solo PIN</p>
+                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>6 números, simple</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMode("both")}
+                className="rounded-2xl border-2 px-3 py-3 text-left"
+                style={{ borderColor: authMode === "both" ? "var(--p-accent)" : "#2A2F33" }}
+              >
+                <p className="text-[14px] font-extrabold">PIN + contraseña <span style={{ color: "var(--p-accent)" }}>★</span></p>
+                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>Recomendado, más seguro</p>
+              </button>
+            </div>
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               PIN
               <input
@@ -281,6 +320,42 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
             {pinConfirmReady && !pinsMatch && (
               <p className="text-[13px] font-bold text-[#E23B2F]">Los PIN no coinciden.</p>
             )}
+            {authMode === "both" && (
+              <>
+                <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+                  Contraseña
+                  <input
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value.slice(0, 128))}
+                    autoComplete="new-password"
+                    maxLength={128}
+                    placeholder="Mínimo 8, con mayúscula, número y símbolo"
+                    type="password"
+                    className={fieldClass}
+                    style={{ borderColor: "#2A2F33" }}
+                  />
+                </label>
+                <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+                  Confirmar contraseña
+                  <input
+                    value={passwordConfirm}
+                    onChange={(event) => setPasswordConfirm(event.target.value.slice(0, 128))}
+                    autoComplete="new-password"
+                    maxLength={128}
+                    placeholder="Repite tu contraseña"
+                    type="password"
+                    className={fieldClass}
+                    style={{ borderColor: passwordConfirm && !passwordsMatch ? "#E23B2F" : "#2A2F33" }}
+                  />
+                </label>
+                {password.length > 0 && !passwordMeetsPolicy(password) && (
+                  <p className="text-[13px] font-bold text-[#E23B2F]">Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo.</p>
+                )}
+                {passwordConfirm && !passwordsMatch && (
+                  <p className="text-[13px] font-bold text-[#E23B2F]">Las contraseñas no coinciden.</p>
+                )}
+              </>
+            )}
             {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
             {switchHint === "login" && (
               <button type="button" onClick={() => open("login")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
@@ -302,19 +377,23 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
             <p className="text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>Entra y lánzate un Rush.</p>
             <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-              PIN
+              PIN o contraseña
               <input
-                value={pin}
-                onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 6))}
-                inputMode="numeric"
+                value={credential}
+                onChange={(event) => setCredential(event.target.value.slice(0, 128))}
                 autoComplete="current-password"
-                maxLength={6}
-                placeholder="••••••"
+                maxLength={128}
+                placeholder="Tu PIN de 6 números o tu contraseña"
                 type="password"
                 className={fieldClass}
                 style={{ borderColor: "#2A2F33", letterSpacing: "0.3em" }}
               />
             </label>
+            {credential.length > 0 && (
+              <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>
+                {credentialLooksPin ? "Se validará como PIN" : "Se validará como contraseña"}
+              </p>
+            )}
             {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
             {switchHint === "register" && (
               <button type="button" onClick={() => open("register")} className="text-[14px] font-extrabold" style={{ color: "var(--p-accent)" }}>
