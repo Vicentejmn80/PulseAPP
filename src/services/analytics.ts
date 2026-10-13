@@ -22,7 +22,10 @@ export type AnalyticsEvent =
   | "challenge_submitted"
   | "challenge_correct"
   | "challenge_incorrect"
-  | "challenge_bonus_awarded";
+  | "challenge_bonus_awarded"
+  | "pwa_banner_seen"
+  | "pwa_install_tapped"
+  | "pwa_installed";
 
 export function trackEvent(event: AnalyticsEvent, properties?: Record<string, unknown>) {
   const token = readSessionToken();

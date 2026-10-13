@@ -309,16 +309,16 @@ security definer
 set search_path = public
 as $$
 declare
-  source_type text := 'reto_' || p_action;
-  source_id text := p_reto || ':' || p_user || ':' || p_action;
+  v_source_type text := 'reto_' || p_action;
+  v_source_id text := p_reto || ':' || p_user || ':' || p_action;
 begin
   insert into public.pulse_transactions (id, user_id, experience_id, source_type, source_id, points, metadata)
   values (
-    'tx_' || substr(md5(source_type || ':' || source_id), 1, 24),
+    'tx_' || substr(md5(v_source_type || ':' || v_source_id), 1, 24),
     p_user,
     'exp_tobo',
-    source_type,
-    source_id,
+    v_source_type,
+    v_source_id,
     p_points,
     jsonb_build_object(
       'retoId', p_reto,

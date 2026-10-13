@@ -2,6 +2,9 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
+import { InstallBanner } from "./InstallBanner";
+import { RetoSheetHost } from "./RetoSheet";
+import { RetosIntro } from "./RetosIntro";
 import { ToboBackHome } from "./ToboBackHome";
 import { ToboOnboarding } from "./ToboOnboarding";
 
@@ -37,6 +40,7 @@ export function ToboLayout() {
           {LVBP_EXPERIENCE_TITLE}
         </span>
       </div>
+      <InstallBanner />
 
       {!atHome && (
         <div className="shrink-0 px-4 pb-2 pt-2">
@@ -52,6 +56,8 @@ export function ToboLayout() {
         <Outlet />
       </div>
       <ToboOnboarding />
+      <RetosIntro />
+      <RetoSheetHost />
     </div>
   );
 }

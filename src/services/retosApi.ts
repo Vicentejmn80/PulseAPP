@@ -53,6 +53,27 @@ function token() {
   return readSessionToken();
 }
 
+export interface RetoPrefs {
+  adultConfirmed: boolean;
+  introSeen: boolean;
+  recent: string[];
+}
+
+export async function retoPrefs(): Promise<RetoPrefs> {
+  const result = await callRpc<{ ok?: boolean; adultConfirmed?: boolean; introSeen?: boolean; recent?: string[] }>("pulse_reto_prefs", {
+    p_token: token(),
+  });
+  return {
+    adultConfirmed: Boolean(result?.adultConfirmed),
+    introSeen: Boolean(result?.introSeen),
+    recent: Array.isArray(result?.recent) ? result.recent.map(String).slice(0, 6) : [],
+  };
+}
+
+export async function retoAckIntro() {
+  await callRpc("pulse_reto_intro_ack", { p_token: token() });
+}
+
 export async function retoBoard() {
   const result = await callRpc<RetoBoard>("pulse_reto_board", {
     p_token: token(),

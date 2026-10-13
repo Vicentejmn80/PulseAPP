@@ -52,8 +52,8 @@ export function ShareLine({ share, empty }: { share: CrowdShare | null; empty: s
   );
 }
 
-export function DuelBox({ matchId, predictionSaved = true }: { matchId: string; duels?: MatchCenter["duels"]; onDone?: () => void; predictionSaved?: boolean }) {
-  return <RetosPanel matchId={matchId} predictionSaved={predictionSaved} />;
+export function DuelBox({ matchId }: { matchId: string; duels?: MatchCenter["duels"]; onDone?: () => void; predictionSaved?: boolean }) {
+  return <RetosPanel matchId={matchId} />;
 }
 
 function EventRow({ event, fresh }: { event: LiveEvent; fresh: boolean }) {

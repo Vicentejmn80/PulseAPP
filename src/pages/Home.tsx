@@ -160,7 +160,7 @@ function TeamSide({ name, align = "start" }: { name: string; align?: "start" | "
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { reload } = usePulse();
+  const { reload, currentUser } = usePulse();
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [cycle, setCycle] = useState<ToboCycle | null>(null);
   const [ranking, setRanking] = useState<LeaderboardEntry[]>([]);
@@ -300,7 +300,7 @@ export function HomePage() {
           </div>
         </ToboCard>
 
-        <RetosPanel />
+        <RetosPanel userId={currentUser?.id ?? ""} />
 
         <ToboCard>
           <CardHead

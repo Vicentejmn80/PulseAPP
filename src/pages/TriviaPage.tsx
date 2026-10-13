@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type LucideIcon } from "lucide-react";
 import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { RetosPanel } from "@/components/tobo/RetosPanel";
+import { openRetoSheet } from "@/state/retoSheet";
 import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
@@ -402,7 +403,10 @@ export function TriviaPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setRetoLevel(key)}
+                onClick={() => {
+                  setRetoLevel(key);
+                  openRetoSheet({ triviaLevel: key });
+                }}
                 className="min-h-11 rounded-2xl text-[14px] font-extrabold"
                 style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
               >
@@ -410,7 +414,7 @@ export function TriviaPage() {
               </button>
               </div>
             ))}
-            {retoLevel && <RetosPanel triviaLevel={retoLevel} startOpen />}
+            {retoLevel && <RetosPanel triviaLevel={retoLevel} />}
           </div>
           <p className="mt-5 text-center text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>
             Puedes cambiar de nivel cuando quieras.
