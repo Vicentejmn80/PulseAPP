@@ -85,7 +85,7 @@ export function ProfilePage() {
 
   return (
     <div className="flex h-full flex-col" style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)" }}>
-      <div className="shrink-0 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="shrink-0 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
         <p className="text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
           {LVBP_EXPERIENCE_TITLE}
         </p>
@@ -98,7 +98,7 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
         <ToboCard className="text-center">
           <p className="text-[40px] font-extrabold leading-none tabular-nums">{formato(seasonPoints)}</p>
           <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>

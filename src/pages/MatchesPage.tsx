@@ -59,7 +59,7 @@ export function MatchesPage() {
           <h2 className="text-[24px] font-extrabold tracking-tight">Próximos partidos</h2>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
         {matches.filter((match) => match.demo).map((match) => (
           <button key={match.id} type="button" onClick={() => navigate(`/tobo/partidos/${match.id}`)} className="mb-3 w-full rounded-[24px] bg-[#241710] px-4 py-4 text-left text-white">
@@ -251,7 +251,7 @@ export function MatchPredictPage() {
           <p className="text-[14px] font-extrabold">Pronóstico</p>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6 lg:px-8">
         {missing && <p className="rounded-[28px] bg-white px-6 py-8 text-center text-[16px] font-extrabold">Ese partido no está publicado.</p>}
         {match && phase === "live" && match.featured && <LiveCenter matchId={match.id} />}
         {match && phase === "finished" && (

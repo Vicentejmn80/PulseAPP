@@ -8,12 +8,21 @@ body,
   min-height: 100%;
 }
 
+#root {
+  min-height: 100dvh;
+}
+
+html {
+  font-size: clamp(15px, 1.15vw, 16px);
+}
+
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   background: #0B0D0F;
   color: #F5F7F2;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* ─────────────────────────────────────────

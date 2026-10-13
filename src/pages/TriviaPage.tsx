@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type LucideIcon } from "lucide-react";
 import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { RetosPanel } from "@/components/tobo/RetosPanel";
-import { openRetoSheet } from "@/state/retoSheet";
+import { startRetoFlow } from "@/state/retoSheet";
 import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
@@ -341,7 +341,7 @@ export function TriviaPage() {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
+        <div className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6 lg:px-8">
           {error && (
             <p className="mb-4 rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ background: "var(--t-card)" }}>
               {error}
@@ -405,7 +405,7 @@ export function TriviaPage() {
                 type="button"
                 onClick={() => {
                   setRetoLevel(key);
-                  openRetoSheet({ triviaLevel: key });
+                  startRetoFlow({ triviaLevel: key });
                 }}
                 className="min-h-11 rounded-2xl text-[14px] font-extrabold"
                 style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
@@ -438,7 +438,7 @@ export function TriviaPage() {
         <p className="text-[14px] font-semibold" style={{ color: "var(--t-muted)" }}>
           Preparando preguntas de {lvl.label}…
         </p>
-        <div className="w-full max-w-sm px-4">
+        <div className="w-full max-w-sm px-4 sm:px-6">
           <ToboBackHome />
         </div>
       </div>
@@ -454,7 +454,7 @@ export function TriviaPage() {
 
     return (
       <div className="flex h-full flex-col">
-        <div className="flex-1 overflow-y-auto px-4 pb-6 pt-[max(2rem,env(safe-area-inset-top))]">
+        <div className="flex-1 overflow-y-auto px-4 pb-6 pt-[max(2rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
           {alreadyDone ? (
             /* Already answered today */
             <ToboCard className="text-center">
@@ -620,7 +620,7 @@ export function TriviaPage() {
       </div>
 
       {/* ── Question card ── */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6 lg:px-8">
         <div
           key={q.id}
           className="trivia-question-enter rounded-[28px] px-5 py-5"

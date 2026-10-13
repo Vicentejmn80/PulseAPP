@@ -68,7 +68,7 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
       </div>
 
       {/* Body */}
-      <div className="px-4 pb-4 pt-4">
+      <div className="px-4 pb-4 pt-4 sm:px-6 lg:px-8">
         {/* Prize */}
         <div className="mb-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "var(--t-tint)" }}>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--t-accent)" }}>
@@ -207,7 +207,7 @@ export function TascasPage() {
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6 lg:px-8">
         {error && (
           <p className="mb-3 rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ backgroundColor: "var(--t-card)" }}>
             {error}

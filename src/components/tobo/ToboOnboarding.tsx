@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, House, MapPin, Trophy, UserRound, X } from "lucide-react";
+import { CalendarDays, House, MapPin, Swords, Trophy, UserRound, X } from "lucide-react";
 import {
   LVBP_ONBOARDING_EVENT,
   LVBP_ONBOARDING_STEPS,
@@ -10,7 +10,9 @@ import {
   onboardingDelayMs,
   onboardingIndexForPath,
   readOnboardingDone,
+  readOnboardingRetosDone,
   writeOnboardingDone,
+  writeOnboardingRetosDone,
 } from "@/lib/lvbpOnboarding";
 import { TOBO_TABS } from "@/lib/toboTabs";
 import { usePulse } from "@/state/PulseContext";
@@ -18,6 +20,7 @@ import type { LucideIcon } from "lucide-react";
 
 const ICONS: Record<(typeof LVBP_ONBOARDING_STEPS)[number]["id"], LucideIcon> = {
   inicio: House,
+  retos: Swords,
   quiniela: CalendarDays,
   ranking: Trophy,
   tascas: MapPin,
@@ -37,6 +40,7 @@ export function ToboOnboarding() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [fallbackStep, setFallbackStep] = useState(0);
+  const [retosOnly, setRetosOnly] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [delayMs] = useState(() => {
     if (typeof window === "undefined") return ONBOARDING_AFTER_INTRO_MS;
@@ -45,17 +49,37 @@ export function ToboOnboarding() {
     return onboardingDelayMs(introShown, reduced);
   });
 
-  const mapped = onboardingIndexForPath(location.pathname);
-  const step = mapped ?? fallbackStep;
-  const current = LVBP_ONBOARDING_STEPS[step] ?? LVBP_ONBOARDING_STEPS[0];
-  const total = LVBP_ONBOARDING_STEPS.length;
+  const mapped = retosOnly ? null : onboardingIndexForPath(location.pathname);
+  const step = mapped === 0 && fallbackStep === 1 ? 1 : (mapped ?? fallbackStep);
+  const current = retosOnly ? LVBP_ONBOARDING_STEPS[1] : (LVBP_ONBOARDING_STEPS[step] ?? LVBP_ONBOARDING_STEPS[0]);
+  const total = retosOnly ? 1 : LVBP_ONBOARDING_STEPS.length;
   const Icon = ICONS[current.id];
 
   useEffect(() => {
-    if (!userId || readOnboardingDone(userId)) return;
+    if (!userId) return;
+    const baseDone = readOnboardingDone(userId);
+    const retosDone = readOnboardingRetosDone(userId);
+    if (baseDone && !retosDone) {
+      let cancelled = false;
+      const id = window.setTimeout(() => {
+        if (cancelled || readOnboardingRetosDone(userId)) return;
+        setRetosOnly(true);
+        setOpen(true);
+        window.dispatchEvent(new Event("rusher-overlay-open"));
+      }, delayMs);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(id);
+      };
+    }
+    if (baseDone) return;
     let cancelled = false;
     const id = window.setTimeout(() => {
-      if (!cancelled && !readOnboardingDone(userId)) setOpen(true);
+      if (!cancelled && !readOnboardingDone(userId)) {
+        setRetosOnly(false);
+        setOpen(true);
+        window.dispatchEvent(new Event("rusher-overlay-open"));
+      }
     }, delayMs);
     return () => {
       cancelled = true;
@@ -65,26 +89,48 @@ export function ToboOnboarding() {
 
   useEffect(() => {
     function onChange() {
-      if (!userId || readOnboardingDone(userId)) {
+      if (!userId) return;
+      if (readOnboardingDone(userId) && readOnboardingRetosDone(userId)) {
         setOpen(false);
+        window.dispatchEvent(new Event("rusher-overlay-closed"));
         return;
       }
+      setRetosOnly(readOnboardingDone(userId) && !readOnboardingRetosDone(userId));
       setFallbackStep(0);
       setOpen(true);
+      window.dispatchEvent(new Event("rusher-overlay-open"));
     }
     window.addEventListener(LVBP_ONBOARDING_EVENT, onChange);
     return () => window.removeEventListener(LVBP_ONBOARDING_EVENT, onChange);
   }, [userId]);
 
   function finish() {
-    writeOnboardingDone(userId);
+    if (retosOnly) {
+      writeOnboardingRetosDone(userId);
+    } else {
+      writeOnboardingDone(userId);
+      writeOnboardingRetosDone(userId);
+    }
     setOpen(false);
+    window.dispatchEvent(new Event("rusher-overlay-closed"));
   }
 
   function go(index: number) {
-    const next = Math.max(0, Math.min(total - 1, index));
-    const tab = TOBO_TABS[next];
+    if (retosOnly) return;
+    const next = Math.max(0, Math.min(LVBP_ONBOARDING_STEPS.length - 1, index));
+    const stepDef = LVBP_ONBOARDING_STEPS[next];
     setFallbackStep(next);
+    if (!stepDef) return;
+    if (stepDef.id === "retos") {
+      try {
+        sessionStorage.setItem("rusher-spotlight-retos", "1");
+      } catch {
+        /* ignore */
+      }
+      navigate("/tobo");
+      return;
+    }
+    const tab = TOBO_TABS.find((row) => row.id === stepDef.id);
     if (tab) navigate(tab.to);
   }
 
@@ -114,10 +160,10 @@ export function ToboOnboarding() {
 
   if (!open || !userId) return null;
 
-  const last = step >= total - 1;
+  const last = retosOnly ? true : step >= total - 1;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-40 flex items-end px-4 pb-[calc(74px+env(safe-area-inset-bottom)+12px)]">
+    <div className="pointer-events-none absolute inset-0 z-40 flex items-end px-4 pb-[calc(74px+env(safe-area-inset-bottom)+12px)] sm:justify-center">
       <div
         ref={dialogRef}
         role="dialog"
@@ -125,7 +171,7 @@ export function ToboOnboarding() {
         aria-labelledby="lvbp-onboarding-title"
         aria-describedby="lvbp-onboarding-body"
         tabIndex={-1}
-        className="flyer-in pointer-events-auto w-full rounded-[22px] px-4 py-4 shadow-[0_16px_40px_rgba(0,0,0,0.45)] outline-none"
+        className="flyer-in pointer-events-auto w-full rounded-[22px] px-4 py-4 shadow-[0_16px_40px_rgba(0,0,0,0.45)] outline-none sm:max-w-[520px]"
         style={{ backgroundColor: "#14171A", border: "1px solid #2A2F33", color: "var(--t-text)" }}
       >
         <div className="flex items-start gap-3">
@@ -137,7 +183,7 @@ export function ToboOnboarding() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>
-              {step + 1} de {total}
+              {retosOnly ? "1 de 1" : `${step + 1} de ${total}`}
             </p>
             <h2 id="lvbp-onboarding-title" className="mt-1 text-[18px] font-extrabold leading-tight">
               {current.title}
@@ -160,7 +206,7 @@ export function ToboOnboarding() {
           {current.action}
         </p>
         <div className="mt-4 flex items-center gap-1.5" aria-hidden="true">
-          {LVBP_ONBOARDING_STEPS.map((item, index) => (
+          {!retosOnly && LVBP_ONBOARDING_STEPS.map((item, index) => (
             <span
               key={item.id}
               className="h-1.5 rounded-full"
@@ -175,7 +221,7 @@ export function ToboOnboarding() {
           <button
             type="button"
             onClick={() => go(step - 1)}
-            disabled={step === 0}
+            disabled={retosOnly || step === 0}
             className="min-h-11 rounded-full px-3 text-[13px] font-extrabold disabled:invisible"
             style={{ color: "var(--t-muted)" }}
           >

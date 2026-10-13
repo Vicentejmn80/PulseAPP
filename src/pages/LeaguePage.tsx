@@ -150,7 +150,7 @@ export function LeaguePage() {
       </div>
 
       {!leagueId && (
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-2 sm:px-6 lg:px-8">
           <div className="grid grid-cols-3 gap-1">
             {(["mis", "crear", "unirme"] as const).map((t) => (
               <button
@@ -166,7 +166,7 @@ export function LeaguePage() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
         {success && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#2E7D32]">{success}</p>}
 

@@ -20,18 +20,25 @@ function storedPrompt() {
 export function InstallBanner() {
   const [mode, setMode] = useState<"hidden" | "native" | "ios" | "inapp" | "guide">("hidden");
   const [prompt, setPrompt] = useState<PromptEvent | null>(null);
-  const [blocked, setBlocked] = useState(true);
+  const [overlayOpen, setOverlayOpen] = useState(false);
 
   useEffect(() => {
-    function release() {
-      setBlocked(false);
+    function onOpen() {
+      setOverlayOpen(true);
     }
-    window.addEventListener("rusher-reto-intro-closed", release);
-    return () => window.removeEventListener("rusher-reto-intro-closed", release);
+    function onClose() {
+      setOverlayOpen(false);
+    }
+    window.addEventListener("rusher-overlay-open", onOpen);
+    window.addEventListener("rusher-overlay-closed", onClose);
+    return () => {
+      window.removeEventListener("rusher-overlay-open", onOpen);
+      window.removeEventListener("rusher-overlay-closed", onClose);
+    };
   }, []);
 
   useEffect(() => {
-    if (blocked) return undefined;
+    if (overlayOpen) return undefined;
     const standalone = window.matchMedia("(display-mode: standalone)").matches;
     const appleStandalone = Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
     if (isInstalledDisplay(standalone, appleStandalone) || readInstallHidden(Date.now(), browserInstallStore())) {
@@ -71,7 +78,7 @@ export function InstallBanner() {
       window.removeEventListener("rusher-pwa-prompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [blocked]);
+  }, [overlayOpen]);
 
   function dismiss() {
     writeInstallDismissed(Date.now());
@@ -97,9 +104,9 @@ export function InstallBanner() {
   if (mode === "hidden") return null;
 
   return (
-    <div className="px-4 pb-2">
-      <div className="flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}>
-        <img src={`${import.meta.env.BASE_URL}icons/rush-ios-180.png`} alt="" className="h-11 w-11 shrink-0 rounded-xl" />
+    <div className="px-4 pb-2 sm:flex sm:justify-center">
+      <div className="flex items-center gap-3 rounded-2xl px-3 py-2 sm:w-full sm:max-w-[520px]" style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}>
+        <img src={`${import.meta.env.BASE_URL}logo-rusher.svg`} alt="" className="h-11 w-11 shrink-0 rounded-xl" style={{ backgroundColor: "rgba(255,255,255,0.06)" }} />
         <p className="min-w-0 flex-1 text-[13px] font-extrabold leading-snug">Instala la app y entra con un toque</p>
         {mode === "native" && (
           <button type="button" onClick={() => void install()} className="shrink-0 rounded-xl px-3 py-2 text-[13px] font-extrabold" style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}>Instalar</button>
@@ -113,7 +120,7 @@ export function InstallBanner() {
         <button type="button" aria-label="Cerrar aviso" onClick={dismiss} className="shrink-0 p-1"><X className="h-4 w-4" /></button>
       </div>
       {mode === "guide" && (
-        <div className="mt-2 rounded-2xl p-3" style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}>
+        <div className="mt-2 rounded-2xl p-3 sm:w-full sm:max-w-[520px]" style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}>
           <p className="text-[14px] font-extrabold">En iPhone o iPad</p>
           <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>Apple no permite instalar con un solo toque.</p>
           <ol className="mt-3 flex flex-col gap-3 text-[13px] font-bold">

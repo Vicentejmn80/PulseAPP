@@ -26,6 +26,15 @@ export function openRetoSheet(partial: Partial<Omit<RetoSheetRequest, "id">> = {
   emit();
 }
 
+export function startRetoFlow(partial: Partial<Omit<RetoSheetRequest, "id">> = {}) {
+  try {
+    window.dispatchEvent(new CustomEvent("rusher-reto-open", { detail: partial }));
+  } catch {
+    // fallback: abrir directo si el navegador bloquea CustomEvent
+    openRetoSheet(partial);
+  }
+}
+
 export function closeRetoSheet() {
   current = null;
   emit();

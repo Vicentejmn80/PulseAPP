@@ -174,7 +174,7 @@ export function RankingPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
+      <div className="px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
         <p className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--t-accent)" }}>{LVBP_EXPERIENCE_TITLE}</p>
         <h2 className="text-[24px] font-extrabold tracking-tight">{title}</h2>
         <p className="mt-1 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>{subtitle}</p>
@@ -185,7 +185,7 @@ export function RankingPage() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-4 gap-1.5">
             {(["global", "liga", "semana", "temporada"] as const).map((item) => (
@@ -269,30 +269,34 @@ export function RankingPage() {
 
           {(tab === "global" || tab === "semana") && (
             <>
-              <PositionCard
-                label={tab === "global" ? "Tu posición global" : "Tu posición en la ronda"}
-                mine={mine}
-                points={myPoints}
-                total={total}
-                gap={gap}
-                above={above}
-                extra={!currentCycleId ? `La próxima ronda todavía no empieza${upcoming ? ` (${cyclePeriodLabel(upcoming)})` : ""}.` : undefined}
-              />
-              {round && tab === "semana" && (
-                <p className="flex items-center gap-1.5 px-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  {cyclePeriodLabel(round)}
-                </p>
-              )}
-              <ToboCard>
-                <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>Top 10</p>
-                <div className="mt-3 flex flex-col gap-2">
-                  {top.length === 0 && <p className="text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>Todavía no hay jugadores en este ranking.</p>}
-                  {top.map((entry) => (
-                    <RankRow key={entry.user.id} entry={entry} highlightPodium />
-                  ))}
+              <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:items-start sm:gap-4">
+                <div className="flex flex-col gap-3">
+                  <PositionCard
+                    label={tab === "global" ? "Tu posición global" : "Tu posición en la ronda"}
+                    mine={mine}
+                    points={myPoints}
+                    total={total}
+                    gap={gap}
+                    above={above}
+                    extra={!currentCycleId ? `La próxima ronda todavía no empieza${upcoming ? ` (${cyclePeriodLabel(upcoming)})` : ""}.` : undefined}
+                  />
+                  {round && tab === "semana" && (
+                    <p className="flex items-center gap-1.5 px-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {cyclePeriodLabel(round)}
+                    </p>
+                  )}
                 </div>
-              </ToboCard>
+                <ToboCard>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-accent)" }}>Top 10</p>
+                  <div className="mt-3 flex flex-col gap-2">
+                    {top.length === 0 && <p className="text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>Todavía no hay jugadores en este ranking.</p>}
+                    {top.map((entry) => (
+                      <RankRow key={entry.user.id} entry={entry} highlightPodium />
+                    ))}
+                  </div>
+                </ToboCard>
+              </div>
               {ellipsis && <p className="text-center text-[18px] font-extrabold tracking-[0.4em]" style={{ color: "var(--t-muted)" }}>...</p>}
               {zone.length > 0 && (
                 <ToboCard>

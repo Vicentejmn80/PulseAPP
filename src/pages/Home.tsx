@@ -160,7 +160,7 @@ function TeamSide({ name, align = "start" }: { name: string; align?: "start" | "
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { reload, currentUser } = usePulse();
+  const { reload } = usePulse();
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [cycle, setCycle] = useState<ToboCycle | null>(null);
   const [ranking, setRanking] = useState<LeaderboardEntry[]>([]);
@@ -247,7 +247,7 @@ export function HomePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-3">
+      <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-3 sm:px-6 lg:px-8">
         <div className="min-w-0">
           <h1 className="text-[18px] font-extrabold leading-tight tracking-tight">{LVBP_EXPERIENCE_TITLE}</h1>
           <p className="mt-1 text-[11px] font-bold" style={{ color: "var(--t-muted)" }}>{LVBP_SEASON_LABEL}</p>
@@ -265,7 +265,7 @@ export function HomePage() {
         </button>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-5">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-5 sm:px-6 lg:px-8">
         {error && (
           <p className="rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ backgroundColor: "var(--t-card)" }}>
             {error}
@@ -281,54 +281,63 @@ export function HomePage() {
           </p>
         </ToboCard>
 
-        <ToboCard>
-          <CardHead icon={CalendarDays} title="Ronda actual" />
-          <h2 className="text-[18px] font-extrabold leading-tight tracking-tight">{cycle ? cyclePeriodLabel(cycle) : "Temporada"}</h2>
-          <p className="mt-2 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
-            🏆 {TOBO_ROUND_PRIZE_SUBTITLE}
-          </p>
-          {cycle && (
-            <p className="mt-2 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-              <Clock className="h-3.5 w-3.5 shrink-0" />
-              {cycleClosesLabel(cycle.endsOn)}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ToboCard>
+            <CardHead icon={CalendarDays} title="Ronda actual" />
+            <h2 className="text-[18px] font-extrabold leading-tight tracking-tight">{cycle ? cyclePeriodLabel(cycle) : "Temporada"}</h2>
+            <p className="mt-2 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
+              🏆 {TOBO_ROUND_PRIZE_SUBTITLE}
             </p>
-          )}
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <StatCell value={<>{formato(roundPoints)}<span className="ml-1 text-[11px]">PT</span></>} label={pointsAreRound ? "puntos de ronda" : "puntos totales"} />
-            <StatCell value={mine ? `#${mine.position}` : "—"} label="puesto" />
-            <StatCell value={gap ?? "—"} label={mine && mine.position > 1 ? "al anterior" : "distancia"} />
-          </div>
-        </ToboCard>
-
-        <RetosPanel userId={currentUser?.id ?? ""} />
-
-        <ToboCard>
-          <CardHead
-            icon={CircleDot}
-            title="Juega hoy"
-            action={{ label: "Ver próximos →", onClick: () => navigate("/tobo/mi-quiniela") }}
-          />
-          <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-            {!ready
-              ? "Cargando pronósticos…"
-              : gamesToShow.length > 0
-                ? "Partidos programados para hoy"
-                : nextMatch
-                  ? "No hay juegos hoy. Este es el próximo partido"
-                  : "No hay pronósticos próximos todavía."}
-          </p>
-          {!ready ? null : gamesToShow.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {gamesToShow.map((match) => (
-                <MatchCard key={match.id} match={match} now={now} onOpen={() => navigate(`/tobo/partidos/${match.id}`)} />
-              ))}
+            {cycle && (
+              <p className="mt-2 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                {cycleClosesLabel(cycle.endsOn)}
+              </p>
+            )}
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <StatCell value={<>{formato(roundPoints)}<span className="ml-1 text-[11px]">PT</span></>} label={pointsAreRound ? "puntos de ronda" : "puntos totales"} />
+              <StatCell value={mine ? `#${mine.position}` : "—"} label="puesto" />
+              <StatCell value={gap ?? "—"} label={mine && mine.position > 1 ? "al anterior" : "distancia"} />
             </div>
-          ) : nextMatch ? (
-            <MatchCard match={nextMatch} now={now} onOpen={() => navigate(`/tobo/partidos/${nextMatch.id}`)} />
-          ) : (
-            <p className="text-[15px] font-extrabold">📅 No hay juegos programados a futuro.</p>
-          )}
-        </ToboCard>
+          </ToboCard>
+
+          <ToboCard className="sm:col-span-1 lg:col-span-1">
+            <CardHead
+              icon={CircleDot}
+              title="Juega hoy"
+              action={{ label: "Ver próximos →", onClick: () => navigate("/tobo/mi-quiniela") }}
+            />
+            <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+              {!ready
+                ? "Cargando pronósticos…"
+                : gamesToShow.length > 0
+                  ? "Partidos programados para hoy"
+                  : nextMatch
+                    ? "No hay juegos hoy. Este es el próximo partido"
+                    : "No hay pronósticos próximos todavía."}
+            </p>
+            {!ready ? null : gamesToShow.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {gamesToShow.map((match) => (
+                  <MatchCard key={match.id} match={match} now={now} onOpen={() => navigate(`/tobo/partidos/${match.id}`)} />
+                ))}
+              </div>
+            ) : nextMatch ? (
+              <MatchCard match={nextMatch} now={now} onOpen={() => navigate(`/tobo/partidos/${nextMatch.id}`)} />
+            ) : (
+              <p className="text-[15px] font-extrabold">📅 No hay juegos programados a futuro.</p>
+            )}
+          </ToboCard>
+
+          <ToboCard className="sm:col-span-2 lg:col-span-1">
+            <CardHead icon={Users} title="Juega con los tuyos" />
+            <p className="mb-3 text-[14px] font-extrabold">Crea una liga privada y compite con tus amigos.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <GoldCta icon={Users} onClick={() => navigate("/tobo/ligas?tab=crear")}>Crear liga</GoldCta>
+              <GhostCta icon={Users} onClick={() => navigate("/tobo/ligas?tab=unirme")}>Unirme</GhostCta>
+            </div>
+          </ToboCard>
+        </div>
 
         <div>
           <GhostCta onClick={() => setMoreOpen((open) => !open)}>{moreOpen ? "Ocultar" : "Más pronósticos"}</GhostCta>
@@ -353,61 +362,56 @@ export function HomePage() {
           )}
         </div>
 
-        <ToboCard>
-          <CardHead icon={Zap} title="Trivia de hoy" action={{ label: "Ver todos →", onClick: () => navigate("/tobo/trivias") }} />
-          <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-            {triviaMax > 0 ? `Hasta ${formato(triviaMax)} puntos disponibles` : "Las trivias del día"}
-          </p>
-          <div className="flex flex-col gap-3">
-            {TRIVIA_ROWS.map((row) => {
-              const state = trivia.find((item) => item.level === row.level);
-              const open = state?.status === "available" || state?.status === "in_progress";
-              const cooling = state?.status === "cooldown";
-              return (
-                <article key={row.level} className="rounded-2xl p-3" style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid var(--t-border)" }}>
-                  <div className="flex items-center gap-3">
-                    <IconChip icon={row.icon} color={row.color} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-extrabold">{row.label}</p>
-                      <p className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-                        {!state || state.questionCount === 0
-                          ? "Sin preguntas"
-                          : `${state.questionCount} preguntas · +${triviaPointsForDifficulty(row.level)} PT por acierto`}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <RetosPanel />
+
+          <ToboCard>
+            <CardHead icon={Zap} title="Trivia de hoy" action={{ label: "Ver todos →", onClick: () => navigate("/tobo/trivias") }} />
+            <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+              {triviaMax > 0 ? `Hasta ${formato(triviaMax)} puntos disponibles` : "Las trivias del día"}
+            </p>
+            <div className="flex flex-col gap-3">
+              {TRIVIA_ROWS.map((row) => {
+                const state = trivia.find((item) => item.level === row.level);
+                const open = state?.status === "available" || state?.status === "in_progress";
+                const cooling = state?.status === "cooldown";
+                return (
+                  <article key={row.level} className="rounded-2xl p-3" style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid var(--t-border)" }}>
+                    <div className="flex items-center gap-3">
+                      <IconChip icon={row.icon} color={row.color} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-extrabold">{row.label}</p>
+                        <p className="text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+                          {!state || state.questionCount === 0
+                            ? "Sin preguntas"
+                            : `${state.questionCount} preguntas · +${triviaPointsForDifficulty(row.level)} PT por acierto`}
+                        </p>
+                      </div>
+                      <p className="text-[16px] font-extrabold tabular-nums">
+                        {!state || state.questionCount === 0 ? "—" : `${state.answeredCount}/${state.questionCount}`}
                       </p>
                     </div>
-                    <p className="text-[16px] font-extrabold tabular-nums">
-                      {!state || state.questionCount === 0 ? "—" : `${state.answeredCount}/${state.questionCount}`}
-                    </p>
-                  </div>
-                  {open && (
-                    <div className="mt-3">
-                      <GoldCta icon={Play} onClick={() => openTrivia(row.level)}>{state?.status === "in_progress" ? "Continuar" : "Jugar ahora"}</GoldCta>
-                    </div>
-                  )}
-                  {cooling && (
-                    <p className="mt-3 flex items-center gap-1.5 text-[13px] font-extrabold" style={{ color: row.color }}>
-                      <Check className="h-4 w-4" /> {formatCooldown(remainingMs(state?.availableAt ?? null, triviaSkew, now))}
-                    </p>
-                  )}
-                  {state && state.questionCount === 0 && (
-                    <p className="mt-3 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
-                      <Lock className="h-4 w-4" /> Hoy no está disponible
-                    </p>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-        </ToboCard>
-
-        <ToboCard>
-          <CardHead icon={Users} title="Juega con los tuyos" />
-          <p className="mb-3 text-[14px] font-extrabold">Crea una liga privada y compite con tus amigos.</p>
-          <div className="grid grid-cols-2 gap-2">
-            <GoldCta icon={Users} onClick={() => navigate("/tobo/ligas?tab=crear")}>Crear liga</GoldCta>
-            <GhostCta icon={Users} onClick={() => navigate("/tobo/ligas?tab=unirme")}>Unirme</GhostCta>
-          </div>
-        </ToboCard>
+                    {open && (
+                      <div className="mt-3">
+                        <GoldCta icon={Play} onClick={() => openTrivia(row.level)}>{state?.status === "in_progress" ? "Continuar" : "Jugar ahora"}</GoldCta>
+                      </div>
+                    )}
+                    {cooling && (
+                      <p className="mt-3 flex items-center gap-1.5 text-[13px] font-extrabold" style={{ color: row.color }}>
+                        <Check className="h-4 w-4" /> {formatCooldown(remainingMs(state?.availableAt ?? null, triviaSkew, now))}
+                      </p>
+                    )}
+                    {state && state.questionCount === 0 && (
+                      <p className="mt-3 flex items-center gap-1.5 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+                        <Lock className="h-4 w-4" /> Hoy no está disponible
+                      </p>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </ToboCard>
+        </div>
       </div>
       <TabBar />
     </div>

@@ -13,12 +13,13 @@ import { TOBO_TABS, type ToboTabId } from "@/lib/toboTabs";
  * existe "Ver introducción de nuevo" en Perfil.
  */
 export const LVBP_ONBOARDING_STORAGE_PREFIX = "rusher-lvbp-onboarding:";
+export const LVBP_ONBOARDING_RETOS_PREFIX = "rusher-lvbp-onboarding-retos:";
 export const LVBP_ONBOARDING_EVENT = "rusher-lvbp-onboarding";
 export const TOBO_INTRO_SESSION_KEY = "tobo-intro-shown";
 export const ONBOARDING_AFTER_INTRO_MS = 1700;
 
 export const LVBP_ONBOARDING_STEPS: ReadonlyArray<{
-  id: ToboTabId;
+  id: ToboTabId | "retos";
   title: string;
   body: string;
   action: string;
@@ -28,6 +29,12 @@ export const LVBP_ONBOARDING_STEPS: ReadonlyArray<{
     title: "Inicio",
     body: "Todo lo importante de Béisbol Rush LVBP en un solo lugar. Revisa la ronda actual, los próximos partidos, las trivias del día y las novedades.",
     action: "Mira la ronda y los partidos de hoy.",
+  },
+  {
+    id: "retos",
+    title: "Retos",
+    body: "Reta a un pana: apuesten puntos en un juego o en una trivia y el que gane se lleva los puntos del otro.",
+    action: "Encuéntralos en el Inicio.",
   },
   {
     id: "quiniela",
@@ -59,6 +66,10 @@ export function onboardingStorageKey(userId: string) {
   return `${LVBP_ONBOARDING_STORAGE_PREFIX}${userId}`;
 }
 
+export function onboardingRetosKey(userId: string) {
+  return `${LVBP_ONBOARDING_RETOS_PREFIX}${userId}`;
+}
+
 type KeyValueStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 export function browserOnboardingStore(): KeyValueStore | null {
@@ -88,6 +99,24 @@ export function writeOnboardingDone(userId: string, store: KeyValueStore | null 
   }
 }
 
+export function readOnboardingRetosDone(userId: string, store: KeyValueStore | null = browserOnboardingStore()) {
+  if (!userId || !store) return false;
+  try {
+    return store.getItem(onboardingRetosKey(userId)) === "done";
+  } catch {
+    return false;
+  }
+}
+
+export function writeOnboardingRetosDone(userId: string, store: KeyValueStore | null = browserOnboardingStore()) {
+  if (!userId || !store) return;
+  try {
+    store.setItem(onboardingRetosKey(userId), "done");
+  } catch {
+    /* igual que al guardar */
+  }
+}
+
 export function clearOnboarding(userId: string, store: KeyValueStore | null = browserOnboardingStore()) {
   if (!userId || !store) return;
   try {
@@ -105,16 +134,17 @@ export function onboardingDelayMs(introAlreadyShown: boolean, reducedMotion: boo
 /** Índice de la pestaña que corresponde a la ruta actual. Null si es otra pantalla de Tobo. */
 export function onboardingIndexForPath(pathname: string) {
   if (pathname === "/tobo" || pathname.startsWith("/tobo/trivias")) return 0;
-  if (pathname.startsWith("/tobo/mi-quiniela") || pathname.startsWith("/tobo/partidos")) return 1;
-  if (pathname.startsWith("/tobo/ranking")) return 2;
-  if (pathname.startsWith("/tobo/tascas") || pathname.startsWith("/tobo/venue")) return 3;
-  if (pathname.startsWith("/tobo/profile")) return 4;
+  if (pathname.startsWith("/tobo/mi-quiniela") || pathname.startsWith("/tobo/partidos")) return 2;
+  if (pathname.startsWith("/tobo/ranking")) return 3;
+  if (pathname.startsWith("/tobo/tascas") || pathname.startsWith("/tobo/venue")) return 4;
+  if (pathname.startsWith("/tobo/profile")) return 5;
   return null;
 }
 
 export function onboardingStepsMatchTabs() {
-  return LVBP_ONBOARDING_STEPS.every((step, index) => {
+  const filtered = LVBP_ONBOARDING_STEPS.filter((step) => step.id !== "retos");
+  return filtered.every((step, index) => {
     const tab = TOBO_TABS[index];
     return tab?.id === step.id && tab.label === step.title;
-  }) && LVBP_ONBOARDING_STEPS.length === TOBO_TABS.length;
+  }) && filtered.length === TOBO_TABS.length;
 }

@@ -17,51 +17,53 @@ export function ToboLayout() {
   return (
     <div
       data-theme="tobo"
-      className="relative flex h-full flex-col"
+      className="relative flex min-h-[100dvh] w-full flex-col lg:pl-[220px]"
       style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)" }}
     >
-      {/* Phase 5: Back-to-Pulse persistent bar */}
-      <div
-        className="flex shrink-0 items-center justify-between px-5 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))]"
-        style={{ borderBottom: "1px solid var(--t-border)" }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate(toboExitTarget())}
-          aria-label={`Salir de ${LVBP_EXPERIENCE_TITLE}`}
-          className="flex items-center gap-1.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em]"
-          style={{ color: "var(--t-accent)" }}
+      <div className="mx-auto flex w-full min-h-[100dvh] flex-col lg:max-w-[1200px]">
+        {/* Phase 5: Back-to-Pulse persistent bar */}
+        <div
+          className="flex shrink-0 items-center justify-between px-4 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-6 lg:px-8"
+          style={{ borderBottom: "1px solid var(--t-border)" }}
         >
-          ← Rusher
-        </button>
-        <span
-          className="max-w-[48%] truncate text-right text-[9px] font-extrabold uppercase tracking-[0.12em]"
-          style={{ color: "var(--t-muted)" }}
-        >
-          {LVBP_EXPERIENCE_TITLE}
-        </span>
-      </div>
-      <InstallBanner />
-      <div className="px-4">
-        <LeagueInviteInbox />
-      </div>
-
-      {!atHome && (
-        <div className="shrink-0 px-4 pb-2 pt-2">
-          <ToboBackHome />
+          <button
+            type="button"
+            onClick={() => navigate(toboExitTarget())}
+            aria-label={`Salir de ${LVBP_EXPERIENCE_TITLE}`}
+            className="flex items-center gap-1.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em]"
+            style={{ color: "var(--t-accent)" }}
+          >
+            ← Rusher
+          </button>
+          <span
+            className="max-w-[48%] truncate text-right text-[9px] font-extrabold uppercase tracking-[0.12em]"
+            style={{ color: "var(--t-muted)" }}
+          >
+            {LVBP_EXPERIENCE_TITLE}
+          </span>
         </div>
-      )}
+        <InstallBanner />
+        <div className="px-4 sm:px-6 lg:px-8">
+          <LeagueInviteInbox />
+        </div>
 
-      {/* Phase 4: Entry brand animation */}
-      <CategoryTransition />
+        {!atHome && (
+          <div className="shrink-0 px-4 pb-2 pt-2 sm:px-6 lg:px-8">
+            <ToboBackHome />
+          </div>
+        )}
 
-      {/* Routed page content */}
-      <div className="min-h-0 flex-1">
-        <Outlet />
+        {/* Phase 4: Entry brand animation */}
+        <CategoryTransition />
+
+        {/* Routed page content */}
+        <div className="min-h-0 flex-1">
+          <Outlet />
+        </div>
+        <ToboOnboarding />
+        <RetosIntro />
+        <RetoSheetHost />
       </div>
-      <ToboOnboarding />
-      <RetosIntro />
-      <RetoSheetHost />
     </div>
   );
 }

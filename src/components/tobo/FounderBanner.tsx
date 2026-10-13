@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const BANNER_SRC = `${import.meta.env.BASE_URL}rusher-locales-afiliados.jpg?v=4`;
+const BANNER_SRC = `${import.meta.env.BASE_URL}rusher-locales-afiliados.png?v=5`;
 
 const BANNER_COPY =
   "Nuevos aliados. Locales aliados. Juega, escanea el QR y gana beneficios en los lugares que ya conoces. Garrison Barber Society, aliado oficial. Beneficio en tu primera visita escaneando el QR en la barbería. Pronostica, escanea y gana.";

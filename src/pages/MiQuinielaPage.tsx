@@ -98,7 +98,7 @@ export function MiQuinielaPage() {
         </div>
       </div>
 
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-2 sm:px-6 lg:px-8">
         <div className={`grid gap-1 ${tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
           {tabs.map((t) => (
             <button
@@ -115,7 +115,7 @@ export function MiQuinielaPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
 
         {grouped.length === 0 && !error && (

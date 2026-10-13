@@ -3,23 +3,10 @@ import { Swords } from "lucide-react";
 import { CardHead, ToboCard } from "@/components/tobo/surface";
 import { formato } from "@/lib/format";
 import { retoBoard, retoCancel, retoCreate, retoRespond, type RetoBoard, type RetoItem } from "@/services/retosApi";
-import { openRetoSheet } from "@/state/retoSheet";
+import { startRetoFlow } from "@/state/retoSheet";
 
 const EMPTY: RetoBoard = { ok: true, won: 0, lost: 0, pending: 0, points: 0, locked: 0, available: 0, maxStake: 0, items: [] };
 const SEND_ERROR = "No pudimos enviar el reto. Inténtalo de nuevo.";
-const COACH_PREFIX = "rusher-reto-coach:";
-
-function coachKey(userId: string) {
-  return `${COACH_PREFIX}${userId || "anon"}`;
-}
-
-function readCoach(userId: string) {
-  try {
-    return localStorage.getItem(coachKey(userId)) === "done";
-  } catch {
-    return true;
-  }
-}
 
 function statusLabel(item: RetoItem) {
   if (item.outcome === "won") return `Ganaste ${formato(item.stake)} pts`;
@@ -33,16 +20,13 @@ function statusLabel(item: RetoItem) {
 export function RetosPanel({
   matchId = "",
   triviaLevel = "",
-  userId = "",
 }: {
   matchId?: string;
   triviaLevel?: string;
-  userId?: string;
 }) {
   const [board, setBoard] = useState<RetoBoard>(EMPTY);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [coach, setCoach] = useState(false);
 
   async function reload() {
     const next = await retoBoard();
@@ -61,23 +45,6 @@ export function RetosPanel({
     };
   }, [matchId, triviaLevel]);
 
-  useEffect(() => {
-    function onCoach() {
-      if (!matchId && !triviaLevel && !readCoach(userId)) setCoach(true);
-    }
-    window.addEventListener("rusher-reto-coach", onCoach);
-    if (!matchId && !triviaLevel && !readCoach(userId)) {
-      try {
-        if (localStorage.getItem("rusher-reto-coach-pending") === (userId || "1") || sessionStorage.getItem("rusher-reto-coach-now") === "1") {
-          setCoach(true);
-        }
-      } catch {
-        /* modo privado */
-      }
-    }
-    return () => window.removeEventListener("rusher-reto-coach", onCoach);
-  }, [matchId, triviaLevel, userId]);
-
   const visible = board.items.filter((item) => {
     if (matchId) return item.matchId === matchId;
     if (triviaLevel) return item.triviaLevel === triviaLevel;
@@ -88,7 +55,7 @@ export function RetosPanel({
   const finished = visible.filter((item) => item.outcome === "won" || item.outcome === "lost").slice(0, 1);
 
   function openSheet() {
-    openRetoSheet({ matchId, triviaLevel });
+    startRetoFlow({ matchId, triviaLevel });
   }
 
   async function cancel(item: RetoItem) {
@@ -141,17 +108,6 @@ export function RetosPanel({
     }
   }
 
-  function dismissCoach() {
-    try {
-      localStorage.setItem(coachKey(userId), "done");
-      localStorage.removeItem("rusher-reto-coach-pending");
-    } catch {
-      /* modo privado */
-    }
-    setCoach(false);
-    window.dispatchEvent(new Event("rusher-reto-coach-closed"));
-  }
-
   return (
     <ToboCard>
       <CardHead icon={Swords} title="Retos" />
@@ -177,12 +133,6 @@ export function RetosPanel({
       <button type="button" onClick={openSheet} className="mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl text-[15px] font-extrabold" style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}>
         Retar a un amigo
       </button>
-      {coach && (
-        <div className="mt-3 rounded-2xl p-3" style={{ border: "1px solid var(--t-accent)" }}>
-          <p className="text-[14px] font-extrabold">Desde aquí retas a un amigo.</p>
-          <button type="button" onClick={dismissCoach} className="mt-2 text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>Entendido</button>
-        </div>
-      )}
       {incoming.length > 0 && (
         <p className="mt-4 rounded-2xl px-3 py-2 text-[14px] font-extrabold" style={{ backgroundColor: "rgba(207,255,0,0.14)", color: "var(--t-accent)" }}>
           Te retaron. Responde antes de que cierre.

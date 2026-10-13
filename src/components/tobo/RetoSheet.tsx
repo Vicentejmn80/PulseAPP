@@ -157,10 +157,10 @@ function RetoSheet({ request }: { request: NonNullable<ReturnType<typeof readRet
   }, [sentAlias]);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end" style={{ backgroundColor: "rgba(0,0,0,0.62)" }}>
+    <div className="fixed inset-0 z-40 flex items-end sm:items-center sm:justify-center" style={{ backgroundColor: "rgba(0,0,0,0.62)" }}>
       <button type="button" aria-label="Cerrar" className="absolute inset-0" onClick={() => closeRetoSheet()} />
       <section
-        className="relative max-h-[88%] w-full overflow-y-auto rounded-t-[28px] px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4"
+        className="relative max-h-[88%] w-full overflow-y-auto rounded-t-[28px] px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 sm:max-h-[80%] sm:max-w-[520px] sm:rounded-[28px] sm:pb-4"
         style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}
       >
         {sentAlias ? (
@@ -173,6 +173,17 @@ function RetoSheet({ request }: { request: NonNullable<ReturnType<typeof readRet
           </div>
         ) : (
           <>
+            <div className="mb-2 flex items-center justify-between px-1">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--t-muted)" }}>Reto</p>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("rusher-reto-howto"))}
+                className="min-h-11 px-2 text-[12px] font-bold"
+                style={{ color: "var(--t-muted)" }}
+              >
+                ¿Cómo funciona?
+              </button>
+            </div>
             <div className="mb-4 flex items-center gap-2">
               {Array.from({ length: steps }, (_, index) => (
                 <span key={index} className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: index <= step ? "var(--t-accent)" : "var(--t-border)" }} />
