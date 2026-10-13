@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Swords } from "lucide-react";
 import { CardHead, ToboCard } from "@/components/tobo/surface";
 import { formato } from "@/lib/format";
-import { retoBoard, retoCreate, retoRespond, type RetoBoard, type RetoItem } from "@/services/retosApi";
+import { retoBoard, retoCancel, retoCreate, retoRespond, type RetoBoard, type RetoItem } from "@/services/retosApi";
 import { openRetoSheet } from "@/state/retoSheet";
 
-const EMPTY: RetoBoard = { ok: true, won: 0, lost: 0, pending: 0, points: 0, maxStake: 0, items: [] };
+const EMPTY: RetoBoard = { ok: true, won: 0, lost: 0, pending: 0, points: 0, locked: 0, available: 0, maxStake: 0, items: [] };
 const SEND_ERROR = "No pudimos enviar el reto. Inténtalo de nuevo.";
 const COACH_PREFIX = "rusher-reto-coach:";
 
@@ -26,7 +26,7 @@ function statusLabel(item: RetoItem) {
   if (item.outcome === "lost") return `Perdiste ${formato(item.stake)} pts`;
   if (item.outcome === "live") return "En juego";
   if (item.status === "pending" && !item.incoming) return "Esperando";
-  if (item.outcome === "tie" || item.outcome === "void" || item.outcome === "expired" || item.outcome === "rejected") return "Puntos devueltos";
+  if (item.outcome === "tie" || item.outcome === "void" || item.outcome === "expired" || item.outcome === "rejected" || item.status === "cancelled") return "Sin cambio de puntos";
   return "Pendiente";
 }
 
@@ -91,6 +91,20 @@ export function RetosPanel({
     openRetoSheet({ matchId, triviaLevel });
   }
 
+  async function cancel(item: RetoItem) {
+    setError("");
+    setBusy(true);
+    try {
+      await retoCancel(item.id);
+      await reload();
+    } catch (reason: unknown) {
+      console.error("reto", reason);
+      setError("No pudimos cancelar el reto. Inténtalo de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function respond(item: RetoItem, accept: boolean) {
     setError("");
     setBusy(true);
@@ -150,6 +164,9 @@ export function RetosPanel({
           <p className="mt-1 text-[13px] font-semibold leading-snug" style={{ color: "var(--t-muted)" }}>
             Quien gane se lleva los puntos del reto.
           </p>
+          <p className="mt-2 text-[13px] font-extrabold">Tienes {formato(board.points)} pts</p>
+          <p className="text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>{formato(board.locked)} pts en juego</p>
+          <p className="text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>Disponibles para apostar: {formato(board.available)}</p>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
@@ -186,6 +203,11 @@ export function RetosPanel({
         <article key={item.id} className="mt-3 rounded-2xl p-3" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
           <p className="text-[15px] font-extrabold">Tú VS @{item.rival}</p>
           <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>{item.label} · {formato(item.stake)} pts · {statusLabel(item)}</p>
+          {item.status === "pending" && !item.incoming && (
+            <button type="button" disabled={busy} onClick={() => void cancel(item)} className="mt-3 min-h-11 w-full rounded-2xl text-[14px] font-extrabold" style={{ border: "1px solid var(--t-border)" }}>
+              Cancelar reto
+            </button>
+          )}
         </article>
       ))}
       {finished.map((item) => (

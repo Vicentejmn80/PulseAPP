@@ -40,6 +40,8 @@ export interface RetoBoard {
   lost: number;
   pending: number;
   points: number;
+  locked: number;
+  available: number;
   maxStake: number;
   items: RetoItem[];
 }
@@ -85,6 +87,8 @@ export async function retoBoard() {
     lost: result?.lost ?? 0,
     pending: result?.pending ?? 0,
     points: result?.points ?? 0,
+    locked: result?.locked ?? 0,
+    available: result?.available ?? result?.points ?? 0,
     maxStake: result?.maxStake ?? 0,
   };
 }
@@ -131,6 +135,14 @@ export async function retoRespond(id: string, accept: boolean) {
     p_adult: true,
   });
   if (!result?.ok) throw new Error(result?.error || "No se pudo responder el reto.");
+}
+
+export async function retoCancel(id: string) {
+  const result = await callRpc<OkResult>("pulse_reto_cancel", {
+    p_token: token(),
+    p_reto_id: id,
+  });
+  if (!result?.ok) throw new Error(result?.error || "No se pudo cancelar el reto.");
 }
 
 export async function retoBlock(alias: string) {

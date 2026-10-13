@@ -38,6 +38,8 @@ function RetoSheet({ request }: { request: NonNullable<ReturnType<typeof readRet
   const [stake, setStake] = useState(request.stake || 5);
   const [message, setMessage] = useState(request.message);
   const [points, setPoints] = useState(0);
+  const [locked, setLocked] = useState(0);
+  const [available, setAvailable] = useState(0);
   const [maxStake, setMaxStake] = useState(0);
   const [adultConfirmed, setAdultConfirmed] = useState(false);
   const [adult, setAdult] = useState(false);
@@ -88,6 +90,8 @@ function RetoSheet({ request }: { request: NonNullable<ReturnType<typeof readRet
   async function refreshPoints() {
     const board = await retoBoard();
     setPoints(board.points);
+    setLocked(board.locked);
+    setAvailable(board.available);
     setMaxStake(board.maxStake);
     if (stake > board.maxStake && board.maxStake >= RETO_MIN) setStake(board.maxStake);
   }
@@ -117,7 +121,7 @@ function RetoSheet({ request }: { request: NonNullable<ReturnType<typeof readRet
       setError("Los retos son solo para mayores de 18.");
       return;
     }
-    if (!retoStakeAllowed(stake, points)) {
+    if (!retoStakeAllowed(stake, available)) {
       setError("No puedes apostar más puntos de los que tienes.");
       return;
     }
@@ -256,6 +260,8 @@ function RetoSheet({ request }: { request: NonNullable<ReturnType<typeof readRet
               <>
                 <h2 className="text-[22px] font-extrabold">¿Cuánto apuestas?</h2>
                 <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>Tienes {formato(points)} pts</p>
+                <p className="text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>{formato(locked)} pts en juego</p>
+                <p className="text-[13px] font-extrabold">Disponibles para apostar: {formato(available)}</p>
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {RETO_QUICK_STAKES.map((value) => (
                     <button key={value} type="button" disabled={value > maxStake} onClick={() => setStake(value)} className="min-h-12 rounded-2xl text-[15px] font-extrabold disabled:opacity-40" style={stake === value ? { backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" } : { backgroundColor: "rgba(255,255,255,0.06)" }}>

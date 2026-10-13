@@ -1,5 +1,6 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
+import { appVersionLabel } from "@/config/appVersion";
 import { formato } from "@/lib/format";
 import { usePulse } from "@/state/PulseContext";
 
@@ -89,6 +90,7 @@ export function PulsePerfilPage() {
         >
           Cerrar sesión en este teléfono
         </button>
+        <p className="mt-3 text-center text-[11px] font-semibold" style={{ color: "var(--p-muted)" }}>{appVersionLabel()}</p>
       </div>
 
       <PulseTabBar />

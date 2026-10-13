@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { AppUpdateNotice } from "@/components/AppUpdateNotice";
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-[100dvh] justify-center">
       <div className="relative flex min-h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden bg-[#0B0D0F] shadow-[0_0_80px_rgba(0,0,0,0.45)]">
         {children}
+        <AppUpdateNotice />
       </div>
     </div>
   );

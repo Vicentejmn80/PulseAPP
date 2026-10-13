@@ -29,7 +29,7 @@ Los puntos ya entregados **no se tocaron**.
 
 ## Desactivadas
 
-- `25b34f03-6546-4be4-9392-a20d64570007` — «¿Qué equipo lleva los colores negro y amarillo en la LVBP?» / respuesta en app: Águilas del Zulia. No está en el banco Iniciado. Marcada `disabled` + `review_note = no verificada`. **4 respuestas** de usuarios quedan como estaban.
+- `25b34f03-6546-4be4-9392-a20d64570007` — «¿Qué equipo lleva los colores negro y amarillo en la LVBP?» / respuesta en app: Águilas del Zulia. No está en el banco Iniciado. Sigue `disabled`. Intermedio y Avanzado quedaron con `review_note = pendiente de verificación`. **4 respuestas** de usuarios quedan como estaban.
 
 Las 21 easy desactivadas de antes siguen archivadas; no se borraron.
 

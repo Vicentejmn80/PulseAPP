@@ -73,7 +73,6 @@ export function RankingPage() {
 
   useEffect(() => {
     let alive = true;
-    const league = leagues.find((row) => row.id === selectedLeague);
     const cycle = currentCycleId || "lifetime";
 
     if (tab === "liga") {

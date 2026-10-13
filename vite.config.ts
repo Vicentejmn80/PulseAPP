@@ -132,11 +132,15 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    define: {
+      __RUSHER_COMMIT__: JSON.stringify((process.env.VERCEL_GIT_COMMIT_SHA || "local").slice(0, 7)),
+      __RUSHER_BUILT_AT__: JSON.stringify(new Date().toISOString().slice(0, 16).replace("T", " ")),
+    },
     plugins: [
       react(),
       pulseApi(),
       VitePWA({
-        registerType: "autoUpdate",
+        registerType: "prompt",
         includeAssets: [
           "rusher-locales-afiliados.jpg",
           "rusher-locales-afiliados.png",
@@ -167,6 +171,9 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          cacheId: "rusher-app-v4",
+          skipWaiting: true,
+          clientsClaim: true,
           globPatterns: ["**/*.{js,css,html,svg,woff2,webmanifest}", "icons/*.png"],
           cleanupOutdatedCaches: true,
           navigateFallback: "/index.html",
@@ -176,9 +183,18 @@ export default defineConfig(({ mode }) => {
               urlPattern: ({ request }) => request.mode === "navigate",
               handler: "NetworkFirst",
               options: {
-                cacheName: "rusher-pages-v3",
+                cacheName: "rusher-pages-v4",
                 networkTimeoutSeconds: 4,
                 expiration: { maxEntries: 8, maxAgeSeconds: 24 * 60 * 60 },
+              },
+            },
+            {
+              urlPattern: ({ request }) => request.destination === "script" || request.destination === "style",
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "rusher-assets-v4",
+                networkTimeoutSeconds: 4,
+                expiration: { maxEntries: 40, maxAgeSeconds: 24 * 60 * 60 },
               },
             },
           ],

@@ -6,6 +6,7 @@ import { AvatarPicker } from "@/components/tobo/AvatarPicker";
 import { TabBar } from "@/components/ui/TabBar";
 import { CardHead, StatLine, ToboCard } from "@/components/tobo/surface";
 import { replayLvbpOnboarding } from "@/components/tobo/ToboOnboarding";
+import { appVersionLabel } from "@/config/appVersion";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { formato, gameTypeLabel } from "@/lib/format";
 import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
@@ -214,9 +215,10 @@ export function ProfilePage() {
         >
           Ver introducción de nuevo
         </button>
-        <button type="button" onClick={logout} className="mx-1 mb-4 mt-3 text-[14px] font-extrabold text-[#E23B2F]">
+        <button type="button" onClick={logout} className="mx-1 mb-2 mt-3 text-[14px] font-extrabold text-[#E23B2F]">
           Cerrar sesion en este telefono
         </button>
+        <p className="mx-1 mb-4 text-[11px] font-semibold" style={{ color: "var(--t-muted)" }}>{appVersionLabel()}</p>
       </div>
       <TabBar />
     </div>
