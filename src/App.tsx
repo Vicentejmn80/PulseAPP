@@ -11,6 +11,7 @@ import { AdminTascasPage } from "@/pages/AdminTascasPage";
 import { AdminTriviasPage } from "@/pages/AdminTriviasPage";
 import { EnterPage } from "@/pages/EnterPage";
 import { HomePage } from "@/pages/Home";
+import { JoinInvitePage } from "@/pages/JoinInvitePage";
 import { LeaguePage } from "@/pages/LeaguePage";
 import { MatchPredictPage, MatchesPage } from "@/pages/MatchesPage";
 import { MiQuinielaPage } from "@/pages/MiQuinielaPage";
@@ -45,6 +46,20 @@ function GuestVenue() {
   return <VenuePage guest />;
 }
 
+function GuestJoin() {
+  const { code = "" } = useParams();
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("rusher-league-join-code", code.trim().toUpperCase());
+      sessionStorage.setItem("rusher-league-autojoin", "1");
+      sessionStorage.setItem("pulse-after-login", `/tobo/unirse/${encodeURIComponent(code)}`);
+    } catch {
+      /* modo privado */
+    }
+  }, [code]);
+  return <EnterPage hint="Entra para unirte a la liga." />;
+}
+
 /* ── Backward-compat redirects for printed QR codes ── */
 function QrRedirect() {
   const { token = "" } = useParams();
@@ -64,7 +79,8 @@ function ResumeVisit() {
       next?.startsWith("/q/") ||
       next?.startsWith("/venue/") ||
       next?.startsWith("/partidos/demo_") ||
-      next?.startsWith("/tobo/")
+      next?.startsWith("/tobo/") ||
+      next?.startsWith("/unirse/")
     ) {
       sessionStorage.removeItem("pulse-after-login");
       navigate(next, { replace: true });
@@ -92,9 +108,11 @@ export function App() {
         <div className="relative flex h-[100dvh] min-h-0 flex-col">
           <div className="flex min-h-0 flex-1 flex-col">
             <Routes>
-              <Route path="/q/:token"     element={<GuestQr />} />
-              <Route path="/venue/:slug"  element={<GuestVenue />} />
-              <Route path="*"             element={<EnterPage />} />
+              <Route path="/q/:token"          element={<GuestQr />} />
+              <Route path="/venue/:slug"       element={<GuestVenue />} />
+              <Route path="/unirse/:code"      element={<GuestJoin />} />
+              <Route path="/tobo/unirse/:code" element={<GuestJoin />} />
+              <Route path="*"                  element={<EnterPage />} />
             </Routes>
           </div>
           <Notice message={notice} />
@@ -121,6 +139,7 @@ export function App() {
             <Route path="partidos"              element={<MatchesPage />} />
             <Route path="partidos/:matchId"     element={<MatchPredictPage />} />
             <Route path="ranking"               element={<RankingPage />} />
+            <Route path="unirse/:code"          element={<JoinInvitePage />} />
             <Route path="ligas/:leagueId?"      element={<LeaguePage />} />
             <Route path="trivias"               element={<TriviaPage />} />
             <Route path="tascas"                element={<TascasPage />} />
@@ -141,6 +160,7 @@ export function App() {
           <Route path="/reportar/:matchId" element={<ReporterPage />} />
 
           {/* ── Legacy QR/venue redirects (backward compat for printed QR codes) ── */}
+          <Route path="/unirse/:code" element={<JoinInvitePage />} />
           <Route path="/q/:token"    element={<QrRedirect />} />
           <Route path="/venue/:slug" element={<VenueRedirect />} />
 

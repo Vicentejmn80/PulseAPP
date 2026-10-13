@@ -18,6 +18,17 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+    window.__pwaPrompt = null;
+    window.addEventListener("beforeinstallprompt", function (event) {
+      event.preventDefault();
+      window.__pwaPrompt = event;
+      window.dispatchEvent(new Event("rusher-pwa-prompt"));
+    });
+    window.addEventListener("appinstalled", function () {
+      window.__pwaPrompt = null;
+    });
+  </script>
     <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
 import { InstallBanner } from "./InstallBanner";
+import { LeagueInviteInbox } from "./LeagueInvite";
 import { RetoSheetHost } from "./RetoSheet";
 import { RetosIntro } from "./RetosIntro";
 import { ToboBackHome } from "./ToboBackHome";
@@ -41,6 +42,9 @@ export function ToboLayout() {
         </span>
       </div>
       <InstallBanner />
+      <div className="px-4">
+        <LeagueInviteInbox />
+      </div>
 
       {!atHome && (
         <div className="shrink-0 px-4 pb-2 pt-2">

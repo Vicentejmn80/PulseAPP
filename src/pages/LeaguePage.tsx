@@ -2,19 +2,22 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Users } from "lucide-react";
 import { RankingList } from "@/components/ranking/RankingList";
+import { LeagueInviteSheet, LeagueShareBar } from "@/components/tobo/LeagueInvite";
 import { BackButton } from "@/components/ui/Buttons";
-import { CardHead, GoldCta, ToboCard } from "@/components/tobo/surface";
+import { CardHead, GhostCta, GoldCta, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { pickActiveCycle } from "@/lib/toboHome";
-import { createLeague, getLeague, joinLeague, listMyLeagues, type League } from "@/services/leaguesApi";
+import { createLeague, getLeague, joinLeague, listMyLeagues, regenLeagueCode, removeLeagueMember, type League } from "@/services/leaguesApi";
 import { listCycles, loadCycleBoard } from "@/services/matchesApi";
+import { usePulse } from "@/state/PulseContext";
 import type { LeaderboardEntry } from "@/types/pulse";
 
 type LeagueTab = "mis" | "crear" | "unirme" | "ranking";
 
 export function LeaguePage() {
   const navigate = useNavigate();
+  const { currentUser } = usePulse();
   const { leagueId } = useParams<{ leagueId?: string }>();
   const [searchParams] = useSearchParams();
   const requested = searchParams.get("tab");
@@ -29,6 +32,7 @@ export function LeaguePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [pending, setPending] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -106,6 +110,32 @@ export function LeaguePage() {
       setError(reason instanceof Error ? reason.message : "No se pudo unir a la liga.");
     } finally {
       setPending(false);
+    }
+  }
+
+  async function onRegen() {
+    if (!current) return;
+    setError("");
+    try {
+      const next = await regenLeagueCode(current.id);
+      setCurrent(next);
+      setSuccess("Nuevo código listo.");
+    } catch (reason: unknown) {
+      console.error("liga", reason);
+      setError(reason instanceof Error && !/[A-Z_]{4,}|SQL|column/i.test(reason.message) ? reason.message : "No se pudo regenerar el código.");
+    }
+  }
+
+  async function onRemove(userId: string) {
+    if (!current) return;
+    setError("");
+    try {
+      await removeLeagueMember(current.id, userId);
+      setEntries((rows) => rows.filter((row) => row.user.id !== userId));
+      setSuccess("Miembro quitado.");
+    } catch (reason: unknown) {
+      console.error("liga", reason);
+      setError(reason instanceof Error && !/[A-Z_]{4,}|SQL|column/i.test(reason.message) ? reason.message : "No se pudo quitar al miembro.");
     }
   }
 
@@ -212,12 +242,31 @@ export function LeaguePage() {
           <>
             {current && (
               <ToboCard className="mb-3">
-                <CardHead icon={Users} title="Codigo de invitacion" />
-                <p className="text-[28px] font-extrabold uppercase tracking-[0.18em]">{current.code}</p>
-                <p className="text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Comparte este codigo para invitar amigos.</p>
+                <LeagueShareBar
+                  league={current}
+                  alias={currentUser?.alias || "Un rusher"}
+                  onInvite={() => setInviteOpen(true)}
+                />
+                {current.isOwner && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <GhostCta onClick={() => void onRegen()}>Regenerar código</GhostCta>
+                    {entries.filter((row) => !row.isCurrentUser).map((row) => (
+                      <button
+                        key={row.user.id}
+                        type="button"
+                        onClick={() => void onRemove(row.user.id)}
+                        className="text-left text-[13px] font-extrabold"
+                        style={{ color: "var(--t-muted)" }}
+                      >
+                        Quitar a {row.user.alias}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </ToboCard>
             )}
             <RankingList entries={entries} subtitle="Ranking de la liga" emptyLabel="Todavia no hay jugadores en esta liga" />
+            {inviteOpen && current && <LeagueInviteSheet leagueId={current.id} onClose={() => setInviteOpen(false)} />}
           </>
         )}
       </div>

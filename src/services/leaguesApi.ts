@@ -75,6 +75,100 @@ export async function getLeagueRanking(leagueId: string, cycle = "lifetime") {
   return Array.isArray(data) ? data : [];
 }
 
+const JOIN_CODE_KEY = "rusher-league-join-code";
+
+export function savePendingLeagueCode(code: string) {
+  try {
+    sessionStorage.setItem(JOIN_CODE_KEY, code.trim().toUpperCase());
+  } catch {
+    /* modo privado */
+  }
+}
+
+export function readPendingLeagueCode() {
+  try {
+    return sessionStorage.getItem(JOIN_CODE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+export function clearPendingLeagueCode() {
+  try {
+    sessionStorage.removeItem(JOIN_CODE_KEY);
+  } catch {
+    /* modo privado */
+  }
+}
+
+export interface LeaguePreview {
+  ok: boolean;
+  error?: string;
+  name?: string;
+  code?: string;
+  memberCount?: number;
+  inviter?: string;
+  alreadyMember?: boolean;
+  full?: boolean;
+}
+
+export async function previewLeague(code: string) {
+  return callRpc<LeaguePreview>("pulse_league_preview", { p_code: code });
+}
+
+export async function inviteLeagueAlias(leagueId: string, alias: string) {
+  const result = await callRpc<OkResult>("pulse_league_invite_alias", {
+    p_token: readSessionToken(),
+    p_league_id: leagueId,
+    p_alias: alias,
+  });
+  expectOk(result);
+}
+
+export async function respondLeagueInvite(inviteId: string, accept: boolean) {
+  const result = await callRpc<OkResult & { league?: unknown }>("pulse_league_invite_respond", {
+    p_token: readSessionToken(),
+    p_invite_id: inviteId,
+    p_accept: accept,
+  });
+  expectOk(result);
+  return result.league ? asLeague(result.league) : null;
+}
+
+export async function searchLeagueInvitees(leagueId: string, prefix: string) {
+  const result = await callRpc<{ ok?: boolean; aliases?: { alias: string }[] }>("pulse_league_invite_search", {
+    p_token: readSessionToken(),
+    p_league_id: leagueId,
+    p_prefix: prefix,
+  });
+  return (result?.aliases ?? []).map((row) => row.alias).filter(Boolean).slice(0, 5);
+}
+
+export async function myLeagueInvites() {
+  const result = await callRpc<{ ok?: boolean; items?: { id: string; league: string; from: string }[] }>("pulse_league_my_invites", {
+    p_token: readSessionToken(),
+  });
+  return Array.isArray(result?.items) ? result.items : [];
+}
+
+export async function regenLeagueCode(leagueId: string) {
+  const result = await callRpc<OkResult & { league?: unknown }>("pulse_league_regen_code", {
+    p_token: readSessionToken(),
+    p_league_id: leagueId,
+  });
+  expectOk(result);
+  return asLeague(result.league ?? {});
+}
+
+export async function removeLeagueMember(leagueId: string, userId: string) {
+  const result = await callRpc<OkResult>("pulse_league_remove_member", {
+    p_token: readSessionToken(),
+    p_league_id: leagueId,
+    p_user_id: userId,
+  });
+  expectOk(result);
+}
+
 export async function listAllLeaguesAdmin(adminKey: string) {
   const result = await callRpc<OkResult & { leagues?: unknown }>("pulse_admin_league_list", {
     p_admin_key: adminKey,

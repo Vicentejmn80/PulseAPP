@@ -266,7 +266,6 @@ export async function listTascas() {
 
 const PUBLIC_VENUES: Record<string, string> = {
   "venue-garrison": "garrison barber society",
-  "venue-beethoven": "la europea beethoven",
 };
 
 export function visibleMvpTascas<T extends Pick<Tasca, "id" | "name" | "slug" | "active"> & Partial<Tasca>>(rows: T[]) {

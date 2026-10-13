@@ -13,6 +13,10 @@ import {
 
 type PromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
+function storedPrompt() {
+  return (window as Window & { __pwaPrompt?: PromptEvent | null }).__pwaPrompt ?? null;
+}
+
 export function InstallBanner() {
   const [mode, setMode] = useState<"hidden" | "native" | "ios" | "inapp" | "guide">("hidden");
   const [prompt, setPrompt] = useState<PromptEvent | null>(null);
@@ -40,26 +44,31 @@ export function InstallBanner() {
       trackEvent("pwa_banner_seen", { mode: "inapp" });
       return undefined;
     }
-    if (isAppleMobile(ua)) {
-      setMode("ios");
-      trackEvent("pwa_banner_seen", { mode: "ios" });
-      return undefined;
-    }
-    function onPrompt(event: Event) {
-      event.preventDefault();
-      setPrompt(event as PromptEvent);
+    function usePrompt(event: PromptEvent) {
+      setPrompt(event);
       setMode("native");
       trackEvent("pwa_banner_seen", { mode: "native" });
+    }
+    const early = storedPrompt();
+    if (early) {
+      usePrompt(early);
+    } else if (isAppleMobile(ua)) {
+      setMode("ios");
+      trackEvent("pwa_banner_seen", { mode: "ios" });
+    }
+    function onPrompt() {
+      const next = storedPrompt();
+      if (next) usePrompt(next);
     }
     function onInstalled() {
       writeInstallCompleted();
       setMode("hidden");
       trackEvent("pwa_installed");
     }
-    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("rusher-pwa-prompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("rusher-pwa-prompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, [blocked]);
@@ -71,9 +80,13 @@ export function InstallBanner() {
 
   async function install() {
     trackEvent("pwa_install_tapped", { mode });
-    if (!prompt) return;
-    await prompt.prompt();
-    const choice = await prompt.userChoice;
+    const event = prompt ?? storedPrompt();
+    if (!event) {
+      if (isAppleMobile(navigator.userAgent)) setMode("guide");
+      return;
+    }
+    await event.prompt();
+    const choice = await event.userChoice;
     if (choice.outcome === "accepted") {
       writeInstallCompleted();
       trackEvent("pwa_installed");
@@ -102,10 +115,10 @@ export function InstallBanner() {
       {mode === "guide" && (
         <div className="mt-2 rounded-2xl p-3" style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}>
           <p className="text-[14px] font-extrabold">En iPhone o iPad</p>
+          <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>Apple no permite instalar con un solo toque.</p>
           <ol className="mt-3 flex flex-col gap-3 text-[13px] font-bold">
-            <li className="flex items-center gap-2"><Share className="h-4 w-4" style={{ color: "var(--t-accent)" }} /> 1. Toca Compartir</li>
-            <li className="flex items-center gap-2"><SquarePlus className="h-4 w-4" style={{ color: "var(--t-accent)" }} /> 2. Agregar a pantalla de inicio</li>
-            <li className="flex items-center gap-2"><span className="flex h-4 w-4 items-center justify-center text-[12px] font-extrabold" style={{ color: "var(--t-accent)" }}>3</span> 3. Agregar</li>
+            <li className="flex items-center gap-2"><Share className="h-5 w-5" style={{ color: "var(--t-accent)" }} /> 1. Toca Compartir (el cuadrado con la flecha)</li>
+            <li className="flex items-center gap-2"><SquarePlus className="h-5 w-5" style={{ color: "var(--t-accent)" }} /> 2. Agregar a pantalla de inicio</li>
           </ol>
         </div>
       )}

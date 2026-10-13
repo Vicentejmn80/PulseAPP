@@ -72,9 +72,9 @@ describe("puntos de ciclo compartidos", () => {
 
 describe("tascas públicas del MVP", () => {
   const target = {
-    id: "venue-beethoven",
-    name: "La Europea Beethoven",
-    slug: "la-europea-beethoven",
+    id: "venue-garrison",
+    name: "Garrison Barber Society",
+    slug: "garrison-barber-society",
     active: true,
     address: "Dirección completa",
     description: "Ficha completa existente",
@@ -84,7 +84,7 @@ describe("tascas públicas del MVP", () => {
     imageUrl: "foto.png",
   };
 
-  it("deja visibles a Garrison y a Europea Beethoven; excluye La Europea y demos", () => {
+  it("deja visible solo a Garrison y oculta Beethoven aunque siga en la lista", () => {
     const garrison = {
       id: "venue-garrison",
       name: "Garrison Barber Society",
@@ -94,15 +94,15 @@ describe("tascas públicas del MVP", () => {
     const result = visibleMvpTascas([
       target,
       garrison,
+      { id: "venue-beethoven", name: "La Europea Beethoven", slug: "la-europea-beethoven", active: true },
       { id: "venue-alias", name: "La Europea", slug: "la-europea", active: true },
       { id: "venue-jose", name: "Tasca San José", slug: "tasca-san-jose", active: true },
-      { id: "venue-other", name: "Tasca Central", slug: "tasca-central", active: true },
     ]);
-    expect(result.map((row) => row.id)).toEqual(["venue-garrison", "venue-beethoven"]);
+    expect(result.map((row) => row.id)).toEqual(["venue-garrison"]);
   });
 
   it("no duplica fichas coincidentes y conserva la ficha con más datos existentes", () => {
-    const shortCopy = { id: "copy", name: "La Europea Beethoven", slug: "beethoven", active: true };
+    const shortCopy = { id: "copy", name: "Garrison Barber Society", slug: "garrison", active: true };
     const result = visibleMvpTascas([shortCopy, target]);
     expect(result).toEqual([target]);
     expect(visibleMvpTascas([{ ...target, active: false }])).toEqual([]);

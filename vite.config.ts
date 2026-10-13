@@ -146,6 +146,7 @@ export default defineConfig(({ mode }) => {
           "icons/rush-any-512.png",
           "icons/rush-maskable-192.png",
           "icons/rush-maskable-512.png",
+          "og/league-invite.png",
         ],
         manifest: {
           name: "Béisbol Rush LVBP",
@@ -169,7 +170,7 @@ export default defineConfig(({ mode }) => {
           globPatterns: ["**/*.{js,css,html,svg,woff2,webmanifest}", "icons/*.png"],
           cleanupOutdatedCaches: true,
           navigateFallback: "/index.html",
-          navigateFallbackDenylist: [/^\/api\//],
+          navigateFallbackDenylist: [/^\/api\//, /^\/unirse\//],
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.mode === "navigate",
