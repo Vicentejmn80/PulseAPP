@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BaseballMatch, ToboCycle } from "@/services/matchesApi";
-import { caracasDateKey, cycleClosesLabel, cycleForMatchStart, cyclePeriodLabel, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleClosesLabel, cycleForMatchStart, cyclePeriodLabel, cycleSpanLabel, homeMatchTone, isActionableToday, pickActiveCycle } from "@/lib/toboHome";
 
 function match(partial: Partial<BaseballMatch>): BaseballMatch {
   return {
@@ -24,7 +24,7 @@ function match(partial: Partial<BaseballMatch>): BaseballMatch {
 }
 
 const cycles: ToboCycle[] = [
-  { id: "ronda_1", name: "Ronda 1", startsOn: "2026-10-12", endsOn: "2026-10-22", status: "open" },
+  { id: "ronda_1", name: "Ronda 1", startsOn: "2026-10-16", endsOn: "2026-10-22", status: "open" },
   { id: "ronda_2", name: "Ronda 2", startsOn: "2026-10-23", endsOn: "2026-10-29", status: "open" },
   { id: "ronda_3", name: "Ronda 3", startsOn: "2026-10-30", endsOn: "2026-11-05", status: "open" },
 ];
@@ -61,11 +61,14 @@ describe("tobo home", () => {
     expect(caracasDateKey("2026-10-13T02:30:00.000Z")).toBe("2026-10-12");
   });
 
-  it("etiqueta la ronda 1 del 12 al 22 de octubre y deja intactas las siguientes", () => {
-    expect(cyclePeriodLabel(cycles[0])).toBe("RONDA 1 · 12 OCT — 22 OCT");
+  it("etiqueta la ronda 1 del 16 al 22 de octubre y deja intactas las siguientes", () => {
+    expect(cycles[0].name).toBe("Ronda 1");
+    expect(cycleSpanLabel(cycles[0])).toBe("Del 16 al 22 de octubre");
+    expect(cyclePeriodLabel(cycles[0])).toBe("RONDA 1 · Del 16 al 22 de octubre");
     expect(cycleClosesLabel(cycles[0].endsOn)).toBe("Cierra el 22 de octubre de 2026 · 23:59");
-    expect(cyclePeriodLabel(cycles[1])).toBe("RONDA 2 · 23 OCT — 29 OCT");
-    expect(cyclePeriodLabel(cycles[2])).toBe("RONDA 3 · 30 OCT — 5 NOV");
+    expect(cyclePeriodLabel(cycles[1])).toBe("RONDA 2 · Del 23 al 29 de octubre");
+    expect(cycleSpanLabel(cycles[2])).toBe("Del 30 de octubre al 5 de noviembre");
+    expect(cyclePeriodLabel(cycles[2])).toBe("RONDA 3 · Del 30 de octubre al 5 de noviembre");
     expect(cycles[1]).toMatchObject({ startsOn: "2026-10-23", endsOn: "2026-10-29" });
     expect(cycles[2]).toMatchObject({ startsOn: "2026-10-30", endsOn: "2026-11-05" });
   });

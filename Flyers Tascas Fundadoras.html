@@ -1,0 +1,261 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Flyers Tascas Fundadoras</title>
+<style>
+/* Layout: two promotional flyers, stacked on a neutral studio canvas, sized
+   like the in-app banner cards (not full phone screens) — these are meant to
+   be lifted into the Tascas entry point of Juégate el Tobo. Single committed
+   look (stadium-at-night navy + scoreboard gold), matching the app's own
+   established palette rather than the viewer's light/dark theme. */
+:root{
+  --canvas-bg:#11131A;
+  --canvas-fg:#EDEFF5;
+  --canvas-muted:#8A90A6;
+  color-scheme: dark;
+
+  --navy-deep:#060B1E;
+  --navy:#0B1A3C;
+  --navy-light:#132652;
+  --gold:#FFC94A;
+  --gold-soft:#FFE39B;
+  --ink:#F3F6FF;
+  --muted:#92A4D6;
+  --line:#23356B;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--canvas-bg);
+  color:var(--canvas-fg);
+  margin:0;
+  font-family:'Inter',system-ui,sans-serif;
+  padding-inline:16px;
+  padding-block:40px;
+}
+.wrap{max-width:760px;margin:0 auto;}
+
+header.page{max-width:620px;margin:0 auto 40px;text-align:center;}
+header.page .eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+header.page h1{font-family:'Sora',sans-serif;font-size:clamp(24px,4.5vw,32px);font-weight:700;margin:10px 0 10px;text-wrap:balance;}
+header.page p{font-size:14px;line-height:1.6;color:var(--canvas-muted);margin:0;}
+
+.flyers{display:flex;flex-direction:column;gap:40px;align-items:center;}
+
+.flyer-block{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:360px;}
+.flyer-block .tag{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gold);
+}
+
+/* ---- shared flyer chrome ---- */
+.flyer{
+  width:100%;
+  aspect-ratio:16/10.5;
+  border-radius:20px;
+  position:relative;
+  overflow:hidden;
+  background:var(--navy);
+  box-shadow:0 24px 50px -18px rgba(0,0,0,.55);
+  font-family:'Inter',sans-serif;
+}
+.flyer .content{
+  position:relative;
+  z-index:3;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:18px;
+  gap:8px;
+}
+.flyer .ribbon{
+  position:absolute;top:14px;left:-30px;
+  background:var(--gold);
+  color:var(--navy-deep);
+  font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:5px 38px 5px 38px;
+  transform:rotate(-8deg);
+  z-index:4;
+  box-shadow:0 6px 14px -4px rgba(0,0,0,.4);
+}
+.flyer h3{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.01em;
+  font-size:25px;
+  line-height:1.08;
+  color:#fff;
+  margin:0;
+  text-wrap:balance;
+}
+.flyer p.sub{
+  font-size:12px;
+  line-height:1.4;
+  color:var(--gold-soft);
+  margin:0;
+  max-width:88%;
+}
+.flyer .cta{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--gold);
+  color:var(--navy-deep);
+  font-weight:700;font-size:12.5px;
+  padding:9px 16px;
+  border-radius:999px;
+  margin-top:4px;
+  width:max-content;
+}
+.flyer .meta{
+  position:absolute;top:16px;right:16px;z-index:4;
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;color:var(--gold-soft);
+  background:rgba(6,11,30,.55);
+  padding:5px 10px;border-radius:999px;
+  backdrop-filter:blur(2px);
+}
+.flyer .meta .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+
+/* ---- Flyer A: bokeh stadium lights ---- */
+.flyer-a .scene{position:absolute;inset:0;z-index:1;}
+.flyer-a .scene::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255,201,74,.55) 0, rgba(255,201,74,0) 42%),
+    radial-gradient(circle at 78% 15%, rgba(255,201,74,.35) 0, rgba(255,201,74,0) 38%),
+    radial-gradient(circle at 60% 48%, rgba(255,201,74,.22) 0, rgba(255,201,74,0) 45%),
+    radial-gradient(circle at 92% 60%, rgba(255,201,74,.3) 0, rgba(255,201,74,0) 34%),
+    radial-gradient(circle at 30% 70%, rgba(255,201,74,.18) 0, rgba(255,201,74,0) 40%),
+    linear-gradient(165deg, var(--navy-light) 0%, var(--navy) 55%, var(--navy-deep) 100%);
+  filter:blur(1px);
+}
+.flyer-a .scene::after{
+  content:"";position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.9) 0 2px, transparent 2.2px);
+  background-size:46px 46px, 70px 70px;
+  background-position:10px 10px, 30px 40px;
+  opacity:.12;
+}
+.flyer-a .overlay-grad{
+  position:absolute;inset:0;z-index:2;
+  background:linear-gradient(180deg, rgba(6,11,30,0) 35%, rgba(6,11,30,.92) 100%);
+}
+.flyer-a .diamond{
+  position:absolute;z-index:2;right:14px;bottom:72px;
+  width:46px;height:46px;opacity:.9;
+}
+
+/* ---- Flyer B: crowd silhouette with raised arms ---- */
+.flyer-b .scene{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg, var(--navy-light) 0%, var(--navy) 60%, var(--navy-deep) 100%);
+}
+.flyer-b .glow{
+  position:absolute;z-index:2;left:50%;top:18%;
+  width:220px;height:220px;transform:translateX(-50%);
+  background:radial-gradient(circle, rgba(255,201,74,.4) 0%, rgba(255,201,74,0) 70%);
+}
+.flyer-b .crowd{
+  position:absolute;z-index:2;left:0;right:0;bottom:0;
+  height:46%;
+  display:flex;align-items:flex-end;justify-content:space-evenly;
+  padding:0 4px;
+}
+.flyer-b .person{position:relative;width:11%;}
+.flyer-b .person .head{
+  width:62%;aspect-ratio:1;border-radius:50%;
+  background:var(--navy-deep);margin:0 auto;
+}
+.flyer-b .person .body{
+  width:100%;height:60%;
+  background:var(--navy-deep);
+  border-radius:40% 40% 0 0;
+  margin-top:-4%;
+}
+.flyer-b .person.up .arm{
+  position:absolute;width:16%;height:70%;
+  background:var(--navy-deep);
+  border-radius:40%;
+  top:-48%;
+}
+.flyer-b .person.up .arm.l{left:6%;transform:rotate(-18deg);}
+.flyer-b .person.up .arm.r{right:6%;transform:rotate(18deg);}
+.flyer-b .overlay-grad{
+  position:absolute;inset:0;z-index:3;
+  background:linear-gradient(180deg, rgba(6,11,30,0) 30%, rgba(6,11,30,.85) 78%, rgba(6,11,30,.96) 100%);
+}
+
+.caption{
+  font-size:12px;color:var(--canvas-muted);line-height:1.55;text-align:center;
+  max-width:320px;
+}
+.caption b{color:var(--canvas-fg);}
+
+footer.note{
+  max-width:600px;margin:48px auto 0;text-align:center;
+  font-size:12.5px;color:var(--canvas-muted);line-height:1.6;
+}
+footer.note b{color:var(--canvas-fg);}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+
+<div class="wrap">
+
+  <header class="page">
+    <div class="eyebrow">Para el botón "Tascas"</div>
+    <h1>Dos flyers de entrada, sin QR</h1>
+    <p>Estos son el "frente" que aparece antes de pasar al listado real de tascas — pensados para la transición de marca, no para escanear nada todavía.</p>
+  </header>
+
+  <div class="flyers">
+
+    <div class="flyer-block">
+      <span class="tag">Flyer A · Credibilidad</span>
+      <div class="flyer flyer-a">
+        <div class="scene"></div>
+        <div class="overlay-grad"></div>
+        <span class="ribbon">Fundadoras</span>
+        <span class="meta"><span class="dot"></span>9 tascas activas</span>
+        <div class="content">
+          <h3>Las tascas donde se vive el Tobo</h3>
+          <p class="sub">Cada una tiene su ranking, su premio y su gente. Encuentra la más cerca de ti.</p>
+          <span class="cta">Ver tascas fundadoras →</span>
+        </div>
+      </div>
+      <p class="caption">Abre el listado real de tascas. El sello <b>"Fundadoras"</b> es la pieza clave: son las 9 que entraron desde octubre, y el flyer las usa como argumento de peso, no de escasez.</p>
+    </div>
+
+    <div class="flyer-block">
+      <span class="tag">Flyer B · Energía social</span>
+      <div class="flyer flyer-b">
+        <div class="scene"></div>
+        <div class="glow"></div>
+        <div class="crowd">
+          <div class="person"></div>
+          <div class="person up"><div class="arm l"></div><div class="arm r"></div><div class="head"></div><div class="body"></div></div>
+          <div class="person"></div>
+          <div class="person up"><div class="arm l"></div><div class="arm r"></div><div class="head"></div><div class="body"></div></div>
+          <div class="person"></div>
+          <div class="person up"><div class="arm l"></div><div class="arm r"></div><div class="head"></div><div class="body"></div></div>
+          <div class="person"></div>
+        </div>
+        <div class="overlay-grad"></div>
+        <div class="content">
+          <h3>¿Dónde vas a ver el juego hoy?</h3>
+          <p class="sub">Escanea, suma puntos y compite con la gente que está contigo en la tasca.</p>
+          <span class="cta">Explorar tascas cerca de ti →</span>
+        </div>
+      </div>
+      <p class="caption">Mismo destino que el Flyer A, pero la pregunta directa ("¿dónde vas a ver el juego hoy?") funciona mejor para quien todavía no sabe que existen tascas afiliadas.</p>
+    </div>
+
+  </div>
+
+  <footer class="note">
+    Los dos llevan al mismo sitio: la pantalla de <b>Tascas</b> que ya existe. La idea es alternarlos (o hacer A/B) como la tarjeta que aparece primero al tocar el botón "Tascas" en el nav, con la transición de marca entre uno y el listado.
+  </footer>
+
+</div>
+
+</body></html>

@@ -29,21 +29,40 @@ export function MiQuinielaPage() {
   const navigate = useNavigate();
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [tab, setTab] = useState<Tab>("proximos");
+  const [tabTouched, setTabTouched] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
     listMatches()
       .then((rows) => {
-        if (alive) setMatches(rows.filter((m) => !m.demo && !m.simulation));
+        if (alive) {
+          setMatches(rows.filter((m) => !m.demo && !m.simulation));
+          setLoaded(true);
+        }
       })
       .catch((reason: unknown) => {
-        if (alive) setError(reason instanceof Error ? reason.message : "No se pudieron cargar los pronósticos.");
+        if (alive) {
+          setError(reason instanceof Error ? reason.message : "No se pudieron cargar los pronósticos.");
+          setLoaded(true);
+        }
       });
     return () => {
       alive = false;
     };
   }, []);
+
+  const upcomingCount = useMemo(() => matches.filter(isUpcomingPrediction).length, [matches]);
+  const finalizedCount = useMemo(() => matches.filter(isFinalizedPrediction).length, [matches]);
+
+  // Si no hay próximos pero sí historial, abrir directamente en Finalizados
+  // para no obligar al usuario a descubrir el tab. Solo una vez y solo si
+  // el usuario no eligió tab manualmente.
+  useEffect(() => {
+    if (!loaded || tabTouched) return;
+    if (upcomingCount === 0 && finalizedCount > 0) setTab("finalizados");
+  }, [loaded, tabTouched, upcomingCount, finalizedCount]);
 
   const hasWeek = useMemo(() => {
     const now = new Date();
@@ -104,12 +123,19 @@ export function MiQuinielaPage() {
             <button
               key={t}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => {
+                setTabTouched(true);
+                setTab(t);
+              }}
               className={`h-11 rounded-2xl text-[12px] font-extrabold ${
                 tab === t ? "bg-[#FF4F1A] text-white" : "bg-white text-[#8D7366]"
               }`}
             >
-              {t === "semana" ? "Esta semana" : t === "proximos" ? "Próximos" : "Finalizados"}
+              {t === "semana"
+                ? "Esta semana"
+                : t === "proximos"
+                  ? `Próximos (${upcomingCount})`
+                  : `Finalizados (${finalizedCount})`}
             </button>
           ))}
         </div>
@@ -172,6 +198,8 @@ export function MiQuinielaPage() {
                         Resultado oficial: {scoreLine(match, match.homeScore, match.awayScore)}
                         {match.prediction?.processed && match.prediction.total !== null ? (
                           <span className="ml-2 font-extrabold text-[#FF4F1A]">+{match.prediction.total} PT</span>
+                        ) : match.prediction ? (
+                          <span className="ml-2 font-extrabold">⏳ pendiente de liquidación</span>
                         ) : null}
                       </p>
                     )}

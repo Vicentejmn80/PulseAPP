@@ -22,6 +22,7 @@ import { PulsePerfilPage } from "@/pages/PulsePerfilPage";
 import { PulsePremiosPage } from "@/pages/PulsePremiosPage";
 import { QrPage } from "@/pages/QrPage";
 import { RankingPage } from "@/pages/RankingPage";
+import { ScanQrPage } from "@/pages/ScanQrPage";
 import { ReporterPage } from "@/pages/ReporterPage";
 import { SimulatorPage } from "@/pages/SimulatorPage";
 import { TascasPage } from "@/pages/TascasPage";
@@ -147,6 +148,7 @@ export function App() {
             <Route path="venue/:slug"           element={<VenuePage />} />
             <Route path="profile"               element={<ProfilePage />} />
             <Route path="q/:token"              element={<QrPage />} />
+            <Route path="escanear"              element={<ScanQrPage />} />
           </Route>
 
           {/* ── Admin (paths unchanged) ── */}

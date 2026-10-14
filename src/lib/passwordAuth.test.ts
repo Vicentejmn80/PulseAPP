@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   detectAuthMethod,
   loginWithPassword,
+  loginWithPin,
   registerWithPassword,
   validatePasswordFormat,
 } from "../../lib/registration/pinAuth.mjs";
@@ -50,6 +51,11 @@ describe("handlers sin red (validación previa al RPC)", () => {
     expect(result).toMatchObject({ ok: false, code: "INVALID_PASSWORD" });
   });
 
+  it("login con PIN incompleto no abre sesión ni consulta OTP", async () => {
+    const result = await loginWithPin({ phone: "04241234567", pin: "12345" });
+    expect(result).toMatchObject({ ok: false, code: "PIN_INVALID" });
+  });
+
   it("loginWithPassword rechaza método desconocido con el código único", async () => {
     const result = await loginWithPassword({ phone: "04241234567", credential: "Abcdef1!", method: "huella" });
     expect(result).toMatchObject({ ok: false, code: "AUTH_INVALID" });
@@ -88,7 +94,14 @@ describe("accountApi: enrutado del flujo con contraseña", () => {
 
     okResponse({ ok: true, token: "tok", currentUser: { id: "u1", alias: "a", handle: "@a", initials: "A", avatarColor: "#000" } });
     await loginSmart("+584241234567", "Clave123!");
-    expect(lastBody()).toMatchObject({ action: "login-account-password", method: "auto" });
+    expect(lastBody()).toMatchObject({ action: "login-account-password", method: "password", credential: "Clave123!" });
+  });
+
+  it("loginSmart con PIN usa login-account y no envía ticket OTP", async () => {
+    const { loginSmart } = await import("@/services/accountApi");
+    okResponse({ ok: true, token: "tok", currentUser: { id: "u1", alias: "a", handle: "@a", initials: "A", avatarColor: "#000" } });
+    await loginSmart("+584241234567", "482916");
+    expect(lastBody()).toEqual({ action: "login-account", phone: "+584241234567", pin: "482916" });
   });
 
   it("registerWithPassword envía PIN y contraseña juntos", async () => {

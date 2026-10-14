@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { answerLive } from "@/services/mechanicsApi";
 import { matchCenter, type CrowdShare, type LiveEvent, type MatchCenter } from "@/services/liveApi";
-import { RetosPanel } from "@/components/tobo/RetosPanel";
 import { Countdown } from "@/components/tobo/PilotExtras";
 
 const LABELS: Record<string, string> = {
@@ -50,10 +49,6 @@ export function ShareLine({ share, empty }: { share: CrowdShare | null; empty: s
       })}
     </div>
   );
-}
-
-export function DuelBox({ matchId }: { matchId: string; duels?: MatchCenter["duels"]; onDone?: () => void; predictionSaved?: boolean }) {
-  return <RetosPanel matchId={matchId} />;
 }
 
 function EventRow({ event, fresh }: { event: LiveEvent; fresh: boolean }) {
@@ -157,7 +152,6 @@ export function LiveCenter({ matchId }: { matchId: string }) {
         {events?.length === 0 && <p className="rounded-[24px] bg-white px-4 py-6 text-center text-[14px] font-extrabold">La primera jugada aparece aquí.</p>}
       </div>
 
-      <DuelBox matchId={matchId} duels={center.duels ?? []} onDone={() => setTick((value) => value + 1)} />
       {error && <p className="text-[13px] font-bold text-[#E23B2F]">{error}</p>}
     </div>
   );

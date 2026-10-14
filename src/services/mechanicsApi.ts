@@ -1,3 +1,4 @@
+import { qrVisitRpcArgs } from "@/lib/qrReward";
 import { callRpc, readSessionToken } from "@/services/accountApi";
 
 export interface Choice {
@@ -146,7 +147,7 @@ export async function saveBingo(matchId: string, picks: string[]) {
 }
 
 export function visitQr(token: string) {
-  return callRpc<QrVisit>("pulse_qr_visit", { p_token: readSessionToken(), p_qr: token });
+  return callRpc<QrVisit>("pulse_qr_visit", qrVisitRpcArgs(readSessionToken(), token));
 }
 
 export async function answerFlash(questionId: string, optionId: string) {

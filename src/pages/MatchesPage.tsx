@@ -1,18 +1,17 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
+import { mergeMatchWithSavedPrediction, settlementPollIntervalMs } from "@/lib/predictions/visibility";
 import { predictionBackTarget } from "@/lib/toboNav";
 import { cycleForMatchStart } from "@/lib/toboHome";
-import { DuelBox, LiveCenter, ShareLine } from "@/components/live/LiveCenter";
+import { LiveCenter, ShareLine } from "@/components/live/LiveCenter";
 import { MatchExtras } from "@/components/tobo/PilotExtras";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
 import { ToboBackHome } from "@/components/tobo/ToboBackHome";
 import { TabBar } from "@/components/ui/TabBar";
 import { matchCenter, type MatchCenter } from "@/services/liveApi";
 import { DemoExperience } from "@/components/demo/DemoExperience";
-import { MatchChallenges, type ChallengeHandle } from "@/components/tobo/MatchChallenges";
-import { trackEvent } from "@/services/analytics";
-import { getMatch, listCycles, listMatches, matchPhase, saveChallengeAnswers, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
+import { getMatch, listCycles, listMatches, matchPhase, savePrediction, scoreLine, type BaseballMatch, type MatchPrediction } from "@/services/matchesApi";
 
 function when(value: string) {
   const date = new Date(value);
@@ -98,8 +97,11 @@ export function MatchesPage() {
                   <p className="mt-2 text-[14px] font-extrabold">Resultado {scoreLine(match, match.homeScore, match.awayScore)}</p>
                 )}
                 {phase === "open" && !match.prediction && <p className="mt-2 text-[13px] font-extrabold text-[#FF4F1A]">Haz tu pronóstico</p>}
-                {match.prediction && phase !== "finished" && (
-                  <p className="mt-1 text-[13px] font-bold text-[#241710]">{scoreLine(match, match.prediction.homeScore, match.prediction.awayScore)}</p>
+                {match.prediction && (
+                  <p className="mt-1 text-[13px] font-bold text-[#241710]">Tu pronóstico: {scoreLine(match, match.prediction.homeScore, match.prediction.awayScore)}</p>
+                )}
+                {phase === "finished" && match.prediction && !match.prediction.processed && (
+                  <p className="mt-1 text-[13px] font-extrabold text-[#8D7366]">⏳ Resultado pendiente de liquidación</p>
                 )}
                 {phase === "finished" && match.prediction?.processed && match.prediction.total !== null && (
                   <p className="mt-1 text-[13px] font-extrabold text-[#FF4F1A]">+{match.prediction.total} puntos</p>
@@ -136,7 +138,6 @@ export function MatchPredictPage() {
   const [editing, setEditing] = useState(true);
   const [missing, setMissing] = useState(false);
   const [cycleName, setCycleName] = useState("");
-  const challengesRef = useRef<ChallengeHandle>(null);
 
   useEffect(() => {
     let alive = true;
@@ -165,14 +166,18 @@ export function MatchPredictPage() {
   }, [matchId]);
 
   useEffect(() => {
-    if (!match || match.status === "finished" || match.status === "cancelled") return;
+    if (!match) return;
+    // En partidos terminados no se consulta, salvo que la liquidación siga
+    // pendiente: ahí se sigue esperando el cierre del backend con calma.
+    const interval = settlementPollIntervalMs(match);
+    if (interval === null) return;
     const id = setInterval(() => {
       getMatch(matchId).then((row) => {
-        if (row) setMatch(row);
+        if (row) setMatch((current) => mergeMatchWithSavedPrediction(current, row));
       }).catch(() => undefined);
-    }, 5000);
+    }, interval);
     return () => clearInterval(id);
-  }, [match?.id, match?.status, matchId]);
+  }, [match?.id, match?.status, match?.prediction?.processed, matchId]);
 
   async function onSave(event: FormEvent) {
     event.preventDefault();
@@ -198,19 +203,7 @@ export function MatchPredictPage() {
     setPending(true);
     setError("");
     try {
-      const answers = challengesRef.current?.answers();
-      if (answers === null || answers === undefined) {
-        setError("Los retos todavía están cargando. Intenta guardar de nuevo en un momento.");
-        return;
-      }
       await savePrediction({ matchId: match.id, winner, homeScore, awayScore });
-      let challengeSaveError = "";
-      try {
-        await saveChallengeAnswers(match.id, answers);
-        trackEvent("challenge_submitted", { matchId: match.id, count: answers.length });
-      } catch (reason: unknown) {
-        challengeSaveError = reason instanceof Error ? reason.message : "No se pudieron guardar tus retos.";
-      }
       setMatch((current) => current ? {
         ...current,
         prediction: {
@@ -228,8 +221,7 @@ export function MatchPredictPage() {
       } : current);
       setEditing(false);
       const fresh = await getMatch(match.id).catch(() => null);
-      if (fresh) setMatch(fresh);
-      if (challengeSaveError) setError(`Tu pronóstico quedó guardado, pero los retos no se guardaron: ${challengeSaveError}`);
+      if (fresh) setMatch((current) => mergeMatchWithSavedPrediction(current, fresh));
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : "No se pudo guardar.");
     } finally {
@@ -257,7 +249,6 @@ export function MatchPredictPage() {
         {match && phase === "finished" && (
           <>
             <FinishedCard match={match} />
-            <MatchChallenges matchId={match.id} editable={false} predictionSaved />
           </>
         )}
         {match && phase === "locked" && (
@@ -275,7 +266,6 @@ export function MatchPredictPage() {
               <p className="mt-2 text-[14px] font-semibold text-[#8D7366]">No alcanzaste a guardar una predicción.</p>
             )}
             <p className="mt-3 text-[14px] font-extrabold text-[#8D7366]">🔒 Pronóstico bloqueado</p>
-            <MatchChallenges matchId={match.id} editable={false} predictionSaved={Boolean(saved)} />
           </section>
         )}
         {match && phase === "cancelled" && (
@@ -296,7 +286,6 @@ export function MatchPredictPage() {
             <div className="mt-4">
               <PrimaryButton type="button" onClick={() => setEditing(true)}>Editar</PrimaryButton>
             </div>
-            <MatchChallenges matchId={match.id} editable predictionSaved />
           </section>
         )}
         {match && phase === "open" && (!saved || editing) && (
@@ -345,7 +334,6 @@ export function MatchPredictPage() {
                 className="mt-1 h-14 w-full rounded-2xl bg-[#FFF7F1] text-center text-[22px] font-extrabold text-[#241710] outline-none"
               />
             </label>
-            <MatchChallenges ref={challengesRef} matchId={match.id} editable predictionSaved={Boolean(saved)} />
             {error && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
             <div className="mt-4">
               <PrimaryButton type="submit" disabled={pending}>
@@ -355,7 +343,7 @@ export function MatchPredictPage() {
           </form>
         )}
         {match && phase !== "live" && <MatchExtras matchId={match.id} />}
-        {match && phase !== "live" && <MatchCrowd matchId={match.id} predictionSaved={Boolean(saved)} />}
+        {match && phase !== "live" && <MatchCrowd matchId={match.id} />}
         {error && phase !== "open" && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
         <div className="mt-6">
           <ToboBackHome />
@@ -377,9 +365,8 @@ function almostLine(prediction: MatchPrediction) {
   return "";
 }
 
-function MatchCrowd({ matchId, predictionSaved }: { matchId: string; predictionSaved: boolean }) {
+function MatchCrowd({ matchId }: { matchId: string }) {
   const [center, setCenter] = useState<MatchCenter | null>(null);
-  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -389,18 +376,15 @@ function MatchCrowd({ matchId, predictionSaved }: { matchId: string; predictionS
     return () => {
       alive = false;
     };
-  }, [matchId, tick]);
+  }, [matchId]);
 
-  if (!center) return null;
+  if (!center?.winnerShare) return null;
   return (
     <div className="mt-3 flex flex-col gap-3">
-      {center.winnerShare && (
-        <section className="rounded-[24px] bg-white px-4 py-4">
-          <h3 className="text-[16px] font-extrabold">Qué dice la gente</h3>
-          <ShareLine share={center.winnerShare} empty="Equipo" />
-        </section>
-      )}
-      <DuelBox matchId={matchId} duels={center.duels ?? []} predictionSaved={predictionSaved} onDone={() => setTick((value) => value + 1)} />
+      <section className="rounded-[24px] bg-white px-4 py-4">
+        <h3 className="text-[16px] font-extrabold">Qué dice la gente</h3>
+        <ShareLine share={center.winnerShare} empty="Equipo" />
+      </section>
     </div>
   );
 }
@@ -419,6 +403,9 @@ function FinishedCard({ match }: { match: BaseballMatch }) {
         <p className="mt-1 text-[16px] font-extrabold">{scoreLine(match, prediction.homeScore, prediction.awayScore)}</p>
       ) : (
         <p className="mt-1 text-[14px] font-semibold text-[#8D7366]">No enviaste pronóstico. Este juego no te suma puntos.</p>
+      )}
+      {prediction && !prediction.processed && (
+        <p className="mt-3 text-[14px] font-extrabold text-[#8D7366]">⏳ Resultado pendiente de liquidación</p>
       )}
       {prediction?.processed && (
         <div className="mt-5 rounded-2xl bg-[#FFF7F1] px-4 py-4">

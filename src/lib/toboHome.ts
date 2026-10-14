@@ -39,10 +39,26 @@ export function cycleDayTag(isoDate: string) {
   return `${parts.day} ${CYCLE_MONTHS_SHORT[parts.month - 1]}`;
 }
 
-/** Etiqueta de período, p. ej. "RONDA 1 · 12 OCT — 22 OCT". */
+/** Frase de calendario, p. ej. "Del 16 al 22 de octubre". Sale de starts_on/ends_on. */
+export function cycleSpanLabel(cycle: { startsOn: string; endsOn: string }) {
+  const start = parseCycleDate(cycle.startsOn);
+  const end = parseCycleDate(cycle.endsOn);
+  if (!start || !end) return `${cycle.startsOn} – ${cycle.endsOn}`;
+  const startMonth = CYCLE_MONTHS_LONG[start.month - 1];
+  const endMonth = CYCLE_MONTHS_LONG[end.month - 1];
+  if (start.year === end.year && start.month === end.month) {
+    return `Del ${start.day} al ${end.day} de ${startMonth}`;
+  }
+  if (start.year === end.year) {
+    return `Del ${start.day} de ${startMonth} al ${end.day} de ${endMonth}`;
+  }
+  return `Del ${start.day} de ${startMonth} de ${start.year} al ${end.day} de ${endMonth} de ${end.year}`;
+}
+
+/** Etiqueta de período, p. ej. "RONDA 1 · Del 16 al 22 de octubre". */
 export function cyclePeriodLabel(cycle: { name: string; startsOn: string; endsOn: string }) {
   const name = cycle.name.trim().toLocaleUpperCase("es");
-  return `${name} · ${cycleDayTag(cycle.startsOn)} — ${cycleDayTag(cycle.endsOn)}`;
+  return `${name} · ${cycleSpanLabel(cycle)}`;
 }
 
 /** Cierre legible del último día, p. ej. "Cierra el 22 de octubre de 2026 · 23:59". */

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Avatar } from "@/components/ui/Avatar";
 import { PulseTabBar } from "@/components/ui/PulseTabBar";
+import { ScanQrButton } from "@/components/tobo/ScanQrButton";
 import { RusherMark } from "@/components/ui/RusherMark";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { formato } from "@/lib/format";
@@ -32,6 +33,7 @@ export function PulseHomePage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ScanQrButton onClick={() => navigate("/tobo/escanear")} />
           <span className="rounded-full px-3 py-1.5 text-[13px] font-extrabold tabular-nums" style={{ backgroundColor: "var(--p-card)", color: "var(--p-accent)" }}>
             ⚡ {formato(totalPoints)} pts
           </span>

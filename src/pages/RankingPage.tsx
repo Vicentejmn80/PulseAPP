@@ -180,7 +180,7 @@ export function RankingPage() {
         <p className="mt-1 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>{subtitle}</p>
         {tab !== "liga" && (
           <p className="mt-1 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
-            🥇🥈🥉 Los primeros 3 lugares ganan un premio cada ronda.
+            🥇🥈🥉 Los 3 primeros ganan premios
           </p>
         )}
       </div>

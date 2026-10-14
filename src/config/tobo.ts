@@ -10,5 +10,5 @@ function envText(key: string) {
  */
 export const TOBO_ROUND_PRIZE_SUBTITLE =
   envText("VITE_TOBO_ROUND_PRIZE_SUBTITLE") ||
-  "Acumula puntos durante esta ronda. 🥇🥈🥉 Los tres primeros lugares ganan un tobo de cerveza.";
+  "Los 3 primeros ganan premios";
 

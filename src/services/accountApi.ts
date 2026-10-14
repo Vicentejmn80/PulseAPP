@@ -287,7 +287,11 @@ export async function registerWithPassword(phone: string, fullName: string, alia
 }
 
 export async function loginSmart(phone: string, credential: string) {
-  const result = await postAuth("/api/pulse", { action: "login-account-password", phone, credential, method: "auto" });
+  const trimmed = credential.trim();
+  if (/^\d{6}$/.test(trimmed)) {
+    return loginWithPin(phone, trimmed);
+  }
+  const result = await postAuth("/api/pulse", { action: "login-account-password", phone, credential: trimmed, method: "password" });
   const token = result.token ?? "";
   writeSessionToken(token);
   return asSnapshot(result, token);

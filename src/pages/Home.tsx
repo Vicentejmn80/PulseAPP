@@ -17,7 +17,7 @@ import { IconCoin } from "@/components/ui/icons";
 import { TabBar } from "@/components/ui/TabBar";
 import { formato } from "@/lib/format";
 import { pointsToNextPosition } from "@/lib/leaderboard";
-import { caracasDateKey, cycleClosesLabel, cycleContainingToday, cyclePeriodLabel, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
+import { caracasDateKey, cycleClosesLabel, cycleContainingToday, cycleSpanLabel, homeMatchTone, pickActiveCycle } from "@/lib/toboHome";
 import {
   LVBP_EXPERIENCE_TITLE,
   LVBP_SEASON_LABEL,
@@ -26,6 +26,7 @@ import {
 } from "@/config/lvbpBrand";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 import { isUpcomingPrediction } from "@/lib/predictions/state";
+import { recentFinishedWithPrediction } from "@/lib/predictions/visibility";
 import { listCycles, listMatches, loadCycleBoard, scoreLine, type BaseballMatch, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
 import { RetosPanel } from "@/components/tobo/RetosPanel";
@@ -137,6 +138,16 @@ function MatchCard({ match, now, onOpen }: { match: BaseballMatch; now: number; 
         <div className="mt-3">
           <p className="text-[13px] font-extrabold">Finalizado</p>
           {official && <p className="mt-1 text-[14px] font-extrabold">{scoreLine(match, match.homeScore ?? 0, match.awayScore ?? 0)}</p>}
+          {prediction && (
+            <p className="mt-1 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
+              Tu pronóstico: {scoreLine(match, prediction.homeScore, prediction.awayScore)}
+            </p>
+          )}
+          {prediction?.processed && prediction.total !== null ? (
+            <p className="mt-1 text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>+{prediction.total} PT</p>
+          ) : prediction ? (
+            <p className="mt-1 text-[12px] font-extrabold" style={{ color: "var(--t-muted)" }}>⏳ Pendiente de liquidación</p>
+          ) : null}
         </div>
       )}
       {tone === "cancelled" && <p className="mt-3 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>Cancelado</p>}
@@ -235,6 +246,8 @@ export function HomePage() {
       return tone === "predict" || tone === "saved";
     })
     .slice(0, 4);
+  // Historial compacto: últimos finalizados con pronóstico, sin límite de día.
+  const recentResults = recentFinishedWithPrediction(real, 3);
   const mine = ranking.find((entry) => entry.isCurrentUser);
   const gap = mine ? pointsToNextPosition(ranking, mine.user.id) : null;
 
@@ -284,7 +297,10 @@ export function HomePage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ToboCard>
             <CardHead icon={CalendarDays} title="Ronda actual" />
-            <h2 className="text-[18px] font-extrabold leading-tight tracking-tight">{cycle ? cyclePeriodLabel(cycle) : "Temporada"}</h2>
+            <h2 className="text-[18px] font-extrabold leading-tight tracking-tight">{cycle ? cycle.name : "Temporada"}</h2>
+            {cycle && (
+              <p className="mt-1 text-[14px] font-extrabold">{cycleSpanLabel(cycle)}</p>
+            )}
             <p className="mt-2 text-[13px] font-extrabold" style={{ color: "var(--t-muted)" }}>
               🏆 {TOBO_ROUND_PRIZE_SUBTITLE}
             </p>
@@ -361,6 +377,39 @@ export function HomePage() {
             </div>
           )}
         </div>
+
+        {recentResults.length > 0 && (
+          <ToboCard>
+            <CardHead
+              icon={Check}
+              title="Tus últimos resultados"
+              action={{ label: "Ver historial →", onClick: () => navigate("/tobo/mi-quiniela") }}
+            />
+            <div className="flex flex-col gap-2">
+              {recentResults.map((match) => (
+                <button
+                  key={match.id}
+                  type="button"
+                  onClick={() => navigate(`/tobo/partidos/${match.id}`)}
+                  className="rounded-2xl p-3 text-left"
+                  style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid var(--t-border)" }}
+                >
+                  <p className="text-[13px] font-extrabold">
+                    {match.awayTeam} {match.awayScore ?? "–"} — {match.homeScore ?? "–"} {match.homeTeam}
+                  </p>
+                  <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
+                    Tu pronóstico: {match.prediction ? scoreLine(match, match.prediction.homeScore, match.prediction.awayScore) : "—"}
+                    {match.prediction?.processed && match.prediction.total !== null ? (
+                      <span className="ml-2 font-extrabold" style={{ color: "var(--t-accent)" }}>+{match.prediction.total} PT</span>
+                    ) : (
+                      <span className="ml-2">⏳ pendiente</span>
+                    )}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </ToboCard>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <RetosPanel />

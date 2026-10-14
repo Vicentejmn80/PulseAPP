@@ -1,0 +1,14 @@
+{
+  "functions": [
+    {"name": "pulse_load", "why": "El navegador restaura la sesión con la clave anónima y el token."},
+    {"name": "pulse_league_ranking", "why": "El navegador pide el ranking de una liga. La función saca al jugador del token y responde vacío si no es miembro."},
+    {"name": "pulse_alias_available", "why": "Consulta pública de si un alias está libre. No dice si un teléfono existe."},
+    {"name": "pulse_alias_key", "why": "Normaliza un alias. No lee perfiles."},
+    {"name": "pulse_normalize_phone", "why": "Normaliza un teléfono. No lee perfiles."},
+    {"name": "pulse_make_handle", "why": "Arma un handle a partir de un alias."},
+    {"name": "pulse_initials", "why": "Calcula iniciales."},
+    {"name": "pulse_public_profile", "why": "Proyecta solo campos públicos de una fila que ya tiene la función llamadora."},
+    {"name": "pulse_pin_valid", "why": "Valida el formato de un PIN. No lo compara con una cuenta."},
+    {"name": "pulse_random_code", "why": "Genera un código aleatorio. No lee cuentas."}
+  ]
+}
