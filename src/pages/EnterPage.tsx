@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { RusherMark } from "@/components/ui/RusherMark";
 import { RusherSplash } from "@/components/ui/RusherSplash";
-import { checkAlias, FlowError, passwordMeetsPolicy } from "@/services/accountApi";
+import { checkAlias, FlowError, passwordMeetsPolicy, resolveLoginAttempt } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
 type Mode = "choose" | "register" | "login";
@@ -32,7 +32,7 @@ function composePhone(dial: string, local: string) {
 const fieldClass = "mt-1 h-14 w-full rounded-2xl border bg-[#14171A] px-4 text-[16px] font-bold text-[#F5F7F2] outline-none";
 
 export function EnterPage({ hint = "" }: { hint?: string }) {
-  const { createAccount, createAccountWithPassword, loginSmart, authError, setAuthError } = usePulse();
+  const { createAccount, createAccountWithPassword, createAccountPasswordOnly, loginWithPin, loginWithPassword, authError, setAuthError } = usePulse();
   const [step, setStep] = useState<"splash" | "welcome" | "auth">("splash");
   const [splashPhase, setSplashPhase] = useState<"play" | "exit">("play");
   const [mode, setMode] = useState<Mode>("choose");
@@ -42,10 +42,13 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
   const [alias, setAlias] = useState("");
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
-  const [authMode, setAuthMode] = useState<"pin" | "both">("pin");
+  const [authMode, setAuthMode] = useState<"pin" | "password" | "both">("pin");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [credential, setCredential] = useState("");
+  const [loginPin, setLoginPin] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [loginChoice, setLoginChoice] = useState<"pin" | "password" | null>(null);
   const [pending, setPending] = useState(false);
   const [aliasState, setAliasState] = useState<"idle" | "checking" | "free" | "taken" | "invalid">("idle");
   const [switchHint, setSwitchHint] = useState<"login" | "register" | "">("");
@@ -95,16 +98,19 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     setPinConfirm("");
     setPassword("");
     setPasswordConfirm("");
-    setCredential("");
+    setLoginPin("");
+    setLoginPassword("");
+    setShowLoginPassword(false);
+    setLoginChoice(null);
   }
 
   async function onRegister(event: FormEvent) {
     event.preventDefault();
-    if (pin !== pinConfirm) {
+    if (authMode !== "password" && pin !== pinConfirm) {
       setAuthError("Los PIN no coinciden.");
       return;
     }
-    if (authMode === "both" && password !== passwordConfirm) {
+    if (authMode !== "pin" && password !== passwordConfirm) {
       setAuthError("Las contraseñas no coinciden.");
       return;
     }
@@ -114,6 +120,8 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     try {
       if (authMode === "both") {
         await createAccountWithPassword(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), pin, password);
+      } else if (authMode === "password") {
+        await createAccountPasswordOnly(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), password);
       } else {
         await createAccount(composePhone(country.dial, localPhone), fullName.trim(), alias.trim(), pin);
       }
@@ -127,11 +135,25 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
 
   async function onLogin(event: FormEvent) {
     event.preventDefault();
+    const phone = composePhone(country.dial, localPhone);
+    const resolved = resolveLoginAttempt(loginPin, loginPassword, loginChoice);
+    if (resolved.kind === "empty") {
+      setAuthError("Escribe tu PIN o tu contraseña.");
+      return;
+    }
+    if (resolved.kind === "need-choice") {
+      setAuthError("Completa solo un campo o elige con qué entrar.");
+      return;
+    }
     setPending(true);
     setAuthError("");
     setSwitchHint("");
     try {
-      await loginSmart(composePhone(country.dial, localPhone), credential);
+      if (resolved.kind === "password") {
+        await loginWithPassword(phone, resolved.password);
+      } else {
+        await loginWithPin(phone, resolved.pin);
+      }
     } catch (error) {
       if (error instanceof FlowError && error.code === "ACCOUNT_NOT_FOUND") setSwitchHint("register");
     } finally {
@@ -149,12 +171,10 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
     phoneReady &&
     fullName.trim().length >= 2 &&
     aliasState === "free" &&
-    pinReady &&
-    pinConfirmReady &&
-    pinsMatch &&
+    (authMode === "password" || (pinReady && pinConfirmReady && pinsMatch)) &&
     (authMode === "pin" || passwordReady);
-  const loginReady = phoneReady && credential.trim().length > 0;
-  const credentialLooksPin = /^\d{0,6}$/.test(credential);
+  const loginReady = phoneReady && (/^\d{6}$/.test(loginPin.trim()) || loginPassword.length > 0);
+  const loginBothFilled = /^\d{6}$/.test(loginPin.trim()) && loginPassword.length > 0;
 
   if (step === "splash") {
     return (
@@ -269,7 +289,7 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
               />
             </label>
             <AliasHint state={aliasState} />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setAuthMode("pin")}
@@ -277,7 +297,16 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 style={{ borderColor: authMode === "pin" ? "var(--p-accent)" : "#2A2F33" }}
               >
                 <p className="text-[14px] font-extrabold">Solo PIN</p>
-                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>6 números, simple</p>
+                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>6 números</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMode("password")}
+                className="rounded-2xl border-2 px-3 py-3 text-left"
+                style={{ borderColor: authMode === "password" ? "var(--p-accent)" : "#2A2F33" }}
+              >
+                <p className="text-[14px] font-extrabold">Contraseña</p>
+                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>Sin PIN</p>
               </button>
               <button
                 type="button"
@@ -285,10 +314,12 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
                 className="rounded-2xl border-2 px-3 py-3 text-left"
                 style={{ borderColor: authMode === "both" ? "var(--p-accent)" : "#2A2F33" }}
               >
-                <p className="text-[14px] font-extrabold">PIN + contraseña <span style={{ color: "var(--p-accent)" }}>★</span></p>
-                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>Recomendado, más seguro</p>
+                <p className="text-[14px] font-extrabold">Ambas <span style={{ color: "var(--p-accent)" }}>★</span></p>
+                <p className="text-[12px] font-semibold" style={{ color: "var(--p-muted)" }}>Recomendado</p>
               </button>
             </div>
+            {authMode !== "password" && (
+              <>
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
               PIN
               <input
@@ -320,7 +351,9 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
             {pinConfirmReady && !pinsMatch && (
               <p className="text-[13px] font-bold text-[#E23B2F]">Los PIN no coinciden.</p>
             )}
-            {authMode === "both" && (
+              </>
+            )}
+            {authMode !== "pin" && (
               <>
                 <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
                   Contraseña
@@ -377,22 +410,76 @@ export function EnterPage({ hint = "" }: { hint?: string }) {
             <p className="text-[14px] font-semibold" style={{ color: "var(--p-muted)" }}>Entra y lánzate un Rush.</p>
             <PhoneFields country={country} setCountry={setCountry} localPhone={localPhone} setLocalPhone={setLocalPhone} />
             <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
-              PIN o contraseña
+              PIN
               <input
-                value={credential}
-                onChange={(event) => setCredential(event.target.value.slice(0, 128))}
+                value={loginPin}
+                onChange={(event) => {
+                  setLoginPin(event.target.value.replace(/\D/g, "").slice(0, 6));
+                  setLoginChoice(null);
+                }}
+                inputMode="numeric"
                 autoComplete="current-password"
-                maxLength={128}
-                placeholder="Tu PIN de 6 números o tu contraseña"
+                maxLength={6}
+                placeholder="6 números"
                 type="password"
                 className={fieldClass}
                 style={{ borderColor: "#2A2F33", letterSpacing: "0.3em" }}
               />
             </label>
-            {credential.length > 0 && (
-              <p className="text-[13px] font-bold" style={{ color: "var(--p-muted)" }}>
-                {credentialLooksPin ? "Se validará como PIN" : "Se validará como contraseña"}
-              </p>
+            <label className="block text-[12px] font-extrabold" style={{ color: "var(--p-muted)" }}>
+              Contraseña
+              <div className="relative">
+                <input
+                  value={loginPassword}
+                  onChange={(event) => {
+                    setLoginPassword(event.target.value.slice(0, 128));
+                    setLoginChoice(null);
+                  }}
+                  autoComplete="current-password"
+                  maxLength={128}
+                  placeholder="Tu contraseña"
+                  type={showLoginPassword ? "text" : "password"}
+                  className={fieldClass}
+                  style={{ borderColor: "#2A2F33" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword((v) => !v)}
+                  aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] font-extrabold"
+                  style={{ color: "var(--p-muted)" }}
+                >
+                  {showLoginPassword ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+            </label>
+            {loginBothFilled && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginChoice("pin")}
+                  className="h-11 flex-1 rounded-2xl text-[13px] font-extrabold"
+                  style={{
+                    backgroundColor: loginChoice === "pin" ? "var(--p-accent)" : "transparent",
+                    color: loginChoice === "pin" ? "#0B0D0F" : "var(--p-muted)",
+                    border: "2px solid #2A2F33",
+                  }}
+                >
+                  Entrar con PIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginChoice("password")}
+                  className="h-11 flex-1 rounded-2xl text-[13px] font-extrabold"
+                  style={{
+                    backgroundColor: loginChoice === "password" ? "var(--p-accent)" : "transparent",
+                    color: loginChoice === "password" ? "#0B0D0F" : "var(--p-muted)",
+                    border: "2px solid #2A2F33",
+                  }}
+                >
+                  Entrar con contraseña
+                </button>
+              </div>
             )}
             {authError && <p className="text-[13px] font-bold text-[#E23B2F]">{authError}</p>}
             {switchHint === "register" && (

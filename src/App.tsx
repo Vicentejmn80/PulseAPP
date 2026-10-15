@@ -27,7 +27,17 @@ import { ReporterPage } from "@/pages/ReporterPage";
 import { SimulatorPage } from "@/pages/SimulatorPage";
 import { TascasPage } from "@/pages/TascasPage";
 import { TriviaPage } from "@/pages/TriviaPage";
+import { AllyLandingPage } from "@/pages/AllyLandingPage";
+import { ClasificacionPage } from "@/pages/ClasificacionPage";
+import { AdminConsole } from "@/components/admin/AdminFrame";
+import { AlliesAdminPage } from "@/pages/admin/AlliesAdminPage";
+import { BaseballAdminPage } from "@/pages/admin/BaseballAdminPage";
+import { DashboardPage } from "@/pages/admin/DashboardPage";
+import { LedgerAdminPage } from "@/pages/admin/LedgerAdminPage";
+import { TeamAdminPage } from "@/pages/admin/TeamAdminPage";
+import { UsersAdminPage } from "@/pages/admin/UsersAdminPage";
 import { VenuePage } from "@/pages/VenuePage";
+import { callRpc } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
 /* ── Guest helpers for QR / venue landing ── */
@@ -45,6 +55,26 @@ function GuestVenue() {
     sessionStorage.setItem("pulse-after-login", `/venue/${slug}`);
   }, [slug]);
   return <VenuePage guest />;
+}
+
+function GuestAdmin() {
+  useEffect(() => {
+    sessionStorage.setItem("pulse-after-login", "/admin");
+  }, []);
+  return <EnterPage hint="Entra con tu cuenta para abrir la administración." />;
+}
+
+function GuestAlly() {
+  const { code = "" } = useParams();
+  useEffect(() => {
+    const clean = code.trim().toLowerCase();
+    sessionStorage.setItem("rusher-campaign", clean);
+    sessionStorage.setItem("pulse-after-login", `/aliado/${encodeURIComponent(clean)}`);
+    if (/^[a-z0-9]{6,32}$/.test(clean)) {
+      callRpc("pulse_campaign_open", { p_code: clean }).catch(() => undefined);
+    }
+  }, [code]);
+  return <EnterPage hint="Entra para recibir la recompensa de este local." />;
 }
 
 function GuestJoin() {
@@ -81,7 +111,9 @@ function ResumeVisit() {
       next?.startsWith("/venue/") ||
       next?.startsWith("/partidos/demo_") ||
       next?.startsWith("/tobo/") ||
-      next?.startsWith("/unirse/")
+      next?.startsWith("/unirse/") ||
+      next?.startsWith("/admin") ||
+      next?.startsWith("/aliado/")
     ) {
       sessionStorage.removeItem("pulse-after-login");
       navigate(next, { replace: true });
@@ -113,6 +145,9 @@ export function App() {
               <Route path="/venue/:slug"       element={<GuestVenue />} />
               <Route path="/unirse/:code"      element={<GuestJoin />} />
               <Route path="/tobo/unirse/:code" element={<GuestJoin />} />
+              <Route path="/admin"             element={<GuestAdmin />} />
+              <Route path="/admin/*"           element={<GuestAdmin />} />
+              <Route path="/aliado/:code"      element={<GuestAlly />} />
               <Route path="*"                  element={<EnterPage />} />
             </Routes>
           </div>
@@ -140,6 +175,7 @@ export function App() {
             <Route path="partidos"              element={<MatchesPage />} />
             <Route path="partidos/:matchId"     element={<MatchPredictPage />} />
             <Route path="ranking"               element={<RankingPage />} />
+            <Route path="clasificacion"         element={<ClasificacionPage />} />
             <Route path="unirse/:code"          element={<JoinInvitePage />} />
             <Route path="ligas/:leagueId?"      element={<LeaguePage />} />
             <Route path="trivias"               element={<TriviaPage />} />
@@ -150,6 +186,17 @@ export function App() {
             <Route path="q/:token"              element={<QrPage />} />
             <Route path="escanear"              element={<ScanQrPage />} />
           </Route>
+
+          <Route path="/admin" element={<AdminConsole />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="usuarios" element={<UsersAdminPage />} />
+            <Route path="beisbol" element={<BaseballAdminPage />} />
+            <Route path="clasificacion" element={<ClasificacionPage embedded />} />
+            <Route path="aliados" element={<AlliesAdminPage />} />
+            <Route path="movimientos" element={<LedgerAdminPage />} />
+            <Route path="equipo" element={<TeamAdminPage />} />
+          </Route>
+          <Route path="/aliado/:code" element={<AllyLandingPage />} />
 
           {/* ── Admin (paths unchanged) ── */}
           <Route path="/admin/partidos"    element={<AdminMatchesPage />} />

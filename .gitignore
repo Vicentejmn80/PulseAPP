@@ -10,3 +10,5 @@ data/pulse-cloud.json
 supabase/.temp
 .env
 .env.local
+.vercel
+.env*

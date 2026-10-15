@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, CircleDot, Clock, Hand, Play, RefreshCw, Trophy, Zap, type LucideIcon } from "lucide-react";
 import { ToboBackHome } from "@/components/tobo/ToboBackHome";
-import { RetosPanel } from "@/components/tobo/RetosPanel";
-import { startRetoFlow } from "@/state/retoSheet";
 import { GoldCta, GhostCta, IconChip, ToboCard } from "@/components/tobo/surface";
 import { TabBar } from "@/components/ui/TabBar";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
@@ -81,7 +79,6 @@ export function TriviaPage() {
   const { reload } = usePulse();
 
   const [level, setLevel] = useState<TriviaLevel>("beginner");
-  const [retoLevel, setRetoLevel] = useState<TriviaLevel | "">("");
   const [phase, setPhase] = useState<Phase>("picker");
 
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
@@ -349,8 +346,8 @@ export function TriviaPage() {
           )}
           <div className="flex flex-col gap-3">
             {(Object.entries(LEVELS) as [TriviaLevel, LevelMeta][]).map(([key, info], i) => (
-              <div key={key} className="flex flex-col gap-2">
               <button
+                key={key}
                 type="button"
                 onClick={() => pickLevel(key)}
                 disabled={(() => {
@@ -401,20 +398,7 @@ export function TriviaPage() {
                   )}
                 </div>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRetoLevel(key);
-                  startRetoFlow({ triviaLevel: key });
-                }}
-                className="min-h-11 rounded-2xl text-[14px] font-extrabold"
-                style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
-              >
-                Retar
-              </button>
-              </div>
             ))}
-            {retoLevel && <RetosPanel triviaLevel={retoLevel} />}
           </div>
           <p className="mt-5 text-center text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>
             Puedes cambiar de nivel cuando quieras.

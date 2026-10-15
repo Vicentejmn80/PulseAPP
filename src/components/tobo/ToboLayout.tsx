@@ -5,8 +5,7 @@ import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
 import { InstallBanner } from "./InstallBanner";
 import { LeagueInviteInbox } from "./LeagueInvite";
-import { RetoSheetHost } from "./RetoSheet";
-import { RetosIntro } from "./RetosIntro";
+
 import { ToboBackHome } from "./ToboBackHome";
 import { ToboOnboarding } from "./ToboOnboarding";
 
@@ -63,8 +62,6 @@ export function ToboLayout() {
           <Outlet />
         </div>
         <ToboOnboarding />
-        <RetosIntro />
-        <RetoSheetHost />
       </div>
     </div>
   );

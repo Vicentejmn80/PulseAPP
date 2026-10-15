@@ -12,10 +12,13 @@ import {
   loginAccount,
   loginSmart as loginSmartRequest,
   loginWithPin as loginWithPinRequest,
+  loginWithPassword as loginWithPasswordRequest,
+  setPassword as setPasswordRequest,
   logoutAccount,
   readSessionToken,
   registerAccount,
   registerWithPin as registerWithPinRequest,
+  registerPasswordOnly as registerPasswordOnlyRequest,
   registerWithPassword as registerWithPasswordRequest,
   requestOtp as requestOtpRequest,
   writeSessionToken,
@@ -71,7 +74,10 @@ interface PulseContextValue {
   directEnter: (phone: string, fullName: string, alias: string) => Promise<void>;
   createAccount: (phone: string, fullName: string, alias: string, pin: string) => Promise<void>;
   createAccountWithPassword: (phone: string, fullName: string, alias: string, pin: string, password: string) => Promise<void>;
+  createAccountPasswordOnly: (phone: string, fullName: string, alias: string, password: string) => Promise<void>;
   loginWithPin: (phone: string, pin: string) => Promise<void>;
+  loginWithPassword: (phone: string, password: string) => Promise<void>;
+  setPassword: (current: string, next: string) => Promise<void>;
   loginSmart: (phone: string, credential: string) => Promise<void>;
   logout: () => void;
   completeGame: (input: CompleteGameInput) => Promise<number>;
@@ -242,8 +248,26 @@ export function PulseProvider({ children }: { children: ReactNode }) {
         await enter(loginWithPinRequest(phone, pin));
         setNotice("¡Bienvenido de nuevo!");
       },
+      async loginWithPassword(phone: string, password: string) {
+        await enter(loginWithPasswordRequest(phone, password));
+        setNotice("¡Bienvenido de nuevo!");
+      },
+      async setPassword(current: string, next: string) {
+        setAuthError("");
+        try {
+          await setPasswordRequest(current, next);
+          setNotice("Contraseña guardada.");
+        } catch (error) {
+          setAuthError(error instanceof Error ? error.message : "No se pudo guardar la contraseña.");
+          throw error;
+        }
+      },
       async createAccountWithPassword(phone: string, fullName: string, alias: string, pin: string, password: string) {
         await enter(registerWithPasswordRequest(phone, fullName, alias, pin, password));
+        setNotice("¡Bienvenido a Rusher!");
+      },
+      async createAccountPasswordOnly(phone: string, fullName: string, alias: string, password: string) {
+        await enter(registerPasswordOnlyRequest(phone, fullName, alias, password));
         setNotice("¡Bienvenido a Rusher!");
       },
       async loginSmart(phone: string, credential: string) {

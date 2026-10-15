@@ -1,4 +1,13 @@
+import { USER_RETOS_ENABLED } from "@/config/retos";
 import { callRpc, readSessionToken } from "@/services/accountApi";
+
+const RETOS_OFF = "Los retos entre usuarios están deshabilitados.";
+
+export function retoMutationBlocked(fn: string) {
+  if (USER_RETOS_ENABLED) return null;
+  if (fn === "pulse_reto_create" || fn === "pulse_reto_respond" || fn === "pulse_reto_cancel") return RETOS_OFF;
+  return null;
+}
 
 const DEVICE_KEY = "pulse-device-id";
 
@@ -111,6 +120,8 @@ export async function retoCreate(input: {
   triviaLevel?: string;
   adult: boolean;
 }) {
+  const blocked = retoMutationBlocked("pulse_reto_create");
+  if (blocked) throw new Error(blocked);
   const result = await callRpc<OkResult & { alias?: string; stake?: number }>("pulse_reto_create", {
     p_token: token(),
     p_kind: input.kind,
@@ -127,6 +138,8 @@ export async function retoCreate(input: {
 }
 
 export async function retoRespond(id: string, accept: boolean) {
+  const blocked = retoMutationBlocked("pulse_reto_respond");
+  if (blocked) throw new Error(blocked);
   const result = await callRpc<OkResult>("pulse_reto_respond", {
     p_token: token(),
     p_reto_id: id,
@@ -138,6 +151,8 @@ export async function retoRespond(id: string, accept: boolean) {
 }
 
 export async function retoCancel(id: string) {
+  const blocked = retoMutationBlocked("pulse_reto_cancel");
+  if (blocked) throw new Error(blocked);
   const result = await callRpc<OkResult>("pulse_reto_cancel", {
     p_token: token(),
     p_reto_id: id,

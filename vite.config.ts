@@ -1,3 +1,4 @@
+import "dotenv/config";
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { defineConfig, loadEnv, type Plugin } from "vite";
@@ -88,6 +89,35 @@ function pulseApi(): Plugin {
           const { handlePulse } = await server.ssrLoadModule("/src/server/engine.ts");
           const result = await handlePulse(body);
           json(response, result.ok ? 200 : 400, result);
+        } catch (error) {
+          json(response, 500, { ok: false, error: error instanceof Error ? error.message : "Error del servidor" });
+        }
+      });
+
+      server.middlewares.use("/api/admin", async (req, res, next) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        const response = res as ServerResponse;
+        try {
+          const raw = await readBody(req);
+          const body = raw ? JSON.parse(raw) as Record<string, unknown> : {};
+          const { default: handler } = await server.ssrLoadModule("/api/admin.ts");
+          let statusCode = 200;
+          const vercelRes = {
+            setHeader(name: string, value: string) {
+              response.setHeader(name, value);
+            },
+            status(code: number) {
+              statusCode = code;
+              return vercelRes;
+            },
+            json(payload: unknown) {
+              json(response, statusCode, payload);
+            },
+          };
+          await handler({ method: req.method, headers: req.headers, body }, vercelRes);
         } catch (error) {
           json(response, 500, { ok: false, error: error instanceof Error ? error.message : "Error del servidor" });
         }

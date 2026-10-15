@@ -3,6 +3,7 @@ export function validatePasswordFormat(raw: string): { ok: true; password: strin
 export function detectAuthMethod(credential: string): "pin" | "password";
 export function registerWithPassword(body: Record<string, unknown>): Promise<{ ok: boolean }>;
 export function loginWithPassword(body: Record<string, unknown>): Promise<{ ok: boolean }>;
+export function registerPasswordOnly(body: Record<string, unknown>): Promise<{ ok: boolean }>;
 export function handlePasswordAction(action: string, body: Record<string, unknown>): Promise<{ ok: boolean; code?: string; error?: string }>;
 export function validateFullName(raw: string): { ok: true; fullName: string } | { ok: false; code: string; error: string };
 export function uniqueViolationCode(constraint: string): "PHONE_ALREADY_REGISTERED" | "ALIAS_ALREADY_TAKEN";
@@ -10,3 +11,4 @@ export function handlePinAction(action: string, body: Record<string, unknown>): 
 export function registerWithPin(body: Record<string, unknown>): Promise<{ ok: boolean }>;
 export function loginWithPin(body: Record<string, unknown>): Promise<{ ok: boolean }>;
 export function logoutSession(body: Record<string, unknown>): Promise<{ ok: boolean }>;
+export function setPassword(body: Record<string, unknown>): Promise<{ ok: boolean; code?: string; error?: string }>;

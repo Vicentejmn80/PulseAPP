@@ -14,6 +14,14 @@ function readBody(req: VercelRequest) {
   return (body ?? {}) as Record<string, unknown>;
 }
 
+function statusFor(result: { ok?: boolean; code?: string }) {
+  if (result.ok) return 200;
+  // Fallo de configuración del servidor (sin Supabase): 503, no 400.
+  // No revela si el teléfono existe ni qué credencial falló.
+  if (result.code === "AUTH_UNAVAILABLE") return 503;
+  return 400;
+}
+
 function fail(res: VercelResponse, error: unknown) {
   const message = error instanceof Error ? error.message : "No pudimos completar el registro. Inténtalo nuevamente.";
   res.status(500).json({ ok: false, code: "REGISTRATION_ERROR", error: message });
@@ -31,17 +39,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === "register-account" || action === "login-account" || action === "logout-account") {
     try {
       const result = await handlePinAction(action, body);
-      res.status(result.ok ? 200 : 400).json(result);
+      res.status(statusFor(result)).json(result);
     } catch (error) {
       fail(res, error);
     }
     return;
   }
 
-  if (action === "register-account-password" || action === "login-account-password") {
+  if (action === "register-account-password" || action === "register-account-password-only" || action === "login-account-password" || action === "set-password") {
     try {
       const result = await handlePasswordAction(action, body);
-      res.status(result.ok ? 200 : 400).json(result);
+      res.status(statusFor(result)).json(result);
     } catch (error) {
       fail(res, error);
     }
@@ -59,7 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       console.info(JSON.stringify({ event: "registration_started", action }));
       const result = await handleOtpAction(action, body);
-      res.status(result.ok ? 200 : 400).json(result);
+      res.status(statusFor(result)).json(result);
     } catch (error) {
       fail(res, error);
     }
@@ -69,8 +77,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { handlePulse } = await import("../src/server/engine");
     const result = await handlePulse(body);
-    res.status(result.ok ? 200 : 400).json(result);
+    res.status(statusFor(result)).json(result);
   } catch (error) {
     fail(res, error);
   }
 }
+

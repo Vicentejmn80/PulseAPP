@@ -9,6 +9,7 @@ import {
   Lock,
   Pencil,
   Play,
+  Trophy,
   Users,
   Zap,
 } from "lucide-react";
@@ -29,7 +30,6 @@ import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { recentFinishedWithPrediction } from "@/lib/predictions/visibility";
 import { listCycles, listMatches, loadCycleBoard, scoreLine, type BaseballMatch, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
-import { RetosPanel } from "@/components/tobo/RetosPanel";
 import { triviaPointsForDifficulty } from "@/lib/triviaPoints";
 import { formatCooldown, remainingMs, serverSkewMs, triviaStatus, type TriviaLevel, type TriviaLevelState } from "@/services/triviaApi";
 import { usePulse } from "@/state/PulseContext";
@@ -411,10 +411,7 @@ export function HomePage() {
           </ToboCard>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <RetosPanel />
-
-          <ToboCard>
+        <ToboCard>
             <CardHead icon={Zap} title="Trivia de hoy" action={{ label: "Ver todos →", onClick: () => navigate("/tobo/trivias") }} />
             <p className="mb-3 text-[13px] font-bold" style={{ color: "var(--t-muted)" }}>
               {triviaMax > 0 ? `Hasta ${formato(triviaMax)} puntos disponibles` : "Las trivias del día"}
@@ -460,7 +457,17 @@ export function HomePage() {
               })}
             </div>
           </ToboCard>
-        </div>
+
+        <ToboCard>
+          <CardHead
+            icon={Trophy}
+            title="Tabla LVBP"
+            action={{ label: "Ver tabla →", onClick: () => navigate("/tobo/clasificacion") }}
+          />
+          <p className="text-[14px] font-semibold leading-relaxed" style={{ color: "var(--t-muted)" }}>
+            Clasificación de equipos según los resultados registrados. Es independiente del ranking de jugadores.
+          </p>
+        </ToboCard>
       </div>
       <TabBar />
     </div>

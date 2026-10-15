@@ -7,6 +7,8 @@ export const RETO_MAX_ACTIVOS = 5;
 export const RETO_MAX_PAR_DIA = 3;
 export const RETO_MAX_PUNTOS_DIA = 100;
 export const RETOS_CUENTAN_PARA_PREMIO_RONDA = false;
+/** Lanzamiento: los retos entre usuarios no se ofrecen. El backend SQL se apaga con la migración reversible. */
+export const USER_RETOS_ENABLED = false;
 export const RETO_QUICK_STAKES = [5, 10, 20] as const;
 
 export function maxRetoStake(totalPoints: number) {

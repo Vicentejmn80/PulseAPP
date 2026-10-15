@@ -14,6 +14,8 @@ export function gameTypeLabel(type: string) {
   if (type === "pleno") return "Pleno de la jornada";
   if (type === "streak") return "Racha";
   if (type === "qr_scan") return "Visita a la tasca";
+  if (type === "campaign_reward") return "Recompensa de local";
+  if (type === "admin_adjust") return "Corrección de puntos";
   if (type === "flash") return "Pregunta relámpago";
   return "Actividad";
 }

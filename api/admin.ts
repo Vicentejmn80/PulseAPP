@@ -29,6 +29,7 @@ const ADMIN_ACTIONS = new Map<string, readonly string[]>(
     // matchesApi
     pulse_admin_create_match: ["p_home", "p_away", "p_starts_at"],
     pulse_admin_set_result: ["p_match_id", "p_home_score", "p_away_score"],
+    pulse_admin_preview_result: ["p_match_id", "p_home_score", "p_away_score"],
     pulse_admin_postpone: ["p_match_id", "p_starts_at"],
     pulse_admin_cancel: ["p_match_id"],
     pulse_admin_save_venue: ["p_name", "p_zone", "p_address", "p_contact", "p_founder"],
@@ -88,11 +89,37 @@ const ADMIN_ACTIONS = new Map<string, readonly string[]>(
       "p_category", "p_difficulty", "p_status", "p_publish_date", "p_points",
     ],
     pulse_trivia_admin_set_status: ["p_question_id", "p_status"],
+    pulse_admin_overview: [],
+    pulse_admin_users: ["p_query", "p_limit", "p_offset", "p_status", "p_sort"],
+    pulse_admin_user_ledger: ["p_user_id", "p_limit"],
+    pulse_admin_match_board: ["p_status", "p_team", "p_from", "p_to", "p_limit", "p_offset"],
+    pulse_admin_ledger: ["p_type", "p_limit", "p_offset"],
+    pulse_admin_audit_recent: ["p_limit"],
+    pulse_admin_adjust_points: ["p_user_id", "p_points", "p_reason", "p_request_id"],
+    pulse_admin_set_suspension: ["p_user_id", "p_suspend", "p_reason"],
+    pulse_admin_team: [],
+    pulse_admin_grant: ["p_handle", "p_reason", "p_role"],
+    pulse_admin_revoke: ["p_handle", "p_reason"],
+    pulse_admin_top_predictors: [],
+    pulse_admin_whoami: [],
+    pulse_admin_save_ally: ["p_venue_id", "p_name", "p_zone", "p_city", "p_active"],
+    pulse_admin_save_campaign: ["p_campaign_id", "p_venue_id", "p_name", "p_points", "p_active"],
+    pulse_admin_allies: [],
   })
 );
 
 // Acciones que un rol "reporter" sí puede ejecutar (si pulse_admin_check devuelve rol).
 const isReporterAction = (action: string) => action.startsWith("pulse_reporter_");
+
+// Un operador solo liquida resultados y consulta usuarios. El resto lo rechaza el servidor.
+const OPERATOR_ACTIONS = new Set([
+  "pulse_admin_users",
+  "pulse_admin_user_ledger",
+  "pulse_admin_match_board",
+  "pulse_admin_preview_result",
+  "pulse_admin_set_result",
+  "pulse_admin_whoami",
+]);
 
 // Acciones destructivas / de alto impacto: se audita ANTES de ejecutar y,
 // si la auditoría falla, la acción se aborta (fail-closed).
@@ -112,11 +139,17 @@ const DESTRUCTIVE_ACTIONS = new Set([
   "pulse_admin_flash_void",
   "pulse_admin_bingo_close",
   "pulse_admin_sim_start",
+  "pulse_admin_adjust_points",
+  "pulse_admin_set_suspension",
+  "pulse_admin_grant",
+  "pulse_admin_revoke",
+  "pulse_admin_save_ally",
+  "pulse_admin_save_campaign",
 ]);
 
 /* ----------------------------- Límites ------------------------------------ */
 const MAX_BODY_BYTES = 256 * 1024;
-const MAX_PARAMS_BYTES = 128 * 1024;
+const MAX_PARAMS_BYTES = 32_000;
 const MAX_STRING_LEN = 10_000;
 const MAX_ARRAY_LEN = 200;
 const MAX_OBJECT_KEYS = 100;
@@ -367,9 +400,29 @@ try {
   }
   if (!session) return denyAuth();
 
+  let seatRole = "super";
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const who = await (supabase as any).rpc("pulse_admin_whoami", { p_admin_key: token });
+    const role = who?.data && typeof who.data === "object" ? String((who.data as { role?: string }).role || "") : "";
+    if (!who?.error && role === "operator") {
+      session.role = "operator";
+      seatRole = "operator";
+    } else if (!who?.error && role === "super") {
+      seatRole = "super";
+    }
+  } catch {
+    seatRole = "super";
+  }
+
   // whoami
   if (action === "admin-whoami") {
-    return void res.status(200).json({ ok: true, userId: session.userId });
+    return void res.status(200).json({ ok: true, userId: session.userId, role: seatRole });
+  }
+
+  if (session.role === "operator" && !OPERATOR_ACTIONS.has(action)) {
+    console.warn(`[admin] rol insuficiente user=${session.userId} action=${action}`);
+    return fail(res, 403, "Sin permiso.");
   }
 
   // Allowlist de acciones

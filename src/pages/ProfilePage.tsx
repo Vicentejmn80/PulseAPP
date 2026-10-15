@@ -11,10 +11,12 @@ import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { formato, gameTypeLabel } from "@/lib/format";
 import { caracasDateKey, cycleContainingToday } from "@/lib/toboHome";
 import { myStats, type UserStats } from "@/services/analytics";
+import { adminCall } from "@/services/adminConsoleApi";
 import { adminVenueList } from "@/services/demoApi";
 import { listMyLeagues, type League } from "@/services/leaguesApi";
 import { listCycles, loadCycleBoard } from "@/services/matchesApi";
 import { usePulse } from "@/state/PulseContext";
+import { passwordMeetsPolicy } from "@/services/accountApi";
 import type { PointsTransaction } from "@/types/pulse";
 
 function movementLabel(tx: PointsTransaction) {
@@ -24,9 +26,126 @@ function movementLabel(tx: PointsTransaction) {
   return gameTypeLabel(tx.sourceType);
 }
 
+function PasswordCard({ onSave }: { onSave: (current: string, next: string) => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [show, setShow] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!current) {
+      setIsError(true);
+      setMessage("Escribe tu PIN o contraseña actual.");
+      return;
+    }
+    if (!passwordMeetsPolicy(next)) {
+      setIsError(true);
+      setMessage("La nueva necesita 8+ caracteres, 1 mayúscula, 1 número y 1 símbolo.");
+      return;
+    }
+    if (next !== confirm) {
+      setIsError(true);
+      setMessage("La confirmación no coincide.");
+      return;
+    }
+    setPending(true);
+    setMessage("");
+    try {
+      await onSave(current, next);
+      setIsError(false);
+      setMessage("Contraseña guardada. Ya puedes entrar con ella.");
+      setCurrent("");
+      setNext("");
+      setConfirm("");
+    } catch (error) {
+      setIsError(true);
+      setMessage(error instanceof Error ? error.message : "No se pudo guardar.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-2xl px-4 py-4" style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}>
+      <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between text-left">
+        <span>
+          <span className="block text-[14px] font-extrabold">Contraseña</span>
+          <span className="block text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>
+            Entra también con contraseña, además de tu PIN.
+          </span>
+        </span>
+        <span className="text-[13px] font-extrabold" style={{ color: "var(--t-accent)" }}>{open ? "Cerrar" : "Gestionar"}</span>
+      </button>
+      {open && (
+        <form onSubmit={submit} className="mt-3 flex flex-col gap-2">
+          <label className="block text-[12px] font-extrabold" style={{ color: "var(--t-muted)" }}>
+            PIN o contraseña actual
+            <input
+              value={current}
+              onChange={(event) => setCurrent(event.target.value.slice(0, 128))}
+              type={show ? "text" : "password"}
+              autoComplete="current-password"
+              maxLength={128}
+              className="mt-1 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold text-[#241710] outline-none"
+            />
+          </label>
+          <label className="block text-[12px] font-extrabold" style={{ color: "var(--t-muted)" }}>
+            Nueva contraseña
+            <input
+              value={next}
+              onChange={(event) => setNext(event.target.value.slice(0, 128))}
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              maxLength={128}
+              className="mt-1 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold text-[#241710] outline-none"
+            />
+          </label>
+          <label className="block text-[12px] font-extrabold" style={{ color: "var(--t-muted)" }}>
+            Confirmar nueva contraseña
+            <input
+              value={confirm}
+              onChange={(event) => setConfirm(event.target.value.slice(0, 128))}
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              maxLength={128}
+              className="mt-1 h-12 w-full rounded-2xl bg-[#FFF7F1] px-3 text-[15px] font-bold text-[#241710] outline-none"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setShow((v) => !v)}
+            className="self-start text-[13px] font-extrabold"
+            style={{ color: "var(--t-muted)" }}
+          >
+            {show ? "Ocultar" : "Mostrar"}
+          </button>
+          {message && (
+            <p className={`text-[13px] font-bold ${isError ? "text-[#E23B2F]" : ""}`} style={isError ? undefined : { color: "var(--t-accent)" }}>
+              {message}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={pending}
+            className="h-12 rounded-2xl text-[14px] font-extrabold text-white disabled:opacity-40"
+            style={{ backgroundColor: "#FF4F1A" }}
+          >
+            {pending ? "Guardando…" : "Guardar contraseña"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { currentUser, transactions, logout, reload } = usePulse();
+  const { currentUser, transactions, logout, reload, setPassword } = usePulse();
   const [position, setPosition] = useState<number | null>(null);
   const [roundPoints, setRoundPoints] = useState(0);
   const [seasonPoints, setSeasonPoints] = useState(0);
@@ -34,6 +153,7 @@ export function ProfilePage() {
   const [showingRound, setShowingRound] = useState(false);
   const [rankingLabel, setRankingLabel] = useState("ranking abierto");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [consoleAdmin, setConsoleAdmin] = useState(false);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
 
@@ -80,6 +200,20 @@ export function ProfilePage() {
       alive = false;
     };
   }, [reload, currentUser.accessCode]);
+
+  useEffect(() => {
+    let alive = true;
+    adminCall<{ ok?: boolean }>("admin-whoami")
+      .then(() => {
+        if (alive) setConsoleAdmin(true);
+      })
+      .catch(() => {
+        if (alive) setConsoleAdmin(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [currentUser.id]);
 
   const recent = [...transactions].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
 
@@ -177,6 +311,21 @@ export function ProfilePage() {
           ))}
         </div>
 
+        {consoleAdmin && (
+          <ToboCard className="mt-5">
+            <p className="text-[14px] font-extrabold">Panel de Rusher</p>
+            <p className="mt-1 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>Usuarios, resultados, aliados y auditoría.</p>
+            <button
+              type="button"
+              onClick={() => navigate("/admin")}
+              className="mt-3 h-11 w-full rounded-2xl text-[13px] font-extrabold"
+              style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
+            >
+              Abrir administración
+            </button>
+          </ToboCard>
+        )}
+
         {isAdmin && (
           <ToboCard className="mt-5">
             <p className="text-[14px] font-extrabold">Super Admin</p>
@@ -215,6 +364,8 @@ export function ProfilePage() {
         >
           Ver introducción de nuevo
         </button>
+        <PasswordCard onSave={setPassword} />
+
         <button type="button" onClick={logout} className="mx-1 mb-2 mt-3 text-[14px] font-extrabold text-[#E23B2F]">
           Cerrar sesion en este telefono
         </button>

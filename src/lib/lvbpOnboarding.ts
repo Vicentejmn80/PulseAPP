@@ -19,7 +19,7 @@ export const TOBO_INTRO_SESSION_KEY = "tobo-intro-shown";
 export const ONBOARDING_AFTER_INTRO_MS = 1700;
 
 export const LVBP_ONBOARDING_STEPS: ReadonlyArray<{
-  id: ToboTabId | "retos";
+  id: ToboTabId;
   title: string;
   body: string;
   action: string;
@@ -29,12 +29,6 @@ export const LVBP_ONBOARDING_STEPS: ReadonlyArray<{
     title: "Inicio",
     body: "Todo lo importante de Béisbol Rush LVBP en un solo lugar. Revisa la ronda actual, los próximos partidos, las trivias del día y las novedades.",
     action: "Mira la ronda y los partidos de hoy.",
-  },
-  {
-    id: "retos",
-    title: "Retos",
-    body: "Reta a un pana: apuesten puntos en un juego o en una trivia y el que gane se lleva los puntos del otro.",
-    action: "Encuéntralos en el Inicio.",
   },
   {
     id: "quiniela",
@@ -133,16 +127,16 @@ export function onboardingDelayMs(introAlreadyShown: boolean, reducedMotion: boo
 
 /** Índice de la pestaña que corresponde a la ruta actual. Null si es otra pantalla de Tobo. */
 export function onboardingIndexForPath(pathname: string) {
-  if (pathname === "/tobo" || pathname.startsWith("/tobo/trivias")) return 0;
-  if (pathname.startsWith("/tobo/mi-quiniela") || pathname.startsWith("/tobo/partidos")) return 2;
-  if (pathname.startsWith("/tobo/ranking")) return 3;
-  if (pathname.startsWith("/tobo/tascas") || pathname.startsWith("/tobo/venue")) return 4;
-  if (pathname.startsWith("/tobo/profile")) return 5;
+  if (pathname === "/tobo" || pathname.startsWith("/tobo/trivias") || pathname.startsWith("/tobo/clasificacion")) return 0;
+  if (pathname.startsWith("/tobo/mi-quiniela") || pathname.startsWith("/tobo/partidos")) return 1;
+  if (pathname.startsWith("/tobo/ranking")) return 2;
+  if (pathname.startsWith("/tobo/tascas") || pathname.startsWith("/tobo/venue")) return 3;
+  if (pathname.startsWith("/tobo/profile")) return 4;
   return null;
 }
 
 export function onboardingStepsMatchTabs() {
-  const filtered = LVBP_ONBOARDING_STEPS.filter((step) => step.id !== "retos");
+  const filtered = LVBP_ONBOARDING_STEPS;
   return filtered.every((step, index) => {
     const tab = TOBO_TABS[index];
     return tab?.id === step.id && tab.label === step.title;

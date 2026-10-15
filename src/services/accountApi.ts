@@ -187,6 +187,7 @@ const FLOW_COPY: Record<string, string> = {
   DIRECT_ENTER_DISABLED: "Crea tu cuenta con nombre, alias, teléfono y PIN.",
   INVALID_PIN: "El PIN debe tener 6 números y no ser una secuencia obvia.",
   AUTH_INVALID: "No pudimos validar tus credenciales.",
+  AUTH_UNAVAILABLE: "Servicio no disponible. Inténtalo en unos minutos.",
   ACCOUNT_NOT_FOUND: "No encontramos una cuenta con este número.",
 };
 
@@ -279,11 +280,62 @@ export function passwordMeetsPolicy(password: string): boolean {
   return /\p{Lu}/u.test(password) && /\p{Nd}/u.test(password) && /[^\p{L}\p{N}]/u.test(password);
 }
 
+export type LoginResolution =
+  | { kind: "empty" }
+  | { kind: "need-choice" }
+  | { kind: "pin"; pin: string }
+  | { kind: "password"; password: string };
+
+/** Decide qué credencial usar sin intentar nada en red. Puro y testeable. */
+export function resolveLoginAttempt(
+  pin: string,
+  password: string,
+  choice: "pin" | "password" | null,
+): LoginResolution {
+  const cleanPin = pin.trim();
+  const hasPin = /^\d{6}$/.test(cleanPin);
+  const hasPassword = password.length > 0;
+  if (!hasPin && !hasPassword) return { kind: "empty" };
+  if (hasPin && hasPassword && !choice) return { kind: "need-choice" };
+  if (hasPassword && (!hasPin || choice === "password")) {
+    return { kind: "password", password };
+  }
+  return { kind: "pin", pin: cleanPin };
+}
+
 export async function registerWithPassword(phone: string, fullName: string, alias: string, pin: string, password: string) {
   const result = await postAuth("/api/pulse", { action: "register-account-password", phone, fullName, alias, pin, password });
   const token = result.token ?? "";
   writeSessionToken(token);
   return asSnapshot(result, token);
+}
+
+export async function registerPasswordOnly(phone: string, fullName: string, alias: string, password: string) {
+  const result = await postAuth("/api/pulse", { action: "register-account-password-only", phone, fullName, alias, password });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
+export async function loginWithPassword(phone: string, password: string) {
+  const result = await postAuth("/api/pulse", { action: "login-account-password", phone, credential: password, method: "password" });
+  const token = result.token ?? "";
+  writeSessionToken(token);
+  return asSnapshot(result, token);
+}
+
+export async function setPassword(current: string, next: string) {
+  const result = await postAuth("/api/pulse", {
+    action: "set-password",
+    token: readSessionToken(),
+    current,
+    next,
+  });
+  if (!result.ok) {
+    const code = result.code || "REGISTRATION_ERROR";
+    throw new FlowError(result.error || FLOW_COPY[code] || "No se pudo guardar la contraseña.", code);
+  }
+  return true;
 }
 
 export async function loginSmart(phone: string, credential: string) {
