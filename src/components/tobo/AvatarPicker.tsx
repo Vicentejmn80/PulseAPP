@@ -1,24 +1,22 @@
 import { useState } from "react";
-import { RUSHER_AVATARS } from "@/config/avatars";
+import { RUSHER_AVATARS, isSelectableAvatar } from "@/config/avatars";
 import { Avatar } from "@/components/ui/Avatar";
 import { saveAvatar } from "@/services/accountApi";
 import { usePulse } from "@/state/PulseContext";
 
 export function AvatarPicker() {
   const { currentUser, reload } = usePulse();
-  const current = currentUser.avatarId && RUSHER_AVATARS.some((item) => item.id === currentUser.avatarId)
-    ? currentUser.avatarId
-    : "";
-  const [selected, setSelected] = useState(current);
+  const saved = isSelectableAvatar(currentUser.avatarId) ? currentUser.avatarId ?? "" : "";
+  const [selected, setSelected] = useState(saved);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState("");
 
-  async function save() {
-    if (!selected) return;
+  async function choose(id: string) {
+    setSelected(id);
     setStatus("saving");
     setError("");
     try {
-      await saveAvatar(selected);
+      await saveAvatar(id);
       await reload();
       setStatus("saved");
     } catch (reason) {
@@ -29,17 +27,16 @@ export function AvatarPicker() {
 
   return (
     <section className="mt-5" aria-labelledby="mi-avatar">
-      <h3 id="mi-avatar" className="px-1 text-[14px] font-extrabold">Mi avatar</h3>
-      <p className="mt-1 px-1 text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>
-        Elige una identidad original. No usa los escudos de los clubes.
-      </p>
-      <div className="mt-3 flex items-center gap-3">
-        <Avatar initials={currentUser.initials} bg={currentUser.avatarColor} avatarId={selected || null} size={72} />
-        <p className="text-[13px] font-extrabold">
-          {RUSHER_AVATARS.find((item) => item.id === selected)?.name ?? "Sin elegir"}
+      {!saved ? (
+        <p className="mb-3 rounded-2xl bg-[#C6FF3D] px-3 py-3 text-[13px] font-extrabold text-[#0B0D0F]">
+          Elige tu avatar
         </p>
-      </div>
-      <div className="mt-3 grid grid-cols-4 gap-2" role="listbox" aria-label="Avatares disponibles">
+      ) : null}
+      <h3 id="mi-avatar" className="px-1 text-[14px] font-extrabold">Tu equipo</h3>
+      <p className="mt-1 px-1 text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>
+        Toca un avatar para guardarlo. Puedes cambiarlo cuando quieras.
+      </p>
+      <div className="mt-3 grid grid-cols-4 gap-2" role="listbox" aria-label="Avatares de equipo">
         {RUSHER_AVATARS.map((avatar) => {
           const active = selected === avatar.id;
           return (
@@ -48,32 +45,25 @@ export function AvatarPicker() {
               type="button"
               role="option"
               aria-selected={active}
-              onClick={() => {
-                setSelected(avatar.id);
-                setStatus("idle");
-              }}
-              className="flex flex-col items-center gap-1 rounded-2xl p-2 transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#CFFF00]"
+              disabled={status === "saving"}
+              onClick={() => void choose(avatar.id)}
+              className="flex min-h-11 flex-col items-center gap-1 rounded-2xl p-2 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C6FF3D]"
               style={{
-                backgroundColor: active ? "var(--t-tint)" : "rgba(255,255,255,0.04)",
-                border: active ? "1px solid var(--t-accent)" : "1px solid var(--t-border)",
-                transform: active ? "scale(1.04)" : undefined,
+                backgroundColor: "rgba(255,255,255,0.04)",
+                boxShadow: active ? "0 0 0 2px #C6FF3D" : "0 0 0 1px var(--t-border)",
               }}
             >
-              <Avatar initials={currentUser.initials} bg={currentUser.avatarColor} avatarId={avatar.id} size={48} />
+              <span className="relative">
+                <Avatar initials={currentUser.initials} bg={currentUser.avatarColor} avatarId={avatar.id} size={56} />
+                {active ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#C6FF3D] text-[11px] font-extrabold text-[#0B0D0F]">✓</span>
+                ) : null}
+              </span>
               <span className="text-[10px] font-extrabold">{avatar.name}</span>
             </button>
           );
         })}
       </div>
-      <button
-        type="button"
-        onClick={() => void save()}
-        disabled={!selected || status === "saving"}
-        className="mt-3 min-h-11 w-full rounded-2xl text-[14px] font-extrabold disabled:opacity-50"
-        style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
-      >
-        {status === "saving" ? "Guardando…" : "Guardar cambios"}
-      </button>
       {status === "saved" && <p className="mt-2 text-[12px] font-extrabold" style={{ color: "var(--t-accent)" }}>Avatar guardado.</p>}
       {status === "error" && <p className="mt-2 text-[12px] font-extrabold text-[#E23B2F]">{error}</p>}
     </section>

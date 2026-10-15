@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { RusherSplash } from "@/components/ui/RusherSplash";
 import { Notice, Shell } from "@/components/ui/Shell";
 import { ToboLayout } from "@/components/tobo/ToboLayout";
@@ -122,8 +122,14 @@ function ResumeVisit() {
   return null;
 }
 
+function isAdminConsole(path: string) {
+  return path === "/admin" || /^\/admin\/(usuarios|beisbol|clasificacion|aliados|movimientos|equipo)\/?$/.test(path);
+}
+
 export function App() {
   const { notice, status } = usePulse();
+  const location = useLocation();
+  const consoleScroll = isAdminConsole(location.pathname);
 
   if (status === "loading") {
     return (
@@ -158,8 +164,8 @@ export function App() {
   }
 
   return (
-    <Shell>
-      <div className="relative flex h-[100dvh] flex-col">
+    <Shell scroll={consoleScroll}>
+      <div className={consoleScroll ? "relative flex min-h-[100dvh] flex-col lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden" : "relative flex h-[100dvh] flex-col"}>
         <ResumeVisit />
         <Routes>
           {/* ── Pulse home + top-level Pulse pages ── */}

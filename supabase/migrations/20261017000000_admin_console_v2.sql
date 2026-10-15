@@ -226,6 +226,7 @@ begin
           p.id,
           p.handle,
           p.alias,
+          p.avatar_id as "avatarId",
           p.full_name as "fullName",
           p.phone,
           p.city,
@@ -329,11 +330,11 @@ begin
     'players', coalesce((
       select jsonb_agg(row_to_json(item))
       from (
-        select pr.handle, sum(tx.points) as points
+        select pr.handle, pr.avatar_id as "avatarId", sum(tx.points) as points
         from public.pulse_transactions tx
         join public.pulse_profiles pr on pr.id = tx.user_id
         where tx.source_type = 'prediction' and tx.points > 0
-        group by pr.id, pr.handle
+        group by pr.id, pr.handle, pr.avatar_id
         order by sum(tx.points) desc, pr.handle
         limit 5
       ) item
@@ -446,7 +447,7 @@ begin
     'admins', coalesce((
       select jsonb_agg(row_to_json(item))
       from (
-        select pr.handle, pr.alias, a.granted_at as "grantedAt", a.granted_by as "grantedBy", a.role
+        select pr.handle, pr.alias, pr.avatar_id as "avatarId", a.granted_at as "grantedAt", a.granted_by as "grantedBy", a.role
         from public.pulse_admins a
         join public.pulse_profiles pr on pr.id = a.user_id
         order by a.granted_at

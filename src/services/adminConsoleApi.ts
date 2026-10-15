@@ -77,6 +77,7 @@ export interface AdminUserRow {
   handle: string;
   alias: string;
   fullName?: string;
+  avatarId?: string | null;
   phone: string;
   city: string | null;
   createdAt: string;
@@ -90,6 +91,7 @@ export interface AdminMovement {
   id: string;
   userId?: string;
   handle?: string;
+  avatarId?: string | null;
   type: string;
   points: number;
   at: string;

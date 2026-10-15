@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   ClipboardList,
@@ -10,6 +10,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { formato } from "@/lib/format";
 import type { AdminFailure } from "@/lib/adminConsole";
 import { adminCall, type Overview } from "@/services/adminConsoleApi";
 
@@ -84,10 +85,34 @@ export function AdminConsole() {
     };
   }, [role]);
 
+  const mainRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLElement>(null);
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const node = mainRef.current;
+    const onScroll = () => {
+      const top = window.matchMedia("(min-width: 1024px)").matches ? (node?.scrollTop ?? 0) : window.scrollY;
+      setCompact(top > 8);
+    };
+    onScroll();
+    node?.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      node?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    const current = tabsRef.current?.querySelector<HTMLElement>("[aria-current='page']");
+    current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [location.pathname, items.length]);
+
   return (
-    <div style={theme} className="min-h-[100dvh] bg-[var(--adm-bg)] text-[var(--adm-ink)]">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px]">
-        <aside className="sticky top-0 hidden h-[100dvh] w-[248px] shrink-0 flex-col border-r border-[var(--adm-line)] bg-[#101316] lg:flex">
+    <div style={theme} className="adm-root min-h-[100dvh] bg-[var(--adm-bg)] text-[var(--adm-ink)] lg:flex lg:h-full lg:min-h-0 lg:overflow-hidden">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col lg:h-full lg:min-h-0 lg:flex-row lg:overflow-hidden">
+        <aside className="sticky top-0 hidden h-[100dvh] w-[248px] shrink-0 flex-col border-r border-[var(--adm-line)] bg-[#101316] lg:flex lg:h-full">
           <div className="px-5 pb-4 pt-6">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--adm-accent)]">Rusher</p>
             <p className="mt-1 text-[18px] font-extrabold">Consola</p>
@@ -118,33 +143,37 @@ export function AdminConsole() {
             Volver a Rusher
           </button>
         </aside>
-        <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 border-b border-[var(--adm-line)] bg-[var(--adm-bg)]/95 px-4 py-3 backdrop-blur sm:px-6">
+        <div ref={mainRef} className="adm-main min-w-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+          <header className={`sticky top-0 z-20 border-b border-[var(--adm-line)] bg-[var(--adm-bg)] px-4 shadow-[0_8px_24px_rgba(0,0,0,0.28)] sm:px-6 ${compact ? "py-2" : "py-3"}`}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[var(--adm-accent)]">Consola de Rusher</p>
-                <h1 className="text-[20px] font-extrabold">{title}</h1>
+                <h1 className={`font-extrabold ${compact ? "text-[16px]" : "text-[20px]"}`}>{title}</h1>
               </div>
-              <button type="button" onClick={() => navigate("/")} className="min-h-11 rounded-full px-3 text-[12px] font-extrabold text-[var(--adm-muted)] lg:hidden">Salir</button>
+              <button type="button" onClick={() => navigate("/")} className="min-h-11 rounded-full px-3 text-[12px] font-extrabold text-[var(--adm-muted)] active:scale-[0.98] lg:hidden">Salir</button>
             </div>
-            <nav className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden" aria-label="Secciones de la consola">
-              {items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    `min-h-11 whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-extrabold outline-none ring-[var(--adm-accent)] focus-visible:ring-2 ${isActive ? "bg-[var(--adm-accent)] text-[#0B0D0F]" : "bg-[#171B1F] text-[var(--adm-ink)]"}`
-                  }
-                >
-                  {item.label}
-                  {item.to === "/admin/usuarios" && newUsers > 0 ? ` · ${newUsers}` : ""}
-                </NavLink>
-              ))}
-            </nav>
+            <div className="adm-tabs-wrap relative mt-3 lg:hidden">
+              <nav ref={tabsRef} className="adm-tabs flex gap-2 overflow-x-auto pb-1" aria-label="Secciones de la consola">
+                {items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) =>
+                      `min-h-11 shrink-0 snap-center whitespace-nowrap rounded-full px-3 py-2 text-[13px] font-extrabold outline-none ring-[var(--adm-accent)] focus-visible:ring-2 active:scale-[0.98] ${isActive ? "bg-[var(--adm-accent)] text-[#0B0D0F]" : "bg-[#171B1F] text-[var(--adm-ink)]"}`
+                    }
+                  >
+                    {item.label}
+                    {item.to === "/admin/usuarios" && newUsers > 0 ? ` · ${newUsers}` : ""}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
           </header>
-          <main className="px-4 py-5 sm:px-6">
-            <Outlet />
+          <main className="adm-page px-4 py-5 sm:px-6">
+            <div key={location.pathname} className="adm-enter">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>
@@ -175,13 +204,49 @@ const TONES = {
   violet: "border-t-[var(--adm-violet)]",
 };
 
+function CountText({ value }: { value: string }) {
+  const target = /^\d[\d.]*$/.test(value) ? Number(value.replace(/\./g, "")) : null;
+  const [shown, setShown] = useState(target ?? 0);
+  const from = useRef(0);
+  useEffect(() => {
+    if (target === null) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(target);
+      from.current = target;
+      return;
+    }
+    const startValue = from.current;
+    const started = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - started) / 180);
+      const next = Math.round(startValue + (target - startValue) * progress);
+      setShown(next);
+      if (progress < 1) frame = requestAnimationFrame(tick);
+      else from.current = target;
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target]);
+  if (target === null) return <>{value}</>;
+  return <>{formato(shown)}</>;
+}
+
 export function Metric({ label, value, note, tone = "accent" }: { label: string; value: string; note: string; tone?: keyof typeof TONES }) {
   return (
     <article className={`rounded-[14px] border border-[var(--adm-line)] border-t-[3px] bg-[var(--adm-card)] p-4 ${TONES[tone]}`}>
       <p className="text-[12px] font-bold text-[var(--adm-muted)]">{label}</p>
-      <p className="mt-2 text-[28px] font-extrabold tabular-nums tracking-tight text-[var(--adm-ink)]">{value}</p>
+      <p className="mt-2 text-[28px] font-extrabold tabular-nums tracking-tight text-[var(--adm-ink)]"><CountText value={value} /></p>
       <p className="mt-2 text-[12px] font-semibold leading-snug text-[var(--adm-muted)]">{note}</p>
     </article>
+  );
+}
+
+export function Refresh({ onClick, busy = false }: { onClick: () => void; busy?: boolean }) {
+  return (
+    <button type="button" onClick={onClick} disabled={busy} className="min-h-11 rounded-full border border-[var(--adm-line)] px-4 text-[13px] font-extrabold active:scale-[0.98] disabled:opacity-50">
+      {busy ? "Actualizando…" : "Actualizar"}
+    </button>
   );
 }
 
@@ -219,7 +284,7 @@ export function Skeleton({ label }: { label: string }) {
   return (
     <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-busy="true" aria-label={label}>
       {["a", "b", "c", "d"].map((key) => (
-        <div key={key} className="h-28 animate-pulse rounded-[14px] border border-[var(--adm-line)] bg-[var(--adm-card)]" />
+        <div key={key} className="adm-shimmer h-28 rounded-[14px] border border-[var(--adm-line)]" />
       ))}
     </div>
   );
@@ -238,7 +303,7 @@ export const inputClass = "h-12 w-full rounded-[14px] border border-[var(--adm-l
 
 export function Primary({ children, disabled, onClick, type = "button" }: { children: ReactNode; disabled?: boolean; onClick?: () => void; type?: "button" | "submit" }) {
   return (
-    <button type={type} disabled={disabled} onClick={onClick} className="min-h-12 rounded-[14px] bg-[var(--adm-accent)] px-4 text-[14px] font-extrabold text-[#0B0D0F] outline-none ring-[var(--adm-ink)] focus-visible:ring-2 disabled:opacity-50">
+    <button type={type} disabled={disabled} onClick={onClick} className="min-h-11 rounded-[14px] bg-[var(--adm-accent)] px-4 text-[14px] font-extrabold text-[#0B0D0F] outline-none ring-[var(--adm-ink)] focus-visible:ring-2 active:scale-[0.98] disabled:opacity-50">
       {children}
     </button>
   );

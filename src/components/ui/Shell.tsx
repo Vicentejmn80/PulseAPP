@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { AppUpdateNotice } from "@/components/AppUpdateNotice";
 
-export function Shell({ children }: { children: ReactNode }) {
+export function Shell({ children, scroll = false }: { children: ReactNode; scroll?: boolean }) {
   return (
     <div className="min-h-[100dvh] w-full">
-      <div className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[#0B0D0F]">
+      <div className={`relative flex min-h-[100dvh] w-full flex-col bg-[#0B0D0F] ${scroll ? "" : "overflow-hidden"}`}>
         {children}
         <AppUpdateNotice />
       </div>

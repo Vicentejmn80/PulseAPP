@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Banner, Empty, Metric, Panel, Skeleton, when } from "@/components/admin/AdminFrame";
+import { Banner, Empty, Metric, Panel, Primary, Refresh, Skeleton, when } from "@/components/admin/AdminFrame";
 import { chartHeights } from "@/lib/adminCrm";
 import { formato } from "@/lib/format";
 import { adminActionLabel, adminCodeIsKnown } from "@/lib/adminLabels";
@@ -15,6 +15,7 @@ export function DashboardPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [failure, setFailure] = useState<AdminFailure | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -38,7 +39,7 @@ export function DashboardPage() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [tick]);
 
   const activity = (data?.activity ?? []).slice(0, 10);
   const signups = data?.signups ?? [];
@@ -51,8 +52,10 @@ export function DashboardPage() {
         {data?.generatedAt ? ` Consultadas ${when(data.generatedAt)}.` : ""}
         {" "}Un inicio de sesión es una sesión creada; no significa que la persona siga conectada.
       </p>
+      <div className="mb-4 flex justify-end"><Refresh busy={loading} onClick={() => { setLoading(true); setTick((value) => value + 1); }} /></div>
       <Banner failure={failure} />
       {loading && !data ? <Skeleton label="Cargando resumen" /> : null}
+      {!loading && !data && failure ? <Primary onClick={() => { setLoading(true); setTick((value) => value + 1); }}>Reintentar</Primary> : null}
       {!loading && !data && !failure && <Empty>No hay indicadores para mostrar.</Empty>}
       {data && (
         <>

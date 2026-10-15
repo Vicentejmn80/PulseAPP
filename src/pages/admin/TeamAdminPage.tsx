@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Banner, Chip, Empty, Field, Notice, Panel, Primary, inputClass } from "@/components/admin/AdminFrame";
+import { Avatar } from "@/components/ui/Avatar";
 import { exactHandle } from "@/lib/adminConsole";
 import { adminActionLabel, adminCodeIsKnown } from "@/lib/adminLabels";
 import { adminCall, asAdminFailure } from "@/services/adminConsoleApi";
@@ -8,6 +9,7 @@ import type { AdminFailure } from "@/lib/adminConsole";
 interface AdminSeat {
   handle: string;
   alias: string;
+  avatarId?: string | null;
   grantedAt: string;
   grantedBy: string;
   role?: string;
@@ -103,7 +105,10 @@ export function TeamAdminPage() {
         <ul className="flex flex-col gap-2">
           {admins.map((admin) => (
             <li key={admin.handle} className="rounded-2xl bg-[#0B0D0F] px-3 py-3 text-[13px]">
-              <p className="font-extrabold">{admin.handle} <Chip tone={admin.role === "operator" ? "violet" : "accent"}>{admin.role === "operator" ? "Operador" : "Super admin"}</Chip></p>
+              <p className="flex flex-wrap items-center gap-2 font-extrabold">
+                <Avatar initials={admin.alias.slice(0, 1).toUpperCase()} bg="#12161A" avatarId={admin.avatarId} size={28} />
+                {admin.handle} <Chip tone={admin.role === "operator" ? "violet" : "accent"}>{admin.role === "operator" ? "Operador" : "Super admin"}</Chip>
+              </p>
               <p className="text-[var(--adm-muted)]">
                 Desde {new Date(admin.grantedAt).toLocaleDateString("es-VE")} · otorgado por {adminCodeIsKnown(admin.grantedBy) ? adminActionLabel(admin.grantedBy) : admin.grantedBy}
               </p>

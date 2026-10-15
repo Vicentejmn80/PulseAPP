@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { StandingsTable } from "@/components/lvbp/StandingsTable";
 import { BackButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
+import { lvbpStandings } from "@/lib/lvbpStandings";
 import { listMatches, matchPhase, scoreLine, type BaseballMatch } from "@/services/matchesApi";
 import { isFinalizedPrediction, isSuspendedMatch, isUpcomingPrediction, predictionBadge } from "@/lib/predictions/state";
 
@@ -25,33 +27,52 @@ function whenTime(value: string) {
 
 type Tab = "semana" | "proximos" | "finalizados";
 
+type View = "pronostico" | "tabla";
+
 export function MiQuinielaPage() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const view: View = params.get("vista") === "tabla" ? "tabla" : "pronostico";
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
   const [tab, setTab] = useState<Tab>("proximos");
   const [tabTouched, setTabTouched] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let alive = true;
+  const load = useCallback(() => {
     listMatches()
       .then((rows) => {
-        if (alive) {
-          setMatches(rows.filter((m) => !m.demo && !m.simulation));
-          setLoaded(true);
-        }
+        setMatches(rows.filter((m) => !m.demo && !m.simulation));
+        setError("");
+        setLoaded(true);
       })
       .catch((reason: unknown) => {
-        if (alive) {
-          setError(reason instanceof Error ? reason.message : "No se pudieron cargar los pronósticos.");
-          setLoaded(true);
-        }
+        setError(reason instanceof Error ? reason.message : "No se pudieron cargar los pronósticos.");
+        setLoaded(true);
       });
-    return () => {
-      alive = false;
-    };
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (view !== "tabla") return;
+    const timer = window.setInterval(load, 45_000);
+    const onShow = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [view, load]);
+
+  function setView(next: View) {
+    if (next === "tabla") setParams({ vista: "tabla" }, { replace: true });
+    else setParams({}, { replace: true });
+  }
 
   const upcomingCount = useMemo(() => matches.filter(isUpcomingPrediction).length, [matches]);
   const finalizedCount = useMemo(() => matches.filter(isFinalizedPrediction).length, [matches]);
@@ -97,6 +118,8 @@ export function MiQuinielaPage() {
     return matches.filter(isFinalizedPrediction);
   }, [matches, tab]);
 
+  const standings = useMemo(() => (loaded ? lvbpStandings(matches) : null), [loaded, matches]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, BaseballMatch[]>();
     for (const match of filtered) {
@@ -118,6 +141,26 @@ export function MiQuinielaPage() {
       </div>
 
       <div className="px-4 pb-2 sm:px-6 lg:px-8">
+        <div className="mb-2 grid grid-cols-2 gap-2" role="tablist" aria-label="Pronósticos o tabla">
+          {([
+            ["pronostico", "Pronóstico"],
+            ["tabla", "Tabla de posiciones"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              onClick={() => setView(id)}
+              className={`min-h-[44px] rounded-2xl px-2 text-[13px] font-extrabold leading-tight active:scale-[0.98] ${
+                view === id ? "bg-[#C6FF3D] text-[#0B0D0F]" : "bg-white/10 text-[#F4F6FA]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {view === "pronostico" ? (
         <div className={`grid gap-1 ${tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
           {tabs.map((t) => (
             <button
@@ -139,9 +182,22 @@ export function MiQuinielaPage() {
             </button>
           ))}
         </div>
+        ) : null}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
+        {view === "tabla" ? (
+          <div key="tabla" className="adm-enter">
+            {error ? (
+              <div className="mb-3">
+                <p className="rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>
+                <button type="button" onClick={load} className="mt-3 min-h-[44px] rounded-2xl bg-[#0B0D0F] px-4 text-[13px] font-extrabold text-[#C6FF3D]">Reintentar</button>
+              </div>
+            ) : null}
+            {!standings ? <div className="adm-shimmer h-80 rounded-[18px]" aria-busy="true" aria-label="Cargando tabla" /> : <StandingsTable rows={standings.rows} />}
+          </div>
+        ) : (
+        <div key="pronostico" className="adm-enter">
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
 
         {grouped.length === 0 && !error && (
@@ -215,6 +271,8 @@ export function MiQuinielaPage() {
             </div>
           </div>
         ))}
+        </div>
+        )}
       </div>
       <TabBar />
     </div>

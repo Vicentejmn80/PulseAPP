@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Banner, Chip, Empty, Field, Notice, Primary, Skeleton, inputClass, when } from "@/components/admin/AdminFrame";
+import { Banner, Chip, Empty, Field, Notice, Primary, Refresh, Skeleton, inputClass, when } from "@/components/admin/AdminFrame";
 import { settlementNotice } from "@/lib/adminConsole";
 import { previewCopy } from "@/lib/adminCrm";
 import { adminCall, asAdminFailure, type MatchBoardRow } from "@/services/adminConsoleApi";
@@ -142,7 +142,8 @@ export function BaseballAdminPage() {
       </p>
       <Banner failure={failure} />
       {notice ? <Notice>{notice}</Notice> : null}
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Refresh busy={loading} onClick={() => load(tab)} />
         {([
           ["pending", "Por cargar"],
           ["live", "En juego"],

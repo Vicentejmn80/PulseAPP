@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Banner, Chip, Empty, Field, Notice, Panel, Primary, Skeleton, inputClass, when } from "@/components/admin/AdminFrame";
+import { Banner, Chip, Empty, Field, Notice, Panel, Primary, Refresh, Skeleton, inputClass, when } from "@/components/admin/AdminFrame";
+import { Avatar } from "@/components/ui/Avatar";
 import { adminActionLabel, adminCodeIsKnown } from "@/lib/adminLabels";
 import { adminCall, asAdminFailure, type AdminMovement } from "@/services/adminConsoleApi";
 import type { AdminFailure } from "@/lib/adminConsole";
@@ -16,6 +17,7 @@ export function LedgerAdminPage() {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -37,7 +39,7 @@ export function LedgerAdminPage() {
     return () => {
       alive = false;
     };
-  }, [type, reload]);
+  }, [type, reload, tick]);
 
   async function adjust(event: FormEvent) {
     event.preventDefault();
@@ -80,7 +82,9 @@ export function LedgerAdminPage() {
   return (
     <div>
       <h2 className="mb-4 text-[28px] font-extrabold tracking-tight">Puntos y auditoría</h2>
+      <div className="mb-4 flex justify-end"><Refresh busy={loading} onClick={() => { setLoading(true); setTick((value) => value + 1); }} /></div>
       <Banner failure={failure} />
+      {!loading && failure && movements.length === 0 ? <Primary onClick={() => { setLoading(true); setTick((value) => value + 1); }}>Reintentar</Primary> : null}
       {notice ? <Notice>{notice}</Notice> : null}
       <Panel title="Ajuste manual" note="Solo un super admin. El motivo queda en el movimiento y en la auditoría.">
         <form onSubmit={adjust} className="grid gap-3 lg:grid-cols-[1fr_140px_1.4fr_auto]">
@@ -107,7 +111,10 @@ export function LedgerAdminPage() {
         <ul className="flex flex-col gap-2">
           {movements.map((movement) => (
             <li key={movement.id} className="rounded-2xl bg-[#0B0D0F] px-3 py-3 text-[13px]">
-              <p className="font-extrabold">{movement.handle} · <Chip tone={movement.type === "admin_adjust" ? "amber" : movement.type === "qr_scan" ? "cyan" : movement.type === "campaign_reward" ? "violet" : "accent"}>{adminActionLabel(movement.type)}</Chip> · <span className={movement.points < 0 ? "text-[var(--adm-pink)]" : "text-[var(--adm-accent)]"}>{movement.points > 0 ? `+${movement.points}` : movement.points} pts</span></p>
+              <p className="flex flex-wrap items-center gap-2 font-extrabold">
+                <Avatar initials={(movement.handle || "?").replace("@", "").slice(0, 1).toUpperCase()} bg="#12161A" avatarId={movement.avatarId} size={28} />
+                {movement.handle} · <Chip tone={movement.type === "admin_adjust" ? "amber" : movement.type === "qr_scan" ? "cyan" : movement.type === "campaign_reward" ? "violet" : "accent"}>{adminActionLabel(movement.type)}</Chip> · <span className={movement.points < 0 ? "text-[var(--adm-pink)]" : "text-[var(--adm-accent)]"}>{movement.points > 0 ? `+${movement.points}` : movement.points} pts</span>
+              </p>
               <p className="text-[var(--adm-muted)]">
                 {when(movement.at)}
                 {movement.matchId ? ` · partido ${movement.matchId}` : ""}

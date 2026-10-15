@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Banner, Chip, Empty, Field, Panel, Primary, Skeleton, inputClass, when } from "@/components/admin/AdminFrame";
+import { Avatar } from "@/components/ui/Avatar";
 import { pageWindow } from "@/lib/adminConsole";
 import { USER_PAGE_SIZE, userPresence, usersCsv, whatsappHref } from "@/lib/adminCrm";
 import { formato } from "@/lib/format";
@@ -219,12 +220,13 @@ export function UsersAdminPage() {
         <div className="lg:pt-5"><Primary onClick={() => void copyPhones()}>Copiar números</Primary></div>
         <div className="lg:pt-5"><Primary onClick={exportCsv}>Exportar CSV</Primary></div>
       </div>
-      <Panel title={`${formato(total)} cuentas`} note={picked.length > 0 ? `${picked.length} seleccionadas en esta página.` : "Sin selección, copiar y exportar usan la página visible."}>
+      <Panel title={loading ? "Cargando cuentas" : `${formato(total)} cuentas`} note={picked.length > 0 ? `${picked.length} seleccionadas en esta página.` : "Sin selección, copiar y exportar usan la página visible."}>
         {loading ? <Skeleton label="Cargando usuarios" /> : null}
-        {!loading && users.length === 0 ? <Empty>No hay usuarios con esa búsqueda.</Empty> : null}
+        {!loading && users.length === 0 && !failure ? <Empty>No hay usuarios con esa búsqueda.</Empty> : null}
+        {!loading && users.length === 0 && failure ? <Primary onClick={() => load()}>Reintentar</Primary> : null}
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[920px] text-left text-[13px]">
-            <thead className="text-[11px] uppercase text-[var(--adm-muted)]">
+            <thead className="sticky top-0 bg-[var(--adm-card)] text-[11px] uppercase text-[var(--adm-muted)]">
               <tr>
                 <th className="py-2 pr-3"> </th>
                 <th className="py-2 pr-3">Alias</th>
@@ -244,7 +246,10 @@ export function UsersAdminPage() {
                   <tr key={user.id} className="border-t border-[var(--adm-line)]">
                     <td className="py-3 pr-3"><input type="checkbox" checked={picked.includes(user.id)} onChange={() => toggle(user.id)} aria-label={`Seleccionar ${user.handle}`} /></td>
                     <td className="py-3 pr-3">
-                      <button type="button" onClick={() => openUser(user.id)} className="font-extrabold text-[var(--adm-accent)]">{user.handle}</button>
+                      <button type="button" onClick={() => openUser(user.id)} className="inline-flex items-center gap-2 font-extrabold text-[var(--adm-accent)]">
+                      <Avatar initials={user.alias.slice(0, 1).toUpperCase()} bg="#12161A" avatarId={user.avatarId} size={28} />
+                      {user.handle}
+                    </button>
                       <p className="text-[12px] text-[var(--adm-muted)]">{user.alias}</p>
                     </td>
                     <td className="py-3 pr-3">{user.fullName || "—"}</td>

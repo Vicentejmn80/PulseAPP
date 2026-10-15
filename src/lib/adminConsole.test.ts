@@ -97,6 +97,11 @@ describe("migración del panel", () => {
     expect(next).toContain("pulse_admin_require_super");
     expect(next).toContain("pulse_score_breakdown");
     expect(next).toContain("perform public.pulse_admin_actor(p_admin_key)");
+    const avatars = readFileSync("supabase/migrations/20261018000000_standings_and_avatars.sql", "utf8");
+    expect(avatars).toContain("'navegantes'");
+    expect(avatars).not.toContain("'magallanes'");
+    expect(avatars).toContain("pulse_lvbp_standings");
+    expect(avatars).toContain("home_score");
     expect(next).not.toMatch(/grant execute on function public\.pulse_admin_whoami[\s\S]{0,80}to anon/i);
     expect(api).toContain('session.role === "operator"');
     expect(api).toContain("pulse_admin_preview_result");

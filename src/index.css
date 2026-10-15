@@ -524,7 +524,54 @@ button:disabled {
   .ring-cheer,
   .ring-tense,
   .ring-turn,
-  .ring-climax {
+  .ring-climax,
+  .adm-shimmer,
+  .adm-enter {
     animation: none;
   }
+}
+
+.adm-tabs {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.adm-tabs::-webkit-scrollbar { display: none; }
+.adm-tabs-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(90deg, transparent, var(--adm-bg, #090B0D));
+  pointer-events: none;
+}
+.adm-page {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .adm-page { padding-bottom: 24px; }
+}
+.adm-shimmer {
+  background: linear-gradient(90deg, #12161A 0%, #24303a 45%, #12161A 100%);
+  background-size: 200% 100%;
+  animation: adm-shimmer 1.2s linear infinite;
+}
+.adm-enter { animation: adm-enter 180ms ease; }
+.adm-root button,
+.adm-tabs a {
+  min-height: 44px;
+}
+.adm-root button:active { transform: scale(0.98); }
+.asi-van {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+}
+@keyframes adm-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+@keyframes adm-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }

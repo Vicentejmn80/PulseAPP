@@ -462,7 +462,7 @@ export function HomePage() {
           <CardHead
             icon={Trophy}
             title="Tabla LVBP"
-            action={{ label: "Ver tabla →", onClick: () => navigate("/tobo/clasificacion") }}
+            action={{ label: "Ver tabla →", onClick: () => navigate("/tobo/mi-quiniela?vista=tabla") }}
           />
           <p className="text-[14px] font-semibold leading-relaxed" style={{ color: "var(--t-muted)" }}>
             Clasificación de equipos según los resultados registrados. Es independiente del ranking de jugadores.

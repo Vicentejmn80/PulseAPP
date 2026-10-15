@@ -33,6 +33,8 @@ export function Avatar({
       width={size}
       height={size}
       draggable={false}
+      loading="lazy"
+      decoding="async"
       className={`shrink-0 rounded-full object-cover ${ring ? "ring-2 ring-white" : ""}`}
       style={{ width: size, height: size }}
       onError={() => setFailed(true)}
