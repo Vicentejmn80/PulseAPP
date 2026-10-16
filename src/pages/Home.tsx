@@ -26,7 +26,6 @@ import {
   LVBP_WELCOME_HEADLINE,
 } from "@/config/lvbpBrand";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
-import { isUpcomingPrediction } from "@/lib/predictions/state";
 import { recentFinishedWithPrediction } from "@/lib/predictions/visibility";
 import { listCycles, listMatches, loadCycleBoard, scoreLine, type BaseballMatch, type ToboCycle } from "@/services/matchesApi";
 import { FounderBanner } from "@/components/tobo/FounderBanner";
@@ -232,12 +231,15 @@ export function HomePage() {
   const today = real
     .filter((match) => caracasDateKey(match.startsAt) === todayKey)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const stillOpen = (match: BaseballMatch) => {
+    const tone = homeMatchTone(match);
+    return tone === "predict" || tone === "saved";
+  };
   const upcoming = real
-    .filter(isUpcomingPrediction)
+    .filter(stillOpen)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-  const nextMatch =
-    upcoming.find((m) => new Date(m.startsAt).getTime() >= now - 30 * 60 * 1000) ?? upcoming[0] ?? null;
-  const gamesToShow = today.filter((match) => homeMatchTone(match) !== "cancelled");
+  const gamesToShow = today.filter(stillOpen);
+  const nextMatch = upcoming.find((match) => caracasDateKey(match.startsAt) !== todayKey) ?? null;
   const shownIds = new Set(gamesToShow.length > 0 ? gamesToShow.map((match) => match.id) : nextMatch ? [nextMatch.id] : []);
   const moreGames = upcoming
     .filter((match) => !shownIds.has(match.id))

@@ -1,5 +1,4 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ScanQrButton } from "@/components/tobo/ScanQrButton";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { toboExitTarget } from "@/lib/toboNav";
 import { CategoryTransition } from "./CategoryTransition";
@@ -35,7 +34,6 @@ export function ToboLayout() {
           >
             ← Rusher
           </button>
-          <ScanQrButton onClick={() => navigate("/tobo/escanear")} />
           <span
             className="max-w-[48%] truncate text-right text-[9px] font-extrabold uppercase tracking-[0.12em]"
             style={{ color: "var(--t-muted)" }}
