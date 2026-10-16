@@ -51,6 +51,12 @@ export async function callRpc<T>(fn: string, args: Record<string, unknown>) {
   return data as T;
 }
 
+export async function markOnboardingSeen() {
+  const token = readSessionToken();
+  const result = await callRpc<{ ok?: boolean; error?: string }>("pulse_mark_onboarding", { p_token: token });
+  if (!result.ok) throw new Error(result.error || "No se pudo guardar la bienvenida.");
+}
+
 export function readSessionToken() {
   return localStorage.getItem(SESSION_KEY) ?? "";
 }

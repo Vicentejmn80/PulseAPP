@@ -1,31 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, MapPin } from "lucide-react";
+import { Camera, MapPin, MessageCircle } from "lucide-react";
+import { instagramLink, mapsLink, whatsappLink } from "@/lib/allyContact";
 import { TabBar } from "@/components/ui/TabBar";
 import { cyclePeriodLabel, pickActiveCycle } from "@/lib/toboHome";
 import { listCycles, listTascas, type Tasca, type ToboCycle } from "@/services/matchesApi";
 import { LVBP_EXPERIENCE_TITLE, LVBP_SEASON_LABEL, LVBP_VENUES_TAB_LABEL } from "@/config/lvbpBrand";
 import { TOBO_ROUND_PRIZE_SUBTITLE } from "@/config/tobo";
 
-function externalHref(kind: "instagram" | "whatsapp" | "maps", value: string, lat?: number | null, lng?: number | null) {
-  if (kind === "maps") {
-    if (!lat || !lng) return "";
-    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-  }
-  const text = value.trim();
-  if (!text || text === "Por confirmar") return "";
-  if (kind === "instagram") {
-    if (text.startsWith("http")) return text;
-    return `https://instagram.com/${text.replace(/^@/, "")}`;
-  }
-  const digits = text.replace(/\D/g, "");
-  return digits ? `https://wa.me/${digits}` : "";
-}
-
 function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
-  const instagram = externalHref("instagram", tasca.instagram || "");
-  const mapsUrl = externalHref("maps", "", tasca.lat, tasca.lng);
-  const highlights = tasca.highlights ?? [];
+  const instagram = instagramLink(tasca.instagram || "");
+  const whatsapp = whatsappLink(tasca.whatsapp || "");
+  const mapsUrl = mapsLink(tasca.mapsUrl || "") || (tasca.lat && tasca.lng ? `https://www.google.com/maps/search/?api=1&query=${tasca.lat},${tasca.lng}` : "");
+  const category = tasca.category || tasca.highlights?.find((item) => item.title)?.title || "";
+  const benefit = tasca.roundPrize && tasca.roundPrize !== "Por confirmar" ? tasca.roundPrize : "";
+  const address = tasca.address && tasca.address !== "Por confirmar" ? tasca.address : "";
 
   return (
     <article
@@ -33,136 +22,39 @@ function VenueCard({ tasca, onView }: { tasca: Tasca; onView: () => void }) {
       style={{ backgroundColor: "var(--t-card)", border: "1px solid var(--t-border)" }}
     >
       {/* Photo / cover area */}
-      <div
-        className="relative flex h-[120px] items-end overflow-hidden px-4 pb-4"
-        style={{
-          background: tasca.imageUrl
-            ? `url(${tasca.imageUrl}) center/cover no-repeat`
-            : "linear-gradient(135deg, #132A55 0%, #0B1A3C 60%, #1E3A6E 100%)",
-        }}
-      >
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(7,14,31,0.85) 0%, transparent 60%)" }} />
-        <div className="relative z-10 flex w-full items-end gap-3">
-          {tasca.logoUrl ? (
-            <img src={tasca.logoUrl} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-yellow-400" />
-          ) : (
-            <span className="flex h-10 w-10 items-center justify-center rounded-full text-[20px]" style={{ backgroundColor: "var(--t-bg)" }}>
-              🍺
-            </span>
-          )}
-          <div className="flex-1">
-            <h3 className="text-[18px] font-extrabold text-white leading-tight">{tasca.name}</h3>
-            <p className="text-[12px] font-semibold text-white/70">
-              {[tasca.zone, tasca.city].filter(Boolean).join(" · ")}
-            </p>
-          </div>
-          {tasca.isFounder && (
-            <span
-              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold"
-              style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
-            >
-              FUNDADORA
-            </span>
-          )}
+      <div className="relative flex h-[148px] items-center justify-center overflow-hidden" style={{ background: "linear-gradient(160deg, #10140A 0%, #1A2408 55%, #0B0D0F 100%)" }}>
+        {tasca.logoUrl ? (
+          <img src={tasca.logoUrl} alt="" className="h-24 w-24 rounded-full object-contain ring-2 ring-[#C6FF3D]" />
+        ) : (
+          <span className="text-[28px] font-extrabold text-[#C6FF3D]">{tasca.name.slice(0, 1)}</span>
+        )}
+      </div>
+      <div className="flex items-start gap-3 px-4 pt-4">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[18px] font-extrabold leading-tight">{tasca.name}</h3>
+          {category ? <p className="text-[12px] font-semibold text-[#C9D0D6]">{category}</p> : null}
         </div>
+        <span className="shrink-0 rounded-full bg-[#C6FF3D] px-2 py-1 text-[10px] font-extrabold text-[#0B0D0F]">Aliado oficial</span>
       </div>
 
       {/* Body */}
       <div className="px-4 pb-4 pt-4 sm:px-6 lg:px-8">
         {/* Prize */}
-        <div className="mb-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "var(--t-tint)" }}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--t-accent)" }}>
-            {tasca.id === "venue-garrison" ? "Beneficio" : "🏆 Premio de la semana"}
-          </p>
-          <p className="mt-0.5 text-[16px] font-extrabold">{tasca.roundPrize || "Por confirmar"}</p>
-          {tasca.description && (
-            <p className="mt-1 text-[12px] font-semibold" style={{ color: "var(--t-muted)" }}>{tasca.description}</p>
-          )}
-          {tasca.id === "venue-garrison" && (
-            <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>
-              El canje por QR todavía no está configurado.
-            </p>
-          )}
-        </div>
-
-        {/* Highlights chips */}
-        {highlights.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {highlights.slice(0, 3).map((h, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-1 rounded-full px-3 py-1 text-[12px] font-extrabold"
-                style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)" }}
-              >
-                <span>{h.icon}</span>
-                <span>{h.title}</span>
-              </span>
-            ))}
+        {benefit ? (
+          <div className="mb-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "var(--t-tint)" }}>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--t-accent)" }}>Beneficio</p>
+            <p className="mt-0.5 text-[16px] font-extrabold">{benefit}</p>
+            <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--t-muted)" }}>Escanea el QR en el local en tu primera visita para activar tu beneficio.</p>
           </div>
-        )}
-
-        {/* Address (if available) */}
-        {tasca.address && tasca.address !== "Por confirmar" && (
-          <p className="mb-3 flex items-start gap-1.5 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>
-            <span className="mt-0.5 shrink-0">📍</span>
-            <span>{tasca.address}</span>
-          </p>
-        )}
+        ) : null}
+        {address ? <p className="mb-3 text-[13px] font-semibold" style={{ color: "var(--t-muted)" }}>{address.split(", ").join(" · ")}</p> : null}
 
         {/* Action buttons */}
-        <div className="flex flex-col gap-2">
-          {/* Maps button (primary when available) */}
-          {mapsUrl ? (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex min-h-[48px] items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-[14px] font-extrabold shadow-[0_8px_18px_rgba(255,201,74,0.22)]"
-              style={{ backgroundColor: "var(--t-accent)", color: "var(--t-accent-text)" }}
-            >
-              <MapPin className="h-4 w-4" />
-              Abrir en Google Maps
-            </a>
-          ) : null}
-
-          {/* Social + view */}
-          <div className="grid grid-cols-2 gap-2">
-            {instagram ? (
-              <a
-                href={instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[13px] font-extrabold"
-                style={{ backgroundColor: "var(--t-bg)", color: "var(--t-text)", border: "1px solid var(--t-border)" }}
-              >
-                <Camera className="h-4 w-4" /> Instagram
-              </a>
-            ) : (
-              <span
-                className="flex h-11 items-center justify-center rounded-2xl text-[12px] font-bold"
-                style={{ backgroundColor: "var(--t-bg)", color: "var(--t-muted)", border: "1px solid var(--t-border)" }}
-              >
-                Instagram
-              </span>
-            )}
-            {tasca.slug ? (
-              <button
-                type="button"
-                onClick={onView}
-                className="flex h-11 items-center justify-center gap-1.5 rounded-2xl text-[13px] font-extrabold transition-opacity active:opacity-80"
-                style={{ backgroundColor: "var(--t-border)", color: "var(--t-text)" }}
-              >
-                {tasca.id === "venue-garrison" ? "Consultar beneficio" : "Ver tasca →"}
-              </button>
-            ) : (
-              <span
-                className="flex h-11 items-center justify-center rounded-2xl text-[12px] font-bold"
-                style={{ backgroundColor: "var(--t-bg)", color: "var(--t-muted)", border: "1px solid var(--t-border)" }}
-              >
-                Sin página
-              </span>
-            )}
-          </div>
+        <div className="grid grid-cols-2 gap-2">
+          {instagram ? <a href={instagram} target="_blank" rel="noopener noreferrer" className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] text-[13px] font-extrabold" style={{ backgroundColor: "var(--t-bg)", border: "1px solid var(--t-border)" }}><Camera className="h-4 w-4" /> Instagram</a> : null}
+          {whatsapp ? <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] text-[13px] font-extrabold" style={{ backgroundColor: "var(--t-bg)", border: "1px solid var(--t-border)" }}><MessageCircle className="h-4 w-4" /> WhatsApp</a> : null}
+          {mapsUrl ? <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] text-[13px] font-extrabold" style={{ backgroundColor: "var(--t-bg)", border: "1px solid var(--t-border)" }}><MapPin className="h-4 w-4" /> Cómo llegar</a> : null}
+          <button type="button" onClick={onView} className="flex h-11 items-center justify-center rounded-[14px] bg-[#C6FF3D] px-2 text-[13px] font-extrabold text-[#0B0D0F]">Escanear QR en el local</button>
         </div>
       </div>
     </article>
@@ -207,7 +99,7 @@ export function TascasPage() {
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6 lg:px-8">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(24px+env(safe-area-inset-bottom))] sm:px-6 lg:px-8">
         {error && (
           <p className="mb-3 rounded-2xl px-4 py-3 text-[13px] font-bold text-[#E23B2F]" style={{ backgroundColor: "var(--t-card)" }}>
             {error}

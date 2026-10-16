@@ -355,6 +355,7 @@ export interface UserProfile {
   avatarId?: string | null;
   phone?: string;
   accessCode?: string;
+  onboardingVistoAt?: string | null;
   city?: string;
   fullName?: string;
 }

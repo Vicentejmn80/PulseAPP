@@ -6,6 +6,8 @@ import { CategoryTransition } from "./CategoryTransition";
 import { InstallBanner } from "./InstallBanner";
 import { LeagueInviteInbox } from "./LeagueInvite";
 
+import { NotificationBell } from "./NotificationBell";
+import { ScoreGuide } from "./ScoreGuide";
 import { ToboBackHome } from "./ToboBackHome";
 import { ToboOnboarding } from "./ToboOnboarding";
 
@@ -35,7 +37,10 @@ export function ToboLayout() {
           >
             ← Rusher
           </button>
-          <ScanQrButton onClick={() => navigate("/tobo/escanear")} />
+          <span className="flex items-center gap-2">
+            {atHome ? null : <NotificationBell />}
+            <ScanQrButton onClick={() => navigate("/tobo/escanear")} />
+          </span>
           <span
             className="max-w-[48%] truncate text-right text-[9px] font-extrabold uppercase tracking-[0.12em]"
             style={{ color: "var(--t-muted)" }}
@@ -62,6 +67,7 @@ export function ToboLayout() {
           <Outlet />
         </div>
         <ToboOnboarding />
+        <ScoreGuide />
       </div>
     </div>
   );

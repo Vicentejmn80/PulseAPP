@@ -40,9 +40,11 @@ export function ClasificacionPage({ embedded = false }: { embedded?: boolean }) 
       if (document.visibilityState === "visible") load();
     };
     document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("rusher-standings-refresh", load);
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("rusher-standings-refresh", load);
     };
   }, [load]);
 

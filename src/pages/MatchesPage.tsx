@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
+import { chosenWinner, TIE_PREDICTION_ERROR } from "@/config/scoring";
+import { PointsHint, openScoreGuide } from "@/components/tobo/ScoreGuide";
 import { mergeMatchWithSavedPrediction, settlementPollIntervalMs } from "@/lib/predictions/visibility";
 import { predictionBackTarget } from "@/lib/toboNav";
 import { cycleForMatchStart } from "@/lib/toboHome";
@@ -24,7 +26,7 @@ function statusLabel(match: BaseballMatch) {
   if (phase === "cancelled" || match.status === "cancelled") return "Cancelado";
   if (match.status === "postponed" && phase === "open") return "Pospuesto";
   if (phase === "live") return "En vivo";
-  if (phase === "locked") return "Pronóstico cerrado";
+  if (phase === "locked") return "En curso";
   if (phase === "finished") return "Finalizado";
   if (match.prediction) return "Pronosticado";
   return "Disponible";
@@ -56,6 +58,7 @@ export function MatchesPage() {
         <div>
           <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">{LVBP_EXPERIENCE_TITLE}</p>
           <h2 className="text-[24px] font-extrabold tracking-tight">Próximos partidos</h2>
+          <button type="button" onClick={openScoreGuide} className="mt-2 min-h-11 text-left text-[14px] font-extrabold text-[#C6FF3D]">¿Cómo se calculan mis puntos?</button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
@@ -93,6 +96,7 @@ export function MatchesPage() {
                   <span className="shrink-0 rounded-full bg-[#FFF1EA] px-2 py-1 text-[11px] font-extrabold text-[#FF4F1A]">{statusLabel(match)}</span>
                 </div>
                 <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">{when(match.startsAt)}</p>
+                <PointsHint className="mt-1" />
                 {phase === "finished" && match.homeScore !== null && match.awayScore !== null && (
                   <p className="mt-2 text-[14px] font-extrabold">Resultado {scoreLine(match, match.homeScore, match.awayScore)}</p>
                 )}
@@ -193,7 +197,7 @@ export function MatchPredictPage() {
       return;
     }
     if (homeScore === awayScore) {
-      setError("En béisbol no se predice empate.");
+      setError(TIE_PREDICTION_ERROR);
       return;
     }
     if ((homeScore > awayScore && winner !== match.homeTeam) || (awayScore > homeScore && winner !== match.awayTeam)) {
@@ -254,7 +258,7 @@ export function MatchPredictPage() {
         {match && phase === "locked" && (
           <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(80,40,10,0.05)]">
             <p className="text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#FF4F1A]">{LVBP_EXPERIENCE_TITLE}</p>
-            <h2 className="mt-2 text-[28px] font-extrabold tracking-tight">Pronóstico cerrado</h2>
+            <h2 className="mt-2 text-[28px] font-extrabold tracking-tight">En curso</h2>
             <p className="mt-3 text-[20px] font-extrabold">{match.awayTeam}</p>
             <p className="text-[14px] font-bold text-[#A08B80]">vs. {match.homeTeam}</p>
             {saved ? (
@@ -299,7 +303,8 @@ export function MatchPredictPage() {
             <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">{when(match.startsAt)}</p>
             {cycleName && <p className="mt-1 text-[12px] font-extrabold text-[#FF4F1A]">Puntos para {cycleName} según el inicio programado</p>}
             {saved && <p className="mt-3 text-[16px] font-extrabold">{scoreLine(match, saved.homeScore, saved.awayScore)}</p>}
-            <p className="mt-4 text-[13px] font-semibold text-[#8D7366]">40 PT por acertar el ganador y hasta 40 PT por cercanía del marcador.</p>
+            <PointsHint className="mt-4" />
+            <button type="button" onClick={openScoreGuide} className="mt-2 min-h-11 text-[13px] font-extrabold text-[#0B0D0F]">¿Cómo se calculan mis puntos?</button>
             <p className="mb-2 mt-5 text-[14px] font-extrabold">¿Quién gana?</p>
             <div className="grid grid-cols-2 gap-2">
               {[match.awayTeam, match.homeTeam].map((team) => (
@@ -334,6 +339,12 @@ export function MatchPredictPage() {
                 className="mt-1 h-14 w-full rounded-2xl bg-[#FFF7F1] text-center text-[22px] font-extrabold text-[#241710] outline-none"
               />
             </label>
+            {(() => {
+              const homeScore = parseScore(home);
+              const awayScore = parseScore(away);
+              const picked = homeScore !== null && awayScore !== null ? chosenWinner(match.homeTeam, homeScore, match.awayTeam, awayScore) : null;
+              return picked ? <p className="mt-3 text-[13px] font-extrabold text-[#0B0D0F]">Elegiste ganador: {picked}</p> : null;
+            })()}
             {error && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
             <div className="mt-4">
               <PrimaryButton type="submit" disabled={pending}>
@@ -345,7 +356,8 @@ export function MatchPredictPage() {
         {match && phase !== "live" && <MatchExtras matchId={match.id} />}
         {match && phase !== "live" && <MatchCrowd matchId={match.id} />}
         {error && phase !== "open" && <p className="mt-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
-        <div className="mt-6">
+        <button type="button" onClick={openScoreGuide} className="mt-6 min-h-11 text-[14px] font-extrabold text-[#C6FF3D]">¿Cómo se calculan mis puntos?</button>
+        <div className="mt-2">
           <ToboBackHome />
         </div>
       </div>
@@ -355,8 +367,9 @@ export function MatchPredictPage() {
 
 function almostLine(prediction: MatchPrediction) {
   if (!prediction.processed || prediction.winnerPoints == null || prediction.errorTotal == null) return "";
-  if (prediction.winnerPoints === 0 && prediction.errorTotal >= 1 && prediction.errorTotal <= 4) {
-    return "Te faltó poco: fallaste el ganador pero tu marcador estuvo cerquita.";
+  if (prediction.voided) return "Tu pronóstico queda sin efecto.";
+  if (prediction.winnerPoints === 0) {
+    return "Si fallas el ganador, ese partido suma 0, aunque el marcador esté cerca.";
   }
   if (prediction.winnerPoints === 40 && prediction.errorTotal > 0) {
     const runs = prediction.errorTotal === 1 ? "carrera" : "carreras";

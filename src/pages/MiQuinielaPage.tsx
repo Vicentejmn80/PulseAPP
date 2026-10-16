@@ -1,23 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { StandingsTable } from "@/components/lvbp/StandingsTable";
+import { PointsHint, openScoreGuide } from "@/components/tobo/ScoreGuide";
 import { BackButton } from "@/components/ui/Buttons";
 import { TabBar } from "@/components/ui/TabBar";
 import { LVBP_EXPERIENCE_TITLE } from "@/config/lvbpBrand";
 import { lvbpStandings } from "@/lib/lvbpStandings";
+import { groupByDay, pageSlice, predictionTabMatches, type PredictionTab } from "@/lib/matchAgenda";
 import { listMatches, matchPhase, scoreLine, type BaseballMatch } from "@/services/matchesApi";
-import { isFinalizedPrediction, isSuspendedMatch, isUpcomingPrediction, predictionBadge } from "@/lib/predictions/state";
-
-function whenDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("es-VE", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-    timeZone: "America/Caracas",
-  });
-}
+import { isSuspendedMatch, predictionBadge } from "@/lib/predictions/state";
 
 function whenTime(value: string) {
   const date = new Date(value);
@@ -25,7 +16,7 @@ function whenTime(value: string) {
   return date.toLocaleTimeString("es-VE", { hour: "numeric", minute: "2-digit", timeZone: "America/Caracas" });
 }
 
-type Tab = "semana" | "proximos" | "finalizados";
+type Tab = PredictionTab;
 
 type View = "pronostico" | "tabla";
 
@@ -34,8 +25,8 @@ export function MiQuinielaPage() {
   const [params, setParams] = useSearchParams();
   const view: View = params.get("vista") === "tabla" ? "tabla" : "pronostico";
   const [matches, setMatches] = useState<BaseballMatch[]>([]);
-  const [tab, setTab] = useState<Tab>("proximos");
-  const [tabTouched, setTabTouched] = useState(false);
+  const [tab, setTab] = useState<Tab>("pronosticar");
+  const [pages, setPages] = useState(1);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
 
@@ -63,9 +54,11 @@ export function MiQuinielaPage() {
       if (document.visibilityState === "visible") load();
     };
     document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("rusher-standings-refresh", load);
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("rusher-standings-refresh", load);
     };
   }, [view, load]);
 
@@ -74,61 +67,16 @@ export function MiQuinielaPage() {
     else setParams({}, { replace: true });
   }
 
-  const upcomingCount = useMemo(() => matches.filter(isUpcomingPrediction).length, [matches]);
-  const finalizedCount = useMemo(() => matches.filter(isFinalizedPrediction).length, [matches]);
+  const clock = Date.now();
+  const visible = useMemo(() => predictionTabMatches(matches, tab, clock), [matches, tab, clock]);
+  const page = pageSlice(visible, pages, 20);
+  const grouped = groupByDay(page.rows);
 
-  // Si no hay próximos pero sí historial, abrir directamente en Finalizados
-  // para no obligar al usuario a descubrir el tab. Solo una vez y solo si
-  // el usuario no eligió tab manualmente.
   useEffect(() => {
-    if (!loaded || tabTouched) return;
-    if (upcomingCount === 0 && finalizedCount > 0) setTab("finalizados");
-  }, [loaded, tabTouched, upcomingCount, finalizedCount]);
-
-  const hasWeek = useMemo(() => {
-    const now = new Date();
-    const weekLater = new Date();
-    weekLater.setDate(now.getDate() + 7);
-    return matches.some((m) => {
-      if (isSuspendedMatch(m)) return false;
-      const d = new Date(m.startsAt);
-      return d >= now && d <= weekLater;
-    });
-  }, [matches]);
-
-  const tabs = useMemo(() => {
-    const base: Tab[] = ["proximos", "finalizados"];
-    return hasWeek ? (["semana", ...base] as Tab[]) : base;
-  }, [hasWeek]);
-
-  const filtered = useMemo(() => {
-    const now = new Date();
-    if (tab === "semana") {
-      const weekLater = new Date();
-      weekLater.setDate(now.getDate() + 7);
-      return matches.filter((m) => {
-        if (isSuspendedMatch(m)) return false;
-        const d = new Date(m.startsAt);
-        return d >= now && d <= weekLater;
-      });
-    }
-    if (tab === "proximos") {
-      return matches.filter(isUpcomingPrediction);
-    }
-    return matches.filter(isFinalizedPrediction);
-  }, [matches, tab]);
+    setPages(1);
+  }, [tab]);
 
   const standings = useMemo(() => (loaded ? lvbpStandings(matches) : null), [loaded, matches]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<string, BaseballMatch[]>();
-    for (const match of filtered) {
-      const key = whenDate(match.startsAt) || "Sin fecha";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(match);
-    }
-    return Array.from(map.entries());
-  }, [filtered]);
 
   return (
     <div className="flex h-full flex-col">
@@ -161,31 +109,24 @@ export function MiQuinielaPage() {
           ))}
         </div>
         {view === "pronostico" ? (
-        <div className={`grid gap-1 ${tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-          {tabs.map((t) => (
+        <div className="grid grid-cols-2 gap-1">
+          {(["pronosticar", "finalizados"] as const).map((t) => (
             <button
               key={t}
               type="button"
-              onClick={() => {
-                setTabTouched(true);
-                setTab(t);
-              }}
-              className={`h-11 rounded-2xl text-[12px] font-extrabold ${
-                tab === t ? "bg-[#FF4F1A] text-white" : "bg-white text-[#8D7366]"
+              onClick={() => setTab(t)}
+              className={`h-11 rounded-2xl text-[13px] font-extrabold ${
+                tab === t ? "bg-[#C6FF3D] text-[#0B0D0F]" : "bg-white/10 text-[#F4F6FA]"
               }`}
             >
-              {t === "semana"
-                ? "Esta semana"
-                : t === "proximos"
-                  ? `Próximos (${upcomingCount})`
-                  : `Finalizados (${finalizedCount})`}
+              {t === "pronosticar" ? "Pronosticar" : "Finalizados"}
             </button>
           ))}
         </div>
         ) : null}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(24px+env(safe-area-inset-bottom))] sm:px-6 lg:px-8">
         {view === "tabla" ? (
           <div key="tabla" className="adm-enter">
             {error ? (
@@ -198,26 +139,23 @@ export function MiQuinielaPage() {
           </div>
         ) : (
         <div key="pronostico" className="adm-enter">
+        <button type="button" onClick={openScoreGuide} className="mb-3 min-h-11 text-[13px] font-extrabold text-[#C6FF3D]">¿Cómo se calculan mis puntos?</button>
         {error && <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-[13px] font-bold text-[#E23B2F]">{error}</p>}
 
         {grouped.length === 0 && !error && (
           <div className="rounded-[28px] bg-white px-6 py-8 text-center">
             <p className="text-[16px] font-extrabold">
-              {tab === "proximos"
-                ? "📅 No hay pronósticos próximos"
-                : tab === "finalizados"
-                  ? "Aún no hay juegos finalizados"
-                  : "Esta semana no hay juegos"}
+              {tab === "finalizados" ? "Aún no hay juegos finalizados" : "No hay juegos abiertos para pronosticar"}
             </p>
             <p className="mt-1 text-[13px] font-semibold text-[#8D7366]">Vuelve más tarde o revisa otra sección.</p>
           </div>
         )}
 
-        {grouped.map(([date, dayMatches]) => (
-          <div key={date} className="mb-4">
-            <p className="mb-2 px-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#A08B80]">{date}</p>
+        {grouped.map((group) => (
+          <div key={group.key} className="mb-4">
+            <p className="sticky top-0 z-10 mb-2 bg-[#0B0D0F]/90 px-1 py-2 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#C6FF3D] backdrop-blur">{group.label}</p>
             <div className="flex flex-col gap-2">
-              {dayMatches.map((match) => {
+              {group.matches.map((match) => {
                 const info = predictionBadge(match);
                 const toneClass =
                   info.tone === "open"
@@ -239,9 +177,10 @@ export function MiQuinielaPage() {
                         <p className="mt-1 text-[15px] font-extrabold">{match.homeTeam}</p>
                         <p className="text-[12px] font-bold text-[#A08B80]">local</p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-extrabold ${toneClass}`}>{info.label}</span>
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-extrabold ${toneClass}`}>{match.prediction && matchPhase(match) !== "finished" && matchPhase(match) !== "open" ? "Esperando resultado" : info.label}</span>
                     </div>
                     <p className="mt-2 text-[13px] font-semibold text-[#8D7366]">{whenTime(match.startsAt)}</p>
+                    <PointsHint className="mt-1" />
 
                     {match.prediction && (
                       <p className="mt-2 text-[14px] font-extrabold">
@@ -271,6 +210,11 @@ export function MiQuinielaPage() {
             </div>
           </div>
         ))}
+        {page.hasMore ? (
+          <button type="button" onClick={() => setPages((count) => count + 1)} className="mb-4 flex h-12 w-full items-center justify-center rounded-2xl bg-[#C6FF3D] text-[14px] font-extrabold text-[#0B0D0F]">
+            Cargar más
+          </button>
+        ) : null}
         </div>
         )}
       </div>

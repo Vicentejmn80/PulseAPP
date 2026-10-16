@@ -6,6 +6,6 @@ export const LVBP_SEASON_LABEL = "Temporada LVBP 2026–27";
 export const LVBP_VENUES_TAB_LABEL = "Aliados";
 
 /** Título principal de la tarjeta de bienvenida en inicio. */
-export const LVBP_WELCOME_HEADLINE = "Bienvenido a la experiencia Béisbol Rush LVBP";
+export const LVBP_WELCOME_HEADLINE = "Bienvenido a Béisbol Rush LVBP";
 export const LVBP_WELCOME_BODY =
-  "Pronostica los partidos, demuestra lo que sabes, suma puntos y compite por recompensas durante la temporada.";
+  "Pronostica los juegos de la LVBP y suma hasta 80 puntos por partido: 40 por acertar el ganador y hasta 40 adicionales según qué tan cerca estés del marcador final. ¡Acumula puntos, sube en el ranking y compite por premios cada semana! 🏆";

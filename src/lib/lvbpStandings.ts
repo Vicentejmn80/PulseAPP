@@ -231,6 +231,12 @@ export function formatWinPct(value: number | null) {
   return value.toFixed(3);
 }
 
+/** Positivo: el equipo subió. Negativo: bajó. Cero: se quedó. */
+export function rankDelta(previousRank: number | undefined, rank: number, played: number) {
+  if (!played || previousRank === undefined || previousRank === rank) return 0;
+  return previousRank - rank;
+}
+
 export function formatGamesBehind(value: number | null) {
   if (value === null) return "—";
   if (value === 0) return "—";

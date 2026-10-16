@@ -1,5 +1,16 @@
-import { useLayoutEffect, useRef, useState } from "react";
-import { formatGamesBehind, formatWinPct, type StandingRow } from "@/lib/lvbpStandings";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { formatGamesBehind, formatWinPct, rankDelta, type StandingRow } from "@/lib/lvbpStandings";
+
+const RANK_KEY = "lvbp-standings-rank-v1";
+
+function readRanks() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RANK_KEY) || "{}") as Record<string, number>;
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
 
 function mark(id: string) {
   return `/avatars/${id}.webp`;
@@ -7,8 +18,18 @@ function mark(id: string) {
 
 export function StandingsTable({ rows }: { rows: StandingRow[]; excludedTies?: number }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [savedRanks, setSavedRanks] = useState<Record<string, number>>({});
   const nodes = useRef(new Map<string, HTMLTableRowElement>());
   const previous = useRef(new Map<string, number>());
+
+  useEffect(() => {
+    setSavedRanks(readRanks());
+    return () => {
+      const next: Record<string, number> = {};
+      for (const row of rows) next[row.id] = row.rank;
+      localStorage.setItem(RANK_KEY, JSON.stringify(next));
+    };
+  }, [rows]);
 
   useLayoutEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -40,6 +61,7 @@ export function StandingsTable({ rows }: { rows: StandingRow[]; excludedTies?: n
           <span className="text-white">ASÍ </span>
           <span className="text-[#C6FF3D]">VAN</span>
         </h2>
+        <p className="relative mt-1 text-[11px] font-semibold text-[#C9D0D6]">Si se publica, se corrige o se anula un marcador, cada equipo vuelve a su puesto.</p>
         <p className="relative mt-2 flex items-center gap-2 text-[10px] font-extrabold tracking-[0.16em] text-[#C6FF3D]">
           <span className="h-px flex-1 bg-[#C6FF3D]" />
           TEMPORADA 2026 · 2027
@@ -61,6 +83,7 @@ export function StandingsTable({ rows }: { rows: StandingRow[]; excludedTies?: n
           <tbody>
             {rows.map((row) => {
               const leader = row.rank === 1 && row.played > 0;
+              const delta = rankDelta(savedRanks[row.id], row.rank, row.played);
               return (
                 <tr
                   key={row.id}
@@ -72,9 +95,15 @@ export function StandingsTable({ rows }: { rows: StandingRow[]; excludedTies?: n
                 >
                   <td className="py-1.5 text-left">
                     <button type="button" aria-expanded={open === row.id} onClick={() => setOpen(open === row.id ? null : row.id)} className="flex min-h-[44px] w-full items-center gap-2 text-left">
+                      <span className={`w-5 shrink-0 text-center text-[12px] font-extrabold tabular-nums ${leader ? "text-[#0B0D0F]" : "text-[#C6FF3D]"}`}>{row.rank}</span>
                       <img src={mark(row.id)} alt="" width={32} height={32} loading="lazy" className="h-8 w-8 shrink-0 rounded-full object-cover" />
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-extrabold">{row.team}</span>
+                        <span className="flex items-center gap-1 truncate text-[13px] font-extrabold">
+                          {row.team}
+                          {delta > 0 ? <span className={leader ? "text-[#0B0D0F]" : "text-[#C6FF3D]"}>▲{delta}</span> : null}
+                          {delta < 0 ? <span className="text-[#FF8A8A]">▼{Math.abs(delta)}</span> : null}
+                        </span>
+                        <span className={`block text-[10px] font-bold tabular-nums ${leader ? "text-[#0B0D0F]" : "text-[#C9D0D6]"}`}>{row.played > 0 ? `${row.wins}-${row.losses}` : "0-0"}</span>
                         <span className={`block text-[10px] font-bold ${leader ? "text-[#0B0D0F]" : "text-[#8B93A5]"}`}>{open === row.id ? "Ocultar" : "Ver detalle"}</span>
                       </span>
                     </button>

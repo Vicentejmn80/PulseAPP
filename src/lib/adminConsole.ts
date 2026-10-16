@@ -43,7 +43,7 @@ export function settlementNotice(scored: number, points: number, correcting = fa
     return `Marcador corregido. Puntos ajustados en ${scored} pronósticos · ${points} pts · Tabla actualizada`;
   }
   if (scored > 0) {
-    return `Puntos liberados a ${scored} usuarios · Tabla actualizada`;
+    return `Puntos liberados a ${scored} usuarios · ${points} pts · Tabla actualizada`;
   }
   return "Ese marcador ya estaba publicado. No se duplicaron puntos.";
 }

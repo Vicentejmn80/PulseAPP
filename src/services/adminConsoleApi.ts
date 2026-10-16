@@ -114,6 +114,8 @@ export interface MatchBoardRow {
   predictions: number;
   processed: number;
   points: number;
+  cycleName?: string | null;
+  phase?: string | null;
 }
 
 export interface AllyVenue {
@@ -124,6 +126,15 @@ export interface AllyVenue {
   active: boolean;
   scans: number;
   qrRewards: number;
+  category?: string;
+  address?: string;
+  instagram?: string;
+  whatsapp?: string;
+  mapsUrl?: string;
+  rif?: string;
+  benefit?: string;
+  logoUrl?: string;
+  imageUrl?: string;
 }
 
 export interface AllyCampaign {

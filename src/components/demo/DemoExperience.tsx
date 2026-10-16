@@ -112,7 +112,7 @@ export function DemoExperience({
       return;
     }
     if (homeScore === awayScore) {
-      setError("En beisbol no se predice empate.");
+      setError("Elige un ganador: el marcador no puede quedar empatado");
       return;
     }
     if ((homeScore > awayScore && winner !== match.homeTeam) || (awayScore > homeScore && winner !== match.awayTeam)) {

@@ -170,7 +170,7 @@ export function AdminConsole() {
               </nav>
             </div>
           </header>
-          <main className="adm-page px-4 py-5 sm:px-6">
+          <main className="adm-page px-4 py-5 pb-[calc(24px+env(safe-area-inset-bottom))] sm:px-6">
             <div key={location.pathname} className="adm-enter">
               <Outlet />
             </div>

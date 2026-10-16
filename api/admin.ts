@@ -102,7 +102,10 @@ const ADMIN_ACTIONS = new Map<string, readonly string[]>(
     pulse_admin_revoke: ["p_handle", "p_reason"],
     pulse_admin_top_predictors: [],
     pulse_admin_whoami: [],
-    pulse_admin_save_ally: ["p_venue_id", "p_name", "p_zone", "p_city", "p_active"],
+    pulse_admin_save_ally: ["p_venue_id", "p_name", "p_zone", "p_city", "p_active", "p_category", "p_benefit", "p_instagram", "p_whatsapp", "p_address", "p_maps_url", "p_rif", "p_logo_url", "p_image_url"],
+    pulse_admin_void_match: ["p_match_id"],
+    pulse_admin_delete_match: ["p_match_id"],
+    pulse_admin_reschedule_match: ["p_match_id", "p_starts_at"],
     pulse_admin_save_campaign: ["p_campaign_id", "p_venue_id", "p_name", "p_points", "p_active"],
     pulse_admin_allies: [],
   })
@@ -125,6 +128,9 @@ const OPERATOR_ACTIONS = new Set([
 // si la auditoría falla, la acción se aborta (fail-closed).
 const DESTRUCTIVE_ACTIONS = new Set([
   "pulse_admin_cancel",
+  "pulse_admin_void_match",
+  "pulse_admin_delete_match",
+  "pulse_admin_reschedule_match",
   "pulse_admin_set_result",
   "pulse_admin_postpone",
   "pulse_admin_close_round",

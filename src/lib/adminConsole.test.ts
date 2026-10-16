@@ -69,7 +69,7 @@ describe("crm de la consola", () => {
     expect(userPresence({ createdAt: "2026-10-01T12:00:00Z", lastSessionAt: "2026-10-14T12:00:00Z", now })).toBe("active");
     expect(userPresence({ createdAt: "2026-09-01T12:00:00Z", lastSessionAt: "2026-09-02T12:00:00Z", now })).toBe("inactive");
     expect(chartHeights([0, 2, 4])).toEqual([4, 50, 100]);
-    expect(previewCopy(3, 120, 1)).toContain("3 usuarios ganan puntos");
+    expect(previewCopy({ predictions: 3, winners: 2, exact: 1, points: 120 })).toContain("3 pronósticos");
   });
 });
 

@@ -41,6 +41,14 @@ export function chartHeights(counts: number[]) {
   return counts.map((count) => Math.max(4, Math.round((count / max) * 100)));
 }
 
-export function previewCopy(winners: number, points: number, exact: number) {
-  return `${winners} usuarios ganan puntos · +${points} pts totales · ${exact} con marcador exacto`;
+export function previewCopy(stats: {
+  predictions: number;
+  winners: number;
+  exact: number;
+  points: number;
+  bands?: { label: string; count: number }[];
+}) {
+  const head = `${stats.predictions} pronósticos · ${stats.winners} acertaron ganador · ${stats.exact} marcadores exactos · +${stats.points} puntos totales a repartir`;
+  const extra = (stats.bands ?? []).filter((band) => band.count > 0).map((band) => `${band.label}: ${band.count}`).join(" · ");
+  return extra ? `${head} · ${extra}` : head;
 }

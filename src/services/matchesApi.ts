@@ -14,6 +14,8 @@ export interface MatchPrediction {
   closenessPoints: number | null;
   total: number | null;
   errorTotal: number | null;
+  voided?: boolean;
+  hitWinner?: boolean | null;
 }
 
 export interface BaseballMatch {
@@ -63,6 +65,8 @@ function asPrediction(value: unknown): MatchPrediction | null {
     closenessPoints: asNumber(row.closenessPoints),
     total: asNumber(row.total),
     errorTotal: asNumber(row.errorTotal),
+    voided: Boolean(row.voided),
+    hitWinner: row.hitWinner === null || row.hitWinner === undefined ? null : Boolean(row.hitWinner),
   };
 }
 
@@ -169,6 +173,8 @@ export interface Tasca {
   active?: boolean;
   lat?: number | null;
   lng?: number | null;
+  mapsUrl?: string;
+  category?: string;
   highlights?: Array<{ icon: string; title: string; desc: string }>;
   imageUrl?: string;
 }
